@@ -1,0 +1,20 @@
+{
+  "name": "neels-night-party",
+  "version": "1.0.0",
+  "description": "Neel's Night Party - algebra game (variables, expressions, substitution)",
+  "scripts": {
+    "build": "esbuild src/main.js --bundle --format=iife --minify --target=es2019 --outfile=game.js --external:*.webp --loader:.css=css --loader:.svg=text --loader:.mp3=dataurl",
+    "watch": "esbuild src/main.js --bundle --format=iife --target=es2019 --outfile=game.js --external:*.webp --loader:.css=css --loader:.svg=text --loader:.mp3=dataurl --watch",
+    "serve": "npx http-server . -p 8080 -c-1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "gsap": "3.12.5"
+  },
+  "private": true,
+  "devDependencies": {
+    "esbuild": "0.21.5"
+  }
+}

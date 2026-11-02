@@ -1,0 +1,21 @@
+Audio in Neel's Night Party. Everything here is CC0 (public domain): free to use, change and share,
+no attribution required. Credited anyway, with thanks.
+
+Music (assets/audio/)
+  music_calm.mp3   "Mystical RPG Maker Town Theme" by Symphony, CC0 (seamless loop)
+                   https://opengameart.org/content/mystical-rpg-maker-town-theme
+  music_magic.mp3  "Magic Town" by Controllerhead, CC0
+                   https://opengameart.org/content/magic-town
+
+Sound effects (src/sfx/, bundled into game.js), Kenney (www.kenney.nl), CC0
+  tap.mp3   Interface Sounds: click_002      https://kenney.nl/assets/interface-sounds
+  pop.mp3   Interface Sounds: pluck_001
+  bad.mp3   Interface Sounds: question_004
+  star.mp3  Interface Sounds: glass_001
+  good.mp3  Music Jingles: jingles_PIZZI02   https://kenney.nl/assets/music-jingles
+  cheer.mp3 Music Jingles: jingles_STEEL02
+  win.mp3   Music Jingles: jingles_STEEL12
+  land.mp3  Impact Sounds: impactSoft_heavy_000                     https://kenney.nl/assets/impact-sounds
+  knock.mp3 Impact Sounds: impactWood_medium_000 + impactWood_medium_002
+
+All files were trimmed, loudness-matched and re-encoded as MP3 (64 kbps).
