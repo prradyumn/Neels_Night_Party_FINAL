@@ -1,5 +1,5 @@
 // House map: the level select. Four rooms joined by a path; Neel hops to the next room as the kid progresses.
-import { gsap, el, img, ui, wait, sfx, setScene, setFocus, setDim, hideAllChars, onTap, pointHand, score, showHud, playFx, camUI, camTo, camPt } from "./engine.js";
+import { gsap, el, img, ui, wait, sfx, setScene, setFocus, setDim, hideAllChars, onTap, pointHand, score, showHud, playFx, camUI, camTo, camPt, W, H } from "./engine.js";
 
 export const ROOMS = [
   { id: 1, name: "Party List", icon: "p1_variable_jar", bg: "bg_hall_far", x: 300, y: 600, max: 24 },
@@ -39,13 +39,13 @@ export async function houseMap(state) {
     return c;
   });
   // Neel token hops to the current room
-  const tok = el("div", "abs", m, { width: 150, height: 153, left: ROOMS[neelAt].x - 300, top: ROOMS[neelAt].y - 60, background: "url(assets/anim_neel_happy.webp) 0 0/600% 600% no-repeat" });
+  const tok = el("div", "abs", m, { width: 150, height: 153, left: ROOMS[neelAt].x - 285, top: ROOMS[neelAt].y - 60, background: "url(assets/anim_neel_happy.webp) 0 0/600% 600% no-repeat" });
   await wait(0.6);
   if (neelAt !== cur) {
     for (let k = neelAt + 1; k <= cur; k++) {
       sfx("whoosh");
-      camTo({ x: ROOMS[k].x, y: ROOMS[k].y, s: 1.1, dur: 0.7 }); // follow Neel's token
-      await gsap.to(tok, { left: ROOMS[k].x - 300, top: ROOMS[k].y - 60, duration: 0.7, ease: "power1.inOut" });
+      camTo({ x: ROOMS[k].x, y: ROOMS[k].y, s: 1.04, dur: 0.7 }); // follow Neel's token
+      await gsap.to(tok, { left: ROOMS[k].x - 285, top: ROOMS[k].y - 60, duration: 0.7, ease: "power1.inOut" });
       gsap.fromTo(tok, { y: 0 }, { y: -50, duration: 0.2, yoyo: true, repeat: 1 });
     }
     neelAt = cur;
@@ -55,7 +55,7 @@ export async function houseMap(state) {
   gsap.to(tok, { y: -14, duration: 0.5, yoyo: true, repeat: -1, ease: "sine.inOut" });
   cards[cur].classList.add("pulse");
   const rays = playFx("sunburst", ROOMS[cur].x, ROOMS[cur].y - 20, { palette: "gold", scale: 5.5 }); // the next room glows
-  await camTo({ x: ROOMS[cur].x, y: ROOMS[cur].y, s: 1.05, dur: 0.8 });
+  await camTo({ x: W / 2, y: H / 2, s: 1, dur: 0.8 }); // the whole house stays in view
   const hp = camPt(ROOMS[cur].x + 140, ROOMS[cur].y - 30);
   const hand = await pointHand(hp.x, hp.y, 0);
   const pick = await new Promise((res) => {

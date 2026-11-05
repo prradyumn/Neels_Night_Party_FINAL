@@ -80,7 +80,8 @@ function same(fn, f) {
 let QB, bar, tray, brewBtn, undoBtn, tokens = [], cauldron, orbs = {}, testBox;
 const CX = 735;
 function render() {
-  bar.innerHTML = tokens.length ? show(tokens) : `<span class="ph">your spell</span>`;
+  // empty: a dashed slot shows where the first orb will land
+  bar.innerHTML = tokens.length ? show(tokens) : `<span class="slot"></span><span class="ph">tap an orb</span>`;
   // nothing to brew yet: Brew! stays dim and still, so the first tap goes to the orbs
   if (brewBtn) brewBtn.disabled = !tokens.length;
   if (undoBtn) undoBtn.classList.toggle("off", !tokens.length);
@@ -95,6 +96,8 @@ function addToken(t, o) {
   if (t === "⌫") { tokens.pop(); sfx("tap"); render(); return; }
   if (tokens.length >= 9) return;
   sfx("pop");
+  tray.classList.remove("wave"); // the child has found the orbs: stop the "tap me" wave
+  gsap.fromTo(o, { scale: 0.82 }, { scale: 1, duration: 0.35, ease: "back.out(3)" });
   const r = o.getBoundingClientRect();
   const fly = el("div", o.className.replace(" glow", ""), ui, { left: parseFloat(o.style.left), top: parseFloat(o.style.top), pointerEvents: "none" }, o.innerHTML);
   const into = camPt(CX, 640); // the cauldron moves with the camera, the orbs do not
@@ -116,24 +119,34 @@ function buildScene() {
   };
   bub();
   bar = el("div", "spellbar", ui, { left: CX - 280, top: 396, width: 560 });
-  tray = el("div", "abs", ui, { left: 0, top: 0, width: 1, height: 1 });
+  tray = el("div", "abs tray", ui, { left: 0, top: 0, width: 1, height: 1 });
   QB = qbox();
-  brewBtn = button("Brew!", 1360, 800, tray);
-  undoBtn = el("div", "undo", tray, { left: 1112, top: 762 }, "⌫");
+  brewBtn = button("Brew!", 1385, 842, tray);
+  undoBtn = el("div", "undo", tray, { left: 1150, top: 804 }, "⌫");
   undoBtn.title = "Undo";
   onTap(undoBtn, () => addToken("⌫", undoBtn));
   gsap.set([tray, bar], { opacity: 0 });
   render();
 }
+// the ingredient shelf: letters and numbers on glowing pads (top row), the + × − stones below
+const TRAY_X = 1290, ROW_V = 584, ROW_O = 700;
 function setTray(list) {
   Object.values(orbs).forEach((o) => o.remove());
+  tray.querySelectorAll(".pad").forEach((p) => p.remove());
   orbs = {};
   if (!list) return;
-  const n = list.length, P = 112, x0 = 1290 - ((n - 1) * P) / 2 - 52;
-  list.forEach((t, i) => {
-    const o = orbAt(t, t === "m" ? "m" : t === "d" ? "d" : /\d/.test(t) ? "n" : "op", x0 + i * P, 610);
-    gsap.fromTo(o, { scale: 0 }, { scale: 1, duration: 0.35, delay: i * 0.05, ease: "back.out(2)", immediateRender: true });
+  const vals = list.filter((t) => !["+", "×", "−"].includes(t)), ops = list.filter((t) => ["+", "×", "−"].includes(t));
+  const row = (items, y, P, sz) => items.forEach((t, i) => {
+    const x = TRAY_X - ((items.length - 1) * P) / 2 + i * P;
+    el("div", "pad", tray, { left: x - sz * 0.55, top: y + sz - 12, width: sz * 1.1, height: 26 });
+    const o = orbAt(t, t === "m" ? "m" : t === "d" ? "d" : /\d/.test(t) ? "n" : "op", x - sz / 2, y, undefined);
+    Object.assign(o.style, { width: sz + "px", height: sz + "px" });
+    o.style.setProperty("--i", String(list.indexOf(t)));
+    gsap.fromTo(o, { scale: 0 }, { scale: 1, duration: 0.35, delay: list.indexOf(t) * 0.05, ease: "back.out(2)", immediateRender: true });
   });
+  row(vals, ROW_V, 130, 104);
+  row(ops, ROW_O, 124, 98);
+  tray.classList.add("wave");
 }
 function addD() {
   playFx("starfall", CX, 520, { palette: "ember", scale: 2.5 }); // orange stars for d
@@ -143,7 +156,7 @@ async function testRun(fn, q) {
   camTo({ x: CX, y: 620, s: 1.09, dur: q.tests.length * 0.55 + 0.8, ease: "power1.inOut" }); // lean in while the spell is tested
   testBox?.remove();
   const two = q.tests[0].length === 2;
-  testBox = el("div", "chips", ui, { left: CX - 400, top: 300, width: 800 });
+  testBox = el("div", "chips", ui, { left: 470, top: 284, width: 640 }); // right of the speaker's bubble
   playFx("mana", CX, 640, { palette: "plum", scale: 3 });
   // a rune circle glows on the floor under the cauldron while the spell is tested
   const runes = playFx("runes", CX, 830, { palette: "plum", scale: 3, parent: world });
@@ -169,7 +182,7 @@ async function testRun(fn, q) {
 async function beat() {
   // Agni crashes in: dragon friends are coming too.
   for (const k of ["neel", "maya"]) hideChar(k, 0.1);
-  placeChar("agni", 150, 885, 270, { p: "crash_in" });
+  placeChar("agni", 150, 885, 270, { p: "crash_in", flip: true });
   sfx("whoosh");
   host.cur = "agni";
   await gsap.from(C.agni.box, { x: -500, y: -300, rotation: -20, duration: 0.7, ease: "power2.out" });
@@ -222,6 +235,8 @@ export async function runPart2(start = 1) {
     azTip(q.pre ? "Tap Brew! to test Neel's spell" : "Tap the orbs, then Brew!");
     if (q.who === "maya") { await maya(q.line, "explain"); await mayaOut(); }
     else await say(q.who, q.line, { p: q.who === "neel" && q.pre ? "unsure" : undefined });
+    // the very first question: a hand shows the first tap
+    if (qi === 0 && !tokens.length && orbs.m && tray.classList.contains("wave")) pointHand(parseFloat(orbs.m.style.left) + 50, parseFloat(orbs.m.style.top) + 55, 2.4);
     let tries = 0, solved = false, testedPre = false;
     const iw = idleWatch(18, async () => { await maya("Take your time. " + q.h1, "hint"); await mayaOut(); iw.arm(); });
     if (q.duel) {
@@ -231,6 +246,7 @@ export async function runPart2(start = 1) {
       await testRun(compile(tokens), q);
       await say("neel", "Hmm… it worked for 1 and 1. But not for the others!", { p: "unsure" });
       brewBtn.disabled = true;
+      gsap.set(brewBtn, { autoAlpha: 0 }); // only the two choices in the panel
       azTip("Is 3m + 2d the same as 5md?");
       const yes = el("div", "choice", ui, { left: 1030, top: 640 }, "Yes, same");
       const no = el("div", "choice", ui, { left: 1290, top: 640 }, "No, different");
@@ -240,6 +256,7 @@ export async function runPart2(start = 1) {
         else { tries++; sfx("boing"); react("neel", "oops"); await maya(tries > 1 ? "Look at the test: 2 monsters and 1 dragon need 8, but 5md makes 10. They are different!" : "Not yet. " + q.h1, "hint"); await mayaOut(); }
       }
       yes.remove(); no.remove();
+      gsap.set(brewBtn, { autoAlpha: 1 });
       // m and d orbs try to join… and bounce apart
       const a = el("div", "orb m", ui, { left: CX - 200, top: 300 }, "3m"), b = el("div", "orb d", ui, { left: CX + 120, top: 300 }, "2d");
       a.style.fontSize = b.style.fontSize = "34px";
@@ -279,8 +296,8 @@ export async function runPart2(start = 1) {
     playFx("collect", CX, 470, { palette: "gold", scale: 3 });
     playFx("starfall", CX, 600, { palette: "plum", scale: 2.5 }); // the spell works: purple stars rain into the cauldron
     gsap.fromTo(bar, { scale: 1.15, boxShadow: "0 0 40px #ffd76a" }, { scale: 1, boxShadow: "0 0 0px #ffd76a", duration: 0.8 });
-    popup(q.pop, 1.8);
-    await award(tries, CX, 300, 2);
+    QB.sub(`<span class="win">${q.pop} ✓</span>`);
+    await award(tries, CX + 40, 560, 2);
     await praise();
     await maya(q.exp, "happy");
     await mayaOut();

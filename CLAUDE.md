@@ -31,5 +31,7 @@ Never hand-edit game.js / game.css; they are build outputs.
 ## Layout rules
 - Speaking character bottom-left, question card top-centre,
   all tappable controls in the bottom-right action zone, ★ counter top-right.
+  Exception, Part 3 (Magic Doors): equation bar top-centre, guests flank the table (monsters left, dragons right),
+  answer gems in a panel under the table, smaller speaker bottom-left with the bubble beside them (SPOTS.table).
 - Keep the UI uncluttered and keep m purple / d orange everywhere.
 - Keep assets WebP, total game under 20 MB.

@@ -30,9 +30,12 @@ const ITEMS = [
     exp: "One balloon for each friend. If the friends change, these balloons change. Same balloons, but a different use! So this is a <span class=v>variable</span>.", pop: "Balloons to give away: <b>variable</b>.", inact: "One balloon for each friend." },
 ];
 
-const ZONE = { x: 470, y: 230, w: 510, h: 300 };
+// read left to right: the dial (cause) beside the speaker, the display (effect) in the middle, jar + chest (decision) on the right
+const ZONE = { x: 780, y: 190, w: 460, h: 280 };
+const DIAL = { x: 610, y: 470, r: 105 }; // dial centre
+const BIN = { v: [1175, 690], c: [1395, 710] }; // where things drop into the jar and the chest
 let QB;
-let friends = 4, dialTurns = 0, dialEl, knob, dialLbl, showBox, showCount, jar, chest, item;
+let friends = 4, dialTurns = 0, dialEl, knob, dialLbl, dialTip, flow, showBox, showCount, jar, chest, item;
 
 function angleFor(n) { return (n - 2) * 40 - 120; }
 function setFriends(n, quiet) {
@@ -75,21 +78,24 @@ function buildScene() {
   setFore(0);
   actionZone(true);
   // dial
-  dialEl = el("div", "abs", ui, { left: 1010, top: 650, width: 210, height: 210, cursor: "grab" });
+  dialEl = el("div", "abs", ui, { left: DIAL.x - DIAL.r, top: DIAL.y - DIAL.r, width: 210, height: 210, cursor: "grab" });
   img("p1_dial_base", dialEl, { width: 210, height: 210, left: 0, top: 0 });
   knob = img("p1_dial_knob", dialEl, { width: 120, height: 120, left: 45, top: 45 });
-  dialLbl = el("div", "dialBadge", ui, { left: 1060, top: 596 }, "");
-  gsap.set(dialEl, { opacity: 0 });
+  dialLbl = el("div", "dialBadge", ui, { left: DIAL.x - 50, top: DIAL.y - DIAL.r - 58 }, "");
+  dialTip = el("div", "dialTip", ui, { left: DIAL.x, top: DIAL.y + DIAL.r + 12 }, "Turn the dial");
+  // a gold arrow from the dial to the display: turning the dial changes what you see
+  flow = el("div", "flowArrow", ui, { left: DIAL.x + DIAL.r + 14, top: ZONE.y + ZONE.h / 2 + 40 }, "");
+  gsap.set([dialEl, dialLbl, dialTip, flow], { opacity: 0 });
   let drag = null;
   dialEl.addEventListener("pointerdown", (e) => {
     e.stopPropagation();
     const p = toStage(e);
-    drag = { a0: Math.atan2(p.y - 755, p.x - 1115), n0: friends, moved: false };
+    drag = { a0: Math.atan2(p.y - DIAL.y, p.x - DIAL.x), n0: friends, moved: false };
     dialEl.setPointerCapture(e.pointerId);
   });
   dialEl.addEventListener("pointermove", (e) => {
     if (!drag) return;
-    const p = toStage(e), a = Math.atan2(p.y - 755, p.x - 1115);
+    const p = toStage(e), a = Math.atan2(p.y - DIAL.y, p.x - DIAL.x);
     let da = ((a - drag.a0) * 180) / Math.PI;
     if (da > 180) da -= 360; if (da < -180) da += 360;
     const n = drag.n0 + Math.round(da / 40);
@@ -105,10 +111,10 @@ function buildScene() {
   showCount = el("div", "itemCount", ui, { left: ZONE.x + ZONE.w / 2, top: ZONE.y + ZONE.h + 8 }, "");
   QB = qbox();
   // bins
-  jar = el("div", "abs", ui, { left: 1245, top: 600, width: 150, height: 190, cursor: "pointer" });
+  jar = el("div", "abs", ui, { left: BIN.v[0] - 75, top: 610, width: 150, height: 190, cursor: "pointer" });
   img("p1_variable_jar", jar, { width: 150, height: 190, left: 0, top: 0, objectFit: "contain" });
   el("div", "lbl binLbl", jar, { left: -10, top: 196, width: 170, color: "#ffe066" }, "VARIABLE");
-  chest = el("div", "abs", ui, { left: 1412, top: 625, width: 170, height: 160, cursor: "pointer" });
+  chest = el("div", "abs", ui, { left: BIN.c[0] - 85, top: 635, width: 170, height: 160, cursor: "pointer" });
   chest.im = img("p1_constant_chest_closed", chest, { width: 170, height: 160, left: 0, top: 0, objectFit: "contain" });
   el("div", "lbl binLbl", chest, { left: 0, top: 171, width: 170, color: "#d8dae6" }, "CONSTANT");
   gsap.set([jar, chest], { opacity: 0.6, pointerEvents: "none" });
@@ -130,7 +136,7 @@ function choose() {
 async function success(it, tries = 0) {
   binsActive(false);
   const bin = it.ans === "v" ? jar : chest;
-  const bx = it.ans === "v" ? 1320 : 1497, by = it.ans === "v" ? 680 : 700;
+  const [bx, by] = BIN[it.ans];
   if (it.ans === "c") chest.im.src = "assets/p1_constant_chest_open.webp";
   sfx("good");
   const kids = [...showBox.children];
@@ -144,7 +150,7 @@ async function success(it, tries = 0) {
   await wait(0.4);
   if (it.ans === "c") chest.im.src = "assets/p1_constant_chest_closed.webp";
   showBox.innerHTML = "";
-  popup(it.pop, 1.8);
+  QB.sub(`<span class="win">${it.pop} ✓</span>`);
   await award(tries, ZONE.x + ZONE.w / 2, 300, 1);
   await praise();
   await maya(it.exp, "happy");
@@ -153,7 +159,7 @@ async function success(it, tries = 0) {
 async function reject(choice) {
   const bin = choice === "v" ? jar : chest;
   sfx("boing");
-  playFx("pow", choice === "v" ? 1320 : 1497, 680, { scale: 2 });
+  playFx("pow", BIN[choice][0], 680, { scale: 2, parent: ui });
   gsap.fromTo(bin, { rotation: -8 }, { rotation: 0, duration: 0.6, ease: "elastic.out(1.2,.2)" });
   gsap.fromTo([...showBox.children], { y: -20 }, { y: 0, duration: 0.5, ease: "bounce.out" });
   react("neel", "oops", 1.4);
@@ -170,14 +176,14 @@ export async function runPart1(start = 1) {
   if (start <= 1) {
   await maya("Some numbers depend on how many friends come. If more friends come, they change. A number that can change is a <span class=v>variable</span>.", "explain");
   gsap.to(jar, { opacity: 1, scale: 1.12, yoyo: true, repeat: 1, duration: 0.4 });
-  playFx("collect", 1320, 720, { palette: "gold" });
+  playFx("collect", BIN.v[0], 720, { palette: "gold", parent: ui });
   await maya("Some numbers stay the same, however many friends come. A number that stays the same is a <span class=c>constant</span>.", "cast");
   gsap.to(chest, { opacity: 1, scale: 1.12, yoyo: true, repeat: 1, duration: 0.4 });
-  playFx("poof", 1497, 760, { palette: "stone" });
+  playFx("poof", BIN.c[0], 760, { palette: "stone", parent: ui });
   await maya("Turn the magic dial to change the friends. Watch what changes. Then put each thing in the jar or the chest!", "explain");
   await mayaOut();
   }
-  gsap.to(dialEl, { opacity: 1, duration: 0.4 });
+  gsap.to([dialEl, dialLbl, flow], { opacity: 1, duration: 0.4 });
   friends = 4; dialTurns = 0;
 
   for (let q = start - 1; q < ITEMS.length; q++) {
@@ -195,15 +201,16 @@ export async function runPart1(start = 1) {
     // phase A: explore the dial
     dialTurns = 0;
     const need = q === 0 ? 2 : 1;
-    azTip("Turn the dial and watch");
+    gsap.to(dialTip, { opacity: 1, duration: 0.3 }); flow.classList.add("go");
     dialEl.classList.add("pulse");
     let hand = null;
-    if (q === 0) hand = await pointHand(1120, 770, 0);
+    if (q === 0) hand = await pointHand(DIAL.x + 5, DIAL.y + 15, 0);
     const iw = idleWatch(14, async () => { await maya(it.inact + " Turn the dial.", "hint"); await mayaOut(); iw.arm(); });
     while (dialTurns < need) await wait(0.15);
     hand && hand.remove();
     await wait(0.6);
     dialEl.classList.remove("pulse");
+    gsap.to(dialTip, { opacity: 0, duration: 0.3 }); flow.classList.remove("go");
     azTip("Did it change? Tap the <span style='color:#ffe066'>jar</span> or the <span style='color:#d8dae6'>chest</span>");
     binsActive(true);
     // phase B: choose
@@ -220,7 +227,7 @@ export async function runPart1(start = 1) {
       else if (tries === 2) { await maya("Not yet. Try again. " + it.h2, "hint"); await demoDial(); await mayaOut(); }
       else {
         iw2.stop();
-        const b = it.ans === "v" ? [1310, 700] : [1490, 710];
+        const b = [BIN[it.ans][0] - 10, BIN[it.ans][1] + 10];
         pointHand(b[0], b[1], 2.2);
         await maya("Let's see the answer together. " + it.exp, "explain");
         await mayaOut();
@@ -234,7 +241,7 @@ export async function runPart1(start = 1) {
     closeBubble();
   }
   item = null;
-  gsap.to([dialEl, dialLbl, jar, chest, showCount, QB.box], { opacity: 0, duration: 0.5 });
+  gsap.to([dialEl, dialLbl, dialTip, flow, jar, chest, showCount, QB.box], { opacity: 0, duration: 0.5 });
   actionZone(false);
   await wait(0.6);
 }

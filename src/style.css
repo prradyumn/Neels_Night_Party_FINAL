@@ -84,7 +84,7 @@ img{-webkit-user-drag:none;user-select:none}
 .letter{color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.35)}
 .orb{position:absolute;width:86px;height:86px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:800;color:#fff;
   text-shadow:0 3px 0 rgba(0,0,0,.45);background:center/contain no-repeat}
-.orb:active{transform:scale(.9)}
+.orb:active{scale:.88}
 .orb.m{background-image:url(assets/p2_orb_m.webp)}
 .orb.d{background-image:url(assets/p2_orb_d.webp)}
 .orb.n{background-image:url(assets/p2_orb_number.webp)}
@@ -298,3 +298,42 @@ img{-webkit-user-drag:none;user-select:none}
 .rug{z-index:1}
 .flynum{position:absolute;z-index:60;transform:translate(-50%,-50%);font-size:46px;font-weight:800;color:#fff;padding:0 14px;border-radius:18px;pointer-events:none}
 .flynum.m{background:#7a3fd1}.flynum.d{background:#e8742a}
+/* Part 1: dial -> display flow */
+.dialTip{position:absolute;transform:translateX(-50%);padding:3px 18px;border-radius:18px;background:#2b2150;border:2px solid rgba(255,197,71,.7);font-size:24px;font-weight:800;color:var(--cream);white-space:nowrap;pointer-events:none}
+.flowArrow{position:absolute;width:92px;height:46px;pointer-events:none;background:linear-gradient(90deg,rgba(255,197,71,0),rgba(255,197,71,.85));clip-path:polygon(0 35%,62% 35%,62% 0,100% 50%,62% 100%,62% 65%,0 65%);filter:drop-shadow(0 0 8px rgba(255,197,71,.6))}
+.flowArrow.go{animation:nudge 1s ease-in-out infinite}
+@keyframes nudge{50%{transform:translateX(14px)}}
+.chips{flex-wrap:wrap}
+/* Part 2 ingredient shelf: things you can pick up */
+.tray .orb{filter:drop-shadow(0 10px 7px rgba(5,2,18,.55));transition:scale .15s;animation:bob 2.6s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.37s)}
+.tray .orb:hover{scale:1.1}
+.tray .orb:active{scale:.88}
+.tray.wave .orb{animation:bob 2.6s ease-in-out infinite,shine 2.8s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.37s),calc(var(--i,0) * .16s)}
+.tray .orb.glow{animation:bob 2.6s ease-in-out infinite;filter:drop-shadow(0 0 18px #ffd76a) brightness(1.2)}
+.tray .orb.op{font-size:54px}
+@keyframes bob{50%{translate:0 -7px}}
+@keyframes shine{0%,62%,100%{filter:drop-shadow(0 10px 7px rgba(5,2,18,.55))}76%{filter:drop-shadow(0 0 16px rgba(255,229,138,.95)) drop-shadow(0 10px 7px rgba(5,2,18,.55)) brightness(1.22)}}
+.pad{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(ellipse at center,rgba(255,214,107,.55) 0%,rgba(255,180,80,.22) 45%,rgba(255,180,80,0) 72%)}
+.spellbar .slot{display:inline-block;width:62px;height:62px;border-radius:50%;border:4px dashed rgba(255,197,71,.75);margin-right:14px;animation:slotp 1.4s ease-in-out infinite}
+@keyframes slotp{50%{scale:1.1;border-color:#ffe58a}}
+@media (prefers-reduced-motion: reduce){.tray .orb,.spellbar .slot{animation:none}}
+
+/* ---- Part 3 table layout ---- */
+#spot{position:absolute;inset:0;pointer-events:none;opacity:0}
+#bubble.side{font-size:25px;line-height:1.2;padding:14px 20px;border-radius:30px}
+#bubble.side .tail{left:-20px !important;top:30px;bottom:auto;border-top:15px solid transparent;border-bottom:15px solid transparent;border-right:24px solid var(--cream);border-left:0}
+.qbox.eq{border:0;border-image:none;padding:0;top:22px;min-width:0;max-width:none;gap:6px}
+.qbox.eq .qt{display:none}
+.qbox.eq:has(.qplan:empty) .qt{display:block;font-size:42px;text-shadow:0 4px 0 rgba(0,0,0,.55)}
+.qbox.eq .qplan{order:1;height:116px;min-width:470px;padding:0 70px;font-size:70px;border:5px solid var(--gold);border-radius:60px;background:linear-gradient(#2e1f63,#150e34);box-shadow:0 0 0 3px #4a2c8a,0 12px 26px rgba(0,0,0,.5);position:relative}
+.qbox.eq .qplan::before,.qbox.eq .qplan::after{content:"✦";position:absolute;top:50%;transform:translateY(-50%);font-size:54px;color:var(--gold);text-shadow:0 0 12px rgba(255,197,71,.8)}
+.qbox.eq .qplan::before{left:-30px}.qbox.eq .qplan::after{right:-30px}
+.qbox.eq .qhead{order:2}
+.qbox.eq .qs{order:3;font-size:32px;font-weight:800;color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.7),0 0 14px rgba(0,0,0,.6)}
+.qbox.eq .qplan .q{color:#fff}
+.pickbar{position:absolute;height:200px;border-radius:100px;background:rgba(20,12,46,.82);border:4px solid rgba(255,197,71,.85);box-shadow:0 12px 30px rgba(0,0,0,.45),inset 0 0 30px rgba(255,197,71,.08);pointer-events:none}
+.lantern.big{width:150px;height:150px;font-size:66px;transition:scale .15s}
+.lantern.big:hover{scale:1.08}.lantern.big:active{scale:.9}
+.rug.ground{height:40px;mix-blend-mode:normal}
+.rug.ground.m{background:radial-gradient(ellipse at center,rgba(5,2,18,.62) 0%,rgba(5,2,18,.42) 38%,rgba(155,92,240,.42) 60%,rgba(155,92,240,0) 74%)}
+.rug.ground.d{background:radial-gradient(ellipse at center,rgba(5,2,18,.62) 0%,rgba(5,2,18,.42) 38%,rgba(255,138,61,.42) 60%,rgba(255,138,61,0) 74%)}

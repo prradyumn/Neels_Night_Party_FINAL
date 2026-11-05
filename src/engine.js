@@ -51,6 +51,11 @@ export const camUI = el("div", "", camEl); camUI.id = "camui";
 // a soft vignette fixed to the screen gives the frame depth
 const vig = el("div", "", null); vig.id = "vig";
 stage.insertBefore(vig, ui);
+// spotlight: everything but one screen point goes dark (the door that is opening)
+const spot = el("div", "", null); spot.id = "spot";
+stage.insertBefore(spot, ui);
+export function spotOn(x, y, r = 170) { spot.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(6,3,20,0) ${r}px, rgba(6,3,20,.72) ${r * 2}px)`; gsap.to(spot, { opacity: 1, duration: 0.5 }); }
+export function spotOff(dur = 0.6) { gsap.to(spot, { opacity: 0, duration: dur }); }
 function fit() {
   const s = Math.min(innerWidth / W, innerHeight / H);
   stage.style.transform = `translate(${(innerWidth - W * s) / 2}px,${(innerHeight - H * s) / 2}px) scale(${s})`;
@@ -281,14 +286,16 @@ export async function setScene(name, { fast = false, plain = false } = {}) {
 // every focus filter lists the same functions in the same order, so tweens between them never pass through black
 const FILTER_OFF = "blur(0px) brightness(1) saturate(1)";
 export function setFocus(on, dur = 0.6) {
-  const f = { soft: "blur(0px) brightness(0.86) saturate(0.95)", story: "blur(1.5px) brightness(0.92) saturate(1)" }[on] || (on ? "blur(3px) brightness(0.8) saturate(0.95)" : FILTER_OFF);
+  const f = { soft: "blur(0px) brightness(0.86) saturate(0.95)", story: "blur(1.5px) brightness(0.92) saturate(1)", table: "blur(4px) brightness(0.62) saturate(0.8)" }[on] || (on ? "blur(3px) brightness(0.8) saturate(0.95)" : FILTER_OFF);
   gsap.to([layers.far, layers.mid], { filter: f, duration: dur });
 }
 // host mode: only ONE character is on screen – whoever is speaking – standing on a spot.
 // game: bottom-left beside the play area. story: large on the right, the left half is free for visuals.
 export const SPOTS = {
-  game: { x: 190, y: 890, from: -160, bw: 420, size: { neel: 470, agni: 430, maya: 480 } },
-  story: { x: 1150, y: 895, from: 160, bw: 600, size: { neel: 600, agni: 520, maya: 600 } },
+  game: { x: 190, y: 890, from: -160, bw: 420, size: { neel: 470, agni: 430, maya: 480 }, flip: { agni: true } }, // Agni's art looks left
+  story: { x: 1150, y: 895, from: 160, bw: 600, size: { neel: 600, agni: 520, maya: 600 }, flip: { maya: true } },
+  // the table scene: a smaller speaker bottom-left, the bubble beside them (not above), so the table stays the hero
+  table: { x: 165, y: 895, from: -160, bw: 310, side: true, size: { neel: 360, agni: 335, maya: 370 }, flip: { agni: true } },
 };
 export const host = { on: false, cur: null, spot: SPOTS.game };
 /** switch to one-character mode on a spot; the next speaker slides in */
@@ -302,7 +309,7 @@ export async function hostSwap(k) {
   for (const o in C) if (o !== k && C[o].visible) hideChar(o, 0.15);
   host.cur = k;
   const s = host.spot;
-  placeChar(k, s.x, s.y, s.size[k]);
+  placeChar(k, s.x, s.y, s.size[k], { flip: !!(s.flip && s.flip[k]) });
   // the first time each friend appears in the story they make an entrance; after that a quick slide
   if (s === SPOTS.story && !entered[k] && !calm) { entered[k] = true; return ENTER[k](C[k]); }
   await gsap.from(C[k].box, { x: s.from, opacity: 0, duration: 0.35, ease: "back.out(1.4)" });
@@ -424,7 +431,9 @@ gsap.ticker.add((time, dms) => {
 export function pose(k, p, asBase = true) {
   const c = C[k], a = ANIM[k][p] || "idle";
   c.pose = p;
-  if (asBase) c.base = LOOP.has(a) ? p : "idle";
+  // a pose that plays the talking animation (Maya's "explain") is only for while she speaks: never a resting pose,
+  // or the mouth keeps moving after the line has ended
+  if (asBase) c.base = LOOP.has(a) && a !== "talk" ? p : "idle";
   setAnim(c, a);
 }
 export function placeChar(k, x, y, size, { p = "idle", flip = false, show = true } = {}) {
@@ -591,6 +600,7 @@ function placeBubble(c) {
   gsap.set(bubble, { x: 0, xPercent: 0, y: 0 });
   bubble.style.width = w + "px";
   bubble.classList.toggle("host", !!on && host.on && host.spot === SPOTS.game);
+  bubble.classList.toggle("side", !!on && host.on && !!host.spot.side);
   const tail = bubble.querySelector(".tail");
   bubble._c = null;
   if (!on) { Object.assign(bubble.style, { left: (W - w) / 2 + "px", top: "40px", bottom: "auto" }); tail.style.display = "none"; return; }
@@ -602,12 +612,20 @@ function placeBubble(c) {
 function reflowBubble() {
   const c = bubble._c, w = bubble._w;
   if (!c.visible) return;
+  if (host.on && host.spot.side) {
+    // to the right of the speaker's face, tail pointing back at them
+    const a = camPt(c.x + c.h * 0.3, c.y - c.h * 0.74);
+    bubble.style.left = Math.max(24, Math.min(W - 24 - w, a.x)) + "px";
+    bubble.style.top = Math.max(84, Math.min(H - 16 - bubble._h, a.y - 34)) + "px"; bubble.style.bottom = "auto";
+    return;
+  }
   const head = camPt(c.x, c.y - c.h * 0.88), foot = camPt(c.x, 0);
   const left = Math.max(24, Math.min(W - 24 - w, foot.x - w / 2)), top = Math.max(84, head.y - 30 - bubble._h);
   bubble.style.left = left + "px"; bubble.style.top = top + "px"; bubble.style.bottom = "auto";
   bubble.querySelector(".tail").style.left = Math.max(30, Math.min(w - 62, foot.x - left - 16)) + "px";
 }
-export async function say(who, text, { p, wait: needTap = true, auto = 0 } = {}) {
+/** voice: false shows the line without reading it aloud (a prompt that stays up) */
+export async function say(who, text, { p, wait: needTap = true, auto = 0, voice: aloud = true } = {}) {
   if (host.on && C[who] && host.cur !== who) await hostSwap(who);
   const c = C[who];
   // the speaker is lit, everyone else on stage steps back a little
@@ -634,10 +652,10 @@ export async function say(who, text, { p, wait: needTap = true, auto = 0 } = {})
     c.box.classList.add("speaking");
     talk(who, true);
     const stopTalk = () => talk(who, false);
-    voice = speak(text, who);
+    voice = aloud ? speak(text, who) : Promise.resolve(false);
     voice.then((ok) => { if (!ok) setTimeout(stopTalk, Math.min(2600, 600 + text.length * 38)); else stopTalk(); });
     bubble._stop = stopTalk;
-  } else voice = speak(text, who);
+  } else voice = aloud ? speak(text, who) : Promise.resolve(false);
   if (window.__auto) { reveal.progress(1); await wait(0.35); }
   else if (needTap && settings.autoplay) {
     // steady pace: the line stays until the words have appeared, the voice has finished and there was
@@ -761,7 +779,7 @@ export async function award(tries, x = W / 2, y = 420, room = "x") {
   score.room[room] = (score.room[room] || 0) + n;
   const tgt = { x: 1600 - 18 - hud.offsetWidth + 34, y: 44 };
   // a perfect answer gets a gold sunburst behind the stars
-  if (n === 3) { const rays = playFx("sunburst", x, y - 5, { palette: "gold", scale: 3, parent: ui }); setTimeout(() => rays.stop(), 1300); }
+  if (n === 3) { const rays = playFx("sunburst", x, y - 5, { palette: "gold", scale: 2, parent: ui }); if (rays.el) ui.insertBefore(rays.el, ui.firstChild); setTimeout(() => rays.stop(), 1300); }
   punch(x, y, n === 3 ? 1.06 : 1.03);
   camRest(1.2);
   const row = el("div", "starburst", ui, { left: x - 90, top: y - 40 }, "");
@@ -832,6 +850,32 @@ export function onTable(n, { cx, top, w } = TABLE) {
     for (let i = 0; i < r.c; i++) out.push({ x: cx - ((r.c - 1) * step) / 2 + i * step - s / 2, y: base - s * 0.9, sz: s });
   }
   return out;
+}
+/** guests stand on both sides of the table: monsters left and dragons right (only monsters: split between the sides),
+ *  in two rows when a side has more than 4, with a coloured rug under each group */
+// feet: where the front row stands. In the Magic Doors hall the floor starts at y 570 (the wall base) and the
+// table legs stand at 600, so the guests stand at 620: on the floor, just in front of the table
+export function flank(list, { cx = 800, gap = 362, feet = 622, size = 126, sideW = 300 } = {}) {
+  const top = feet - size;
+  const ms = list.filter((g) => g.dataset.k === "m"), ds = list.filter((g) => g.dataset.k === "d");
+  const half = Math.ceil(ms.length / 2), L = ds.length ? ms : ms.slice(0, half), R = ds.length ? ds : ms.slice(half);
+  world.querySelectorAll(".rug").forEach((r) => r.remove());
+  for (const [grp, gx] of [[L, cx - gap - sideW / 2], [R, cx + gap + sideW / 2]]) {
+    if (!grp.length) continue;
+    const front = grp.length > 4 ? grp.slice(0, Math.ceil(grp.length / 2)) : grp, back = grp.slice(front.length);
+    const place = (row, y, sz, off, isBack) => {
+      const step = Math.min(sz * 0.92, sideW / Math.max(1, row.length));
+      row.forEach((g, i) => {
+        g.classList.toggle("back", isBack); g.style.zIndex = isBack ? 2 : 3;
+        gsap.to(g, { left: gx - ((row.length - 1) * step) / 2 + i * step + off - sz / 2, top: y, width: sz, height: sz, x: 0, duration: 0.45 });
+      });
+    };
+    place(back, feet - 30 - size * 0.84, size * 0.84, size * 0.32, true); // a step further back, on the floor too
+    place(front, top, size, 0, false);
+    const r = el("div", "rug ground " + grp[0].dataset.k, null); // a dark contact shadow with a coloured rim
+    world.insertBefore(r, world.querySelector("img[data-k]"));
+    gsap.set(r, { left: gx - sideW / 2 - 24, width: sideW + 48, top: feet - 26, opacity: 1 });
+  }
 }
 export function clearCrowd() { world.querySelectorAll(".rug").forEach((r) => r.remove()); }
 // menu (voice / sound)

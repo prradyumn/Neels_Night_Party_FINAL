@@ -1,8 +1,8 @@
 import { C, say, react, closeBubble, gsap, wait, sfx, pose, host, hostSwap, setFocus, solo } from "./engine.js";
 
 // Gameplay layout: ONE character at a time on the left (whoever speaks). Background in focus-blur.
-export function sideChars() {
-  solo("game");
+export function sideChars(spot = "game") {
+  solo(spot);
   hostSwap("neel");
   setFocus(true);
 }

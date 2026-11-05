@@ -71,7 +71,7 @@ export async function runFinale(guests, start = 1) {
     playFx("collect", TX, 450, { palette: "gold", scale: 3 });
     gsap.fromTo(pile.children, { y: -10 }, { y: 0, duration: 0.4, stagger: 0.02, ease: "bounce.out" });
     QB.sub(`<span class="win">${it.v} ${it.name.toLowerCase()} packed! ✓</span>`);
-    await award(tries, TX, 285, 4);
+    await award(tries, TX, 268, 4);
     await praise();
     checkDone(q);
     closeBubble();
