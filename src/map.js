@@ -9,6 +9,13 @@ export const ROOMS = [
 ];
 
 let neelAt = 0; // index of the room Neel stands at
+// a locked room says which room opens it, just under the card
+function lockedTip(c, cur) {
+  c.querySelector(".locktip")?.remove();
+  const t = el("div", "locktip", c, {}, `Finish room ${cur + 1} first!`);
+  gsap.fromTo(t, { opacity: 0, y: -6 }, { opacity: 1, y: 0, duration: 0.25 });
+  gsap.to(t, { opacity: 0, duration: 0.3, delay: 2, onComplete: () => t.remove() });
+}
 export async function houseMap(state) {
   await setScene("forest");
   hideAllChars();
@@ -26,7 +33,7 @@ export async function houseMap(state) {
   const cards = ROOMS.map((r, i) => {
     const locked = i > cur && !state.unlockAll, done = !!state.done[r.id];
     const c = el("div", "room" + (locked ? " locked" : "") + (done ? " done" : ""), m, { left: r.x - 150, top: r.y - 110 });
-    el("div", "num", c, {}, r.id === 4 ? "★" : String(r.id));
+    el("div", "num", c, {}, String(r.id));
     const th = el("div", "th", c, { backgroundImage: `url(assets/${r.bg}.webp)` });
     if (r.id === 4) th.style.filter = locked ? "" : "hue-rotate(-20deg) saturate(1.4) brightness(1.1)";
     img(r.icon, th, {}, "ic");
@@ -60,7 +67,7 @@ export async function houseMap(state) {
   const hand = await pointHand(hp.x, hp.y, 0);
   const pick = await new Promise((res) => {
     cards.forEach((c, i) => onTap(c, () => {
-      if (c.classList.contains("locked")) { sfx("boing"); gsap.fromTo(c, { x: -8 }, { x: 0, duration: 0.5, ease: "elastic.out(1.2,.3)" }); return; }
+      if (c.classList.contains("locked")) { sfx("boing"); gsap.fromTo(c, { x: -8 }, { x: 0, duration: 0.5, ease: "elastic.out(1.2,.3)" }); lockedTip(c, cur); return; }
       sfx("tap"); res(ROOMS[i].id);
     }));
   });

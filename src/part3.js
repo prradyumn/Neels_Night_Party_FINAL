@@ -52,7 +52,7 @@ function buildScene() {
   bar = QB.plan; valBox = QB.vals;
 }
 function drawVals() { valPills(valBox, vals, uses); gsap.set(valBox, { autoAlpha: 1 }); }
-function layoutGuests() { flank(guests, { cx: TX }); }
+function layoutGuests() { flank(guests, { cx: TX, gap: 220, sideW: 280 }); } // at the table ends, clear of the speaker
 /** a prompt beside the speaker that stays up while the child works (not read aloud) */
 const prompt = (t) => host.cur && say(host.cur, t, { wait: false, voice: false });
 async function knockDoor(di, kind, count) {
@@ -114,7 +114,7 @@ async function leave(count) {
 }
 const OPS = ["+", "−", "×"];
 const EQ_Q = `<span class="lo">&thinsp;=&thinsp;</span><span class="q">?</span>`;
-function renderPlan(tokens) { bar.innerHTML = tokens.map((t) => OPS.includes(t) ? `&thinsp;${show([t])}&thinsp;` : (t === "m" || t === "d") ? `<span class="seal" data-k="${t}" style="display:inline-flex;width:92px;height:92px;align-items:center;justify-content:center;background:url(assets/p3_gold_seal.webp) center/contain no-repeat;color:#7a3a00;font-size:52px;cursor:pointer;margin:0 4px">${t}</span>` : show([t])).join(""); }
+function renderPlan(tokens) { bar.innerHTML = tokens.map((t) => OPS.includes(t) ? `&thinsp;${show([t])}&thinsp;` : (t === "m" || t === "d") ? `<span class="seal" data-k="${t}" style="display:inline-flex;width:92px;height:92px;align-items:center;justify-content:center;background:url(assets/p3_gold_seal.webp) center/contain no-repeat;color:${t === "m" ? "#6a2bc4" : "#d4520a"};text-shadow:0 2px 0 #fff3c4;font-size:56px;font-weight:900;cursor:pointer;margin:0 4px">${t}</span>` : show([t])).join(""); }
 async function crackSeals() {
   const seals = [...bar.querySelectorAll(".seal")];
   for (const s of seals) {
@@ -163,12 +163,12 @@ async function deliver(n, need, icon) {
   if (n < need) {
     const g = guests.find((x) => x.dataset.k === "m") || guests[0];
     if (g) { const old = g.src; g.src = "assets/gu_monster_sad.webp"; setTimeout(() => (g.src = old), 2600); }
-    popup(`Not enough! <span style="color:#fff">${n}</span>`, 1.2, TABLE_POP);
+    popup(`${n} is not enough!`, 1.6, TABLE_POP);
   } else {
     gsap.to([...tableItems.children].slice(need), { y: -14, rotation: 12, yoyo: true, repeat: 3, duration: 0.15 });
-    popup(`Too many! <span style="color:#fff">${n}</span>`, 1.2, TABLE_POP);
+    popup(`${n} is too many!`, 1.6, TABLE_POP);
   }
-  await wait(1.3);
+  await wait(1.7);
   tableItems.innerHTML = "";
   return false;
 }
@@ -183,7 +183,7 @@ function chooseNum(opts) {
     return l;
   });
   ls.panel = panel;
-  return { ls, pick: () => new Promise((res) => ls.forEach((l, i) => (l.onpointerdown = (e) => { e.stopPropagation(); sfx("tap"); res([opts[i], l]); }))) };
+  return { ls, pick: () => new Promise((res) => ls.forEach((l, i) => (l.onpointerdown = (e) => { e.stopPropagation(); sfx("tap"); ls.forEach((x) => (x.onpointerdown = null)); res([opts[i], l]); }))) };
 }
 
 function spawnNow(kind, count) {

@@ -156,7 +156,7 @@ async function testRun(fn, q) {
   camTo({ x: CX, y: 620, s: 1.09, dur: q.tests.length * 0.55 + 0.8, ease: "power1.inOut" }); // lean in while the spell is tested
   testBox?.remove();
   const two = q.tests[0].length === 2;
-  testBox = el("div", "chips", ui, { left: 470, top: 284, width: 640 }); // right of the speaker's bubble
+  testBox = el("div", "chips one", ui, { left: 450, top: 284, width: 820 }); // one row, right of the speaker's bubble
   playFx("mana", CX, 640, { palette: "plum", scale: 3 });
   // a rune circle glows on the floor under the cauldron while the spell is tested
   const runes = playFx("runes", CX, 830, { palette: "plum", scale: 3, parent: world });

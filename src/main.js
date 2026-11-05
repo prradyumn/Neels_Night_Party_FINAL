@@ -253,7 +253,8 @@ async function ending(opt = {}) {
     await say("neel", "Let's party!", { p: "happy" });
   }
   closeBubble();
-  sb.hide(); // the narrator's line takes the top centre
+  sb.hide(); // the narrator's line takes the top centre, once the tiles have gone
+  await wait(0.35);
   // the party: fireworks and confetti, then the curtain frames the stage for the end card
   sfx("cheer");
   dance(host.cur || "neel");

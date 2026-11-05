@@ -295,7 +295,7 @@ export const SPOTS = {
   game: { x: 190, y: 890, from: -160, bw: 420, size: { neel: 470, agni: 430, maya: 480 }, flip: { agni: true } }, // Agni's art looks left
   story: { x: 1150, y: 895, from: 160, bw: 600, size: { neel: 600, agni: 520, maya: 600 }, flip: { maya: true } },
   // the table scene: a smaller speaker bottom-left, the bubble beside them (not above), so the table stays the hero
-  table: { x: 165, y: 895, from: -160, bw: 310, side: true, size: { neel: 360, agni: 335, maya: 370 }, flip: { agni: true } },
+  table: { x: 165, y: 895, from: -160, bw: 310, side: true, btop: 648, size: { neel: 360, agni: 335, maya: 370 }, flip: { agni: true } },
 };
 export const host = { on: false, cur: null, spot: SPOTS.game };
 /** switch to one-character mode on a spot; the next speaker slides in */
@@ -616,7 +616,7 @@ function reflowBubble() {
     // to the right of the speaker's face, tail pointing back at them
     const a = camPt(c.x + c.h * 0.3, c.y - c.h * 0.74);
     bubble.style.left = Math.max(24, Math.min(W - 24 - w, a.x)) + "px";
-    bubble.style.top = Math.max(84, Math.min(H - 16 - bubble._h, a.y - 34)) + "px"; bubble.style.bottom = "auto";
+    bubble.style.top = Math.max(host.spot.btop || 84, Math.min(H - 16 - bubble._h, a.y - 34)) + "px"; bubble.style.bottom = "auto";
     return;
   }
   const head = camPt(c.x, c.y - c.h * 0.88), foot = camPt(c.x, 0);
@@ -624,6 +624,24 @@ function reflowBubble() {
   bubble.style.left = left + "px"; bubble.style.top = top + "px"; bubble.style.bottom = "auto";
   bubble.querySelector(".tail").style.left = Math.max(30, Math.min(w - 62, foot.x - left - 16)) + "px";
 }
+// A tap on a control that isn't listening yet (a hint or question is still being read) ends the line,
+// then reaches the control as soon as it listens, so a quick player is never ignored.
+let cutLine = null;
+const listening = (t) => { for (let n = t; n && n !== stage; n = n.parentElement) if (n.onpointerdown || n.dataset.tap) return n; return null; };
+stage.addEventListener("pointerdown", (e) => {
+  const t = e.target;
+  if (!cutLine || !e.isTrusted || t.closest("#bubble, #hud, .menu, .qapanel") || listening(t)) return;
+  if (getComputedStyle(t).cursor !== "pointer") return;
+  cutLine();
+  const end = performance.now() + 6000;
+  const retry = () => {
+    if (!t.isConnected || performance.now() > end) return;
+    const n = listening(t);
+    if (n && !n.disabled && getComputedStyle(n).pointerEvents !== "none") t.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    else setTimeout(retry, 100);
+  };
+  setTimeout(retry, 200);
+}, true);
 /** voice: false shows the line without reading it aloud (a prompt that stays up) */
 export async function say(who, text, { p, wait: needTap = true, auto = 0, voice: aloud = true } = {}) {
   if (host.on && C[who] && host.cur !== who) await hostSwap(who);
@@ -656,17 +674,19 @@ export async function say(who, text, { p, wait: needTap = true, auto = 0, voice:
     voice.then((ok) => { if (!ok) setTimeout(stopTalk, Math.min(2600, 600 + text.length * 38)); else stopTalk(); });
     bubble._stop = stopTalk;
   } else voice = aloud ? speak(text, who) : Promise.resolve(false);
+  let cut = null;
+  const cutP = new Promise((r) => (cut = cutLine = r));
   if (window.__auto) { reveal.progress(1); await wait(0.35); }
   else if (needTap && settings.autoplay) {
     // steady pace: the line stays until the words have appeared, the voice has finished and there was
     // time to read it (about 2.6 words a second, plus a moment), then a short breath before the next line
     const read = readFor;
     gsap.fromTo(bubble.querySelector(".prog i"), { scaleX: 0 }, { scaleX: 1, duration: read, ease: "none" });
-    await Promise.all([reveal, wait(read), voice]);
-    await wait(0.45);
+    await Promise.race([Promise.all([reveal, wait(read), voice]).then(() => wait(0.45)), cutP]);
   }
-  else if (needTap) { while (reveal.progress() < 1) { await Promise.race([tapAnywhere(0.15), new Promise((r) => reveal.eventCallback("onComplete", r))]); reveal.progress(1); } await tapAnywhere(0.2); }
+  else if (needTap) await Promise.race([(async () => { while (reveal.progress() < 1) { await Promise.race([tapAnywhere(0.15), new Promise((r) => reveal.eventCallback("onComplete", r))]); reveal.progress(1); } await tapAnywhere(0.2); })(), cutP]);
   else if (auto) await wait(auto);
+  if (cutLine === cut) cutLine = null;
   bubble._stop && bubble._stop();
   bubble._stop = null;
   if (needTap) hush();
@@ -698,7 +718,7 @@ export function tapAnywhere(delay = 0) {
     }, delay * 1000);
   });
 }
-export function onTap(node, fn) { node.addEventListener("pointerdown", (e) => { e.stopPropagation(); fn(e); }); }
+export function onTap(node, fn) { node.dataset.tap = 1; node.addEventListener("pointerdown", (e) => { e.stopPropagation(); fn(e); }); }
 
 // ---------- misc UI ----------
 /** top: optional centre line in px (default 44% of the stage) */

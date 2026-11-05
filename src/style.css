@@ -337,3 +337,5 @@ img{-webkit-user-drag:none;user-select:none}
 .rug.ground{height:40px;mix-blend-mode:normal}
 .rug.ground.m{background:radial-gradient(ellipse at center,rgba(5,2,18,.62) 0%,rgba(5,2,18,.42) 38%,rgba(155,92,240,.42) 60%,rgba(155,92,240,0) 74%)}
 .rug.ground.d{background:radial-gradient(ellipse at center,rgba(5,2,18,.62) 0%,rgba(5,2,18,.42) 38%,rgba(255,138,61,.42) 60%,rgba(255,138,61,0) 74%)}
+.chips.one{flex-wrap:nowrap;gap:10px}.chips.one .chip{font-size:22px;padding:6px 12px;white-space:nowrap}
+.room .locktip{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:6px;white-space:nowrap;background:#2a1a55;color:#fff;border:3px solid var(--gold);border-radius:16px;padding:6px 14px;font-size:24px;font-weight:800;z-index:5;pointer-events:none}

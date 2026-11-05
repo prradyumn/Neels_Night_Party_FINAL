@@ -87,6 +87,7 @@ function buildScene() {
   flow = el("div", "flowArrow", ui, { left: DIAL.x + DIAL.r + 14, top: ZONE.y + ZONE.h / 2 + 40 }, "");
   gsap.set([dialEl, dialLbl, dialTip, flow], { opacity: 0 });
   let drag = null;
+  dialEl.dataset.tap = 1;
   dialEl.addEventListener("pointerdown", (e) => {
     e.stopPropagation();
     const p = toStage(e);

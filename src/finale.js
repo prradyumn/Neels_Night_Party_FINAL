@@ -54,7 +54,7 @@ export async function runFinale(guests, start = 1) {
     let tries = 0;
     while (true) {
       pack.classList.add("pulse");
-      await new Promise((r) => (pack.onpointerdown = (e) => { e.stopPropagation(); r(); }));
+      await new Promise((r) => (pack.onpointerdown = (e) => { e.stopPropagation(); pack.onpointerdown = null; r(); }));
       pack.classList.remove("pulse");
       if (n === it.v) break;
       tries++;
