@@ -5,7 +5,8 @@
   "scripts": {
     "build": "esbuild src/main.js --bundle --format=iife --minify --target=es2019 --outfile=game.js --external:*.webp --loader:.css=css --loader:.svg=text --loader:.mp3=dataurl",
     "watch": "esbuild src/main.js --bundle --format=iife --target=es2019 --outfile=game.js --external:*.webp --loader:.css=css --loader:.svg=text --loader:.mp3=dataurl --watch",
-    "serve": "npx http-server . -p 8080 -c-1"
+    "serve": "npx http-server . -p 8080 -c-1",
+    "dist": "npm run build && node tools/dist.mjs"
   },
   "keywords": [],
   "author": "",

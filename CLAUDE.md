@@ -6,6 +6,7 @@ substitution). Plain JS + GSAP 3.12.5, bundled with esbuild into game.js / game.
 Run: open index.html, or `npm run serve`. Edit in src/, then `npm run watch` (or `npm run build`).
 Run `npm install` once first (node_modules/ is not checked in).
 Never hand-edit game.js / game.css; they are build outputs.
+Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.html, game.js, game.css and assets/ into public/.
 
 ## Structure
 - src/main.js: flow (title → story → house map → rooms 1–4 → ending → wizard card)
