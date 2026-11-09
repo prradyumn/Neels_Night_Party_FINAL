@@ -10,11 +10,11 @@ const lines = new Map();
 const add = (who, text) => { text = clean(text); if (text) lines.set(`${who}|${text}`, { who, text }); };
 
 // a `const NAME = [ ... ];` data table, evaluated as JavaScript (only literals and small arrow functions)
-function table(file, name) {
+function table(file, name, scope = {}) {
   const s = src(file), i = s.indexOf(`const ${name} = [`);
   if (i < 0) throw new Error(`${name} not found in ${file}`);
   let depth = 0, j = s.indexOf("[", i);
-  for (let k = j; k < s.length; k++) { if (s[k] === "[") depth++; else if (s[k] === "]" && --depth === 0) return Function("tbl", `return ${s.slice(j, k + 1)}`)(() => ""); } // tbl: Part 2's card table, not spoken
+  for (let k = j; k < s.length; k++) { if (s[k] === "[") depth++; else if (s[k] === "]" && --depth === 0) return Function("tbl", ...Object.keys(scope), `return ${s.slice(j, k + 1)}`)(() => "", ...Object.values(scope)); } // tbl: Part 2's card table, not spoken
 }
 // literal calls: say("who", "text" ...) and maya("text" ...)
 function calls(file) {
@@ -31,7 +31,8 @@ for (const it of table("part1.js", "ITEMS")) {
   add(it.who, it.line);
   add("maya", "Correct! " + it.exp);
   add("maya", `Let's see the answer together. The answer is ${ANS1[it.ans]}. ` + it.exp);
-  for (const h of [it.h1, it.h2]) add("maya", "Not yet. Try again. " + h);
+  add("maya", "Not yet. Try again. " + it.h1);
+  // the second clue is built from the dial values on screen at the time (part1.js liveClue), so it is read by the browser voice
   add("maya", it.inact + " Turn the dial.");
   add("maya", "Take your time. " + it.inact + " Tap Variable or Constant.");
 }
@@ -45,13 +46,15 @@ for (const q of table("part2.js", "Q")) {
   if (q.h2) add("maya", "Not yet. Try again. " + q.h2);
   add("maya", `Let's see the answer together. The answer is ${q.ans}. ` + q.exp);
 }
-// Part 3
-for (const q of table("part3.js", "Q")) {
+// Part 3: the hints are worked from the values m and d have at that question
+const P3V = [{ m: 6, d: 0 }, { m: 6, d: 0 }, { m: 6, d: 0 }, { m: 6, d: 4 }, { m: 6, d: 4 }, { m: 6, d: 4 }, { m: 4, d: 4 }, { m: 4, d: 7 }];
+for (const [i, q] of table("part3.js", "Q", { tens: (a, b) => `${a - (a % 10)} + ${b - (b % 10)} is ${a - (a % 10) + b - (b % 10)}, and ${a % 10} + ${b % 10} is ${(a % 10) + (b % 10)}` }).entries()) {
+  const v = P3V[i];
   add(q.who, q.line);
   add("maya", "Correct! " + q.exp);
-  add("maya", "Take your time. " + q.inact);
-  add("maya", "Not yet. Try again. " + q.h1);
-  add("maya", "Not yet. Try again. " + q.h2);
+  add("maya", "Take your time. " + q.inact(v));
+  add("maya", "Not yet. Try again. " + q.h1(v));
+  add("maya", "Not yet. Try again. " + q.h2(v));
   add("maya", `Let's see the answer together. The answer is ${q.ans}. ` + q.exp);
 }
 add("agni", "Listen! Someone is knocking!");

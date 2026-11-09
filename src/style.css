@@ -9,7 +9,7 @@ html,body{margin:0;height:100%;background:#0d0a1c;overflow:hidden;font-family:va
 #stage{position:absolute;left:0;top:0;width:1600px;height:900px;transform-origin:0 0;overflow:hidden;background:#140f2a}
 img{-webkit-user-drag:none;user-select:none}
 .abs{position:absolute}
-.layer{pointer-events:none;position:absolute;left:-200px;top:0;width:2000px;height:900px;will-change:transform;filter:blur(0px) brightness(1) saturate(1)}
+.layer{pointer-events:none;position:absolute;left:-200px;top:0;width:2000px;height:900px;will-change:transform;filter:brightness(1) saturate(1)}
 .layer>img.plate{position:absolute;left:0;top:0;width:2000px;height:900px}
 #world,#chars,#ui,#fxl{position:absolute;inset:0}
 #world{pointer-events:none}
@@ -374,13 +374,158 @@ img{-webkit-user-drag:none;user-select:none}
 .scroll .pl{display:grid;grid-template-columns:1fr 30px 1fr;font-size:27px;font-weight:700;line-height:1.45}
 .scroll .pl b{text-align:center;color:#a06a20}
 .scroll .mtxt{color:#6a2bc4}.scroll .dtxt{color:#d4520a}
-/* word helper under the question */
-.qbox .words{display:flex;flex-direction:column;gap:2px;font-size:18px;font-weight:700;color:#d9d0f5;text-align:left;border-top:1px solid rgba(255,197,71,.35);padding-top:6px}
-.qbox .words b{display:inline-block;width:22px;color:var(--gold);font-size:21px}
 /* the friends / items table in the question card (Part 2, Q1–2) */
 .qtab{border-collapse:collapse;margin:2px auto 0;font-size:21px}
 .qtab th{color:var(--gold);padding:1px 12px;text-align:right}
 .qtab td{padding:1px 12px;border-left:1px solid rgba(255,255,255,.2);white-space:nowrap}
 .binLbl small{display:block;font-size:16px;font-weight:700;opacity:.9;line-height:1.1}
 .mcap{position:absolute;transform:translateX(-50%);white-space:nowrap;font-size:23px;font-weight:800;color:#fff;background:rgba(20,14,44,.85);border:3px solid #9b5cf0;border-radius:18px;padding:4px 18px}
-.qbox.eq .words{order:4;background:rgba(10,7,26,.78);border:2px solid rgba(255,197,71,.45);border-radius:16px;padding:6px 16px;font-size:20px}
+
+/* ---- review round 3 ---- */
+/* a control that is not available right now: visibly asleep (a tap gives a little wiggle) */
+.locked{filter:grayscale(.65) brightness(.62)!important;cursor:default!important}
+.locked .pulse,.locked.pulse{animation:none}
+.tray.locked .orb,.tray.locked .btn,.tray.locked .undo{filter:grayscale(.65) brightness(.62);animation:none}
+/* question progress, top right under the stars */
+#prog{position:absolute;right:18px;top:80px;z-index:55;display:flex;flex-direction:column;align-items:flex-end;gap:4px;padding:6px 16px;border-radius:20px;background:rgba(20,14,44,.85);border:3px solid rgba(255,197,71,.8);pointer-events:none}
+#prog b{font-size:24px;font-weight:800;color:#fff;transform-origin:100% 50%}
+#prog .dots{display:flex;gap:6px}
+#prog .dots i{width:14px;height:14px;border-radius:50%;background:#3b2f66;border:2px solid #8a7ac0}
+#prog .dots i.done{background:var(--good);border-color:#c8ffe0}
+#prog .dots i.cur{background:var(--gold);border-color:#fff3c4;transform:scale(1.25)}
+/* bubble: a tap finishes the line, the next tap moves on */
+#bubble{font-size:31px}
+#bubble.host{font-size:28px}
+#bubble.side{font-size:27px}
+#bubble .who{font-size:21px}
+#bubble .nx{right:16px;bottom:6px;font-size:18px;color:#6a55b0;opacity:.85}
+#bubble .prog{right:110px}
+#bubble .txt{padding-bottom:6px}
+/* the chalkboard writes Maya's words as she says them; one idea at a time */
+.chalk{min-height:250px;cursor:pointer;padding:22px 34px 34px}
+.chalk .page{min-height:200px;text-align:left}
+.chalk h3{margin:0 0 8px;font-size:40px;color:#fff;letter-spacing:1px}
+.chalk h3.v{color:#ffe066}.chalk h3.c{color:#e9ecf8}
+.chalk .said{font-size:34px;line-height:1.35;color:#ffffff;font-weight:700}
+.chalk .said .v{color:#ffe066;text-decoration:underline 3px}
+.chalk .said .c{color:#bfe6ff;text-decoration:underline 3px}
+.chalk .nx{position:absolute;right:18px;bottom:8px;font-size:18px;font-weight:800;color:#ffe9a6}
+.chalk .rp{position:absolute;right:16px;top:10px;font-size:26px;cursor:pointer}
+.said .w{display:inline-block;white-space:pre}
+/* Part 1 bins: the jar or chest and its label are one tap target */
+.bin{border-radius:24px}
+.bin .binLbl{font-size:26px}
+.binLbl small{font-size:18px}
+.bin.wrong img{filter:drop-shadow(0 0 18px rgba(255,70,90,.95)) drop-shadow(0 0 6px rgba(255,70,90,.9))}
+.nope{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);font-size:84px;font-weight:900;color:#ff4d61;text-shadow:0 3px 0 #fff,0 0 14px rgba(0,0,0,.5);pointer-events:none;line-height:1}
+.answer{filter:drop-shadow(0 0 22px #7dffa8) drop-shadow(0 0 8px #7dffa8)!important}
+.dialTip{font-size:26px}
+.aztip{font-size:26px}
+.itemCount{font-size:38px}
+.qbox .qt{font-size:34px}
+.qbox .qs{font-size:28px}
+.qtab{font-size:25px}
+/* the word helper: a panel in a corner, the same words Maya says */
+.words{position:absolute;display:flex;flex-direction:column;gap:2px;padding:8px 16px 10px;border-radius:20px;background:rgba(14,10,34,.86);border:3px solid rgba(255,197,71,.6);font-size:22px;font-weight:700;color:#f3eeff;text-align:left;line-height:1.25;z-index:45}
+.words .wh{font-size:18px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}
+.words b{display:inline-block;width:24px;color:var(--gold);font-size:24px}
+/* Part 2: what the shelf refuses, the cauldron's test results */
+.barTip{position:absolute;transform:translateX(-50%);white-space:nowrap;font-size:24px;font-weight:800;color:#ffd0d6;text-shadow:0 2px 0 rgba(0,0,0,.6)}
+.barTip:empty{display:none}
+.tests{position:absolute;display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:20px;background:rgba(14,10,34,.86);border:3px solid rgba(255,197,71,.6);z-index:45}
+.tests .th{font-size:18px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}
+.tests .chip{font-size:26px;padding:4px 12px;white-space:nowrap}
+.tests .chip img{height:34px}
+.tests .chip small{font-size:20px}
+.choice{translate:-50% -50%;white-space:nowrap;font-size:36px;text-align:center}
+.choice.wrong{border-color:#ff4d61;box-shadow:0 0 18px rgba(255,70,90,.8)}
+.card.lesson .ttab .mrow td{color:#fff;font-weight:800;border-top:2px dashed rgba(255,197,71,.6)}
+.card.lesson p.rule{font-size:30px;color:#fff}
+.card.lesson p.clue{font-size:28px}
+.orb.fly{animation:none;filter:none}
+/* the plan scroll: dark ink, and on the table scene it stays open at the side with the line in use lit */
+.scroll .pl{color:#2a1606}
+.scroll .pl b{color:#7a4a10}
+.scroll.docked{width:380px;padding:14px 18px 18px;z-index:44}
+.scroll.docked h2{font-size:26px;margin-bottom:4px}
+.scroll.docked .pl{grid-template-columns:max-content 26px 1fr;font-size:23px;line-height:1.38;padding:0 8px;border-radius:10px}
+.scroll .pl.on{background:#ffe27a;box-shadow:0 0 0 3px #e89a1a,0 0 18px rgba(255,197,71,.9)}
+/* reply cards: the friends' answers come through the doors */
+.rsvp{position:absolute;pointer-events:none!important;padding:10px 16px 14px;border-radius:14px;background:radial-gradient(circle at 30% 20%,#d6a66a,#b8834a 60%,#a5703a);border:10px solid #6b3f1d;box-shadow:inset 0 0 18px rgba(60,30,5,.5),0 10px 18px rgba(0,0,0,.45);z-index:45}
+.rsvp h3{display:inline-block;margin:0 0 4px;padding:0 12px;font-size:20px;letter-spacing:1px;text-transform:uppercase;color:#4a2a08;background:#fff3c4;border-radius:6px;transform:rotate(-2deg)}
+.rsvp .gl{font-size:24px;font-weight:800;margin:4px 0}
+.rsvp .grp.m .gl{color:#3c1268}.rsvp .grp.d .gl{color:#6e2700}
+.rsvp .gl b{color:#1e0d00;font-size:28px}
+.rsvp .cards{display:flex;flex-wrap:wrap;gap:5px;padding-top:4px}
+.rsvp .cards:empty{display:none}
+.rc{position:relative;width:51px;height:70px;border-radius:10px;background:#fff6e2;border:3px solid #4cd38a;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2px 0 3px;box-shadow:0 4px 0 rgba(0,0,0,.3)}
+.grp.d .rc{border-color:#ff8a3d}
+.rc img{width:42px;height:42px;object-fit:contain}
+.rc span{font-size:16px;font-weight:800;color:#1f7a45;line-height:1}
+.rc.sorry{width:170px;height:58px;flex-direction:row;gap:6px;padding:2px 8px;border-color:#ff5c6c;margin-top:4px}
+.rc.sorry span{font-size:18px;color:#b02035;line-height:1.1;text-align:left}
+.rc.out{filter:grayscale(1) brightness(.7)}
+.rc .x{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:52px;font-weight:900;color:#ff4d61;text-shadow:0 2px 0 #fff}
+.rc .num{position:absolute;right:-8px;top:-10px;min-width:26px;height:26px;border-radius:13px;background:var(--gold);color:#3a1c00;font-style:normal;font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+.doorTip{position:absolute;transform:translateX(-50%);white-space:nowrap;padding:4px 20px;border-radius:20px;background:rgba(20,14,44,.9);border:3px solid var(--gold);font-size:28px;font-weight:800;color:#fff;pointer-events:none}
+/* Part 3 equation bar: the item's name, then its plan */
+.qbox.eq .qplan{font-size:56px;padding:0 44px;height:104px}
+.qbox.eq .qplan .item{font-size:40px;color:var(--gold);margin-right:4px}
+.qbox.eq .qplan .work{font-size:44px;color:#fff}
+.qbox.eq .qs{font-size:30px}
+.seal{display:inline-flex;width:88px;height:88px;align-items:center;justify-content:center;background:url(assets/fx_coin_spin.webp) 0 0/1200% 100% no-repeat;filter:brightness(1.15) saturate(1.35);text-shadow:0 2px 0 #fff3c4;font-size:54px;font-weight:900;cursor:pointer;margin:0 4px}
+.seal .sl{font-style:normal;display:inline-block}
+.seal.open{background:none;filter:none;width:auto;color:#fff!important;text-shadow:none;cursor:default}
+.seal.open .lo{margin:0 10px 0 4px}
+.lantern{position:absolute}
+.lantern.wrong{filter:grayscale(.5) brightness(.8)}
+.lantern .nope{top:50%;font-size:96px}
+.btn.small{min-width:0;height:58px;padding:0 24px;font-size:24px}
+.maptitle{position:absolute;left:0;right:0;top:20px;margin:0;text-align:center;font-size:56px;color:var(--gold);text-shadow:0 5px 0 #4a1d6b;font-weight:800;pointer-events:none!important;z-index:59}
+.wrong.locked{filter:none!important}
+.answer.locked{filter:drop-shadow(0 0 22px #7dffa8) drop-shadow(0 0 8px #7dffa8)!important}
+/* reply cards pinned to the cork board */
+.rsvp .rc{transform:rotate(-3deg)}
+.rsvp .rc:nth-child(2n){transform:rotate(3deg)}
+.rsvp .rc:nth-child(3n){transform:rotate(-1deg)}
+.rsvp .rc::before{content:"";position:absolute;top:-6px;left:50%;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff9a9a,#c41f2f);box-shadow:0 2px 2px rgba(0,0,0,.4)}
+/* count tags on the party table */
+.ctag{position:absolute;transform:translate(-50%,-50%);min-width:46px;height:46px;padding:0 10px;border-radius:23px;background:linear-gradient(#fff3c4,#ffd76a);border:3px solid #b8741a;color:#4a2a08;font-size:28px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35);font-variant-numeric:tabular-nums}
+.ctag.bad{background:linear-gradient(#ffd6da,#ff8a96);border-color:#b02035;color:#5a0010}
+/* lanterns breathe */
+.flicker{position:absolute;border-radius:50%;pointer-events:none;mix-blend-mode:screen;background:radial-gradient(circle,rgba(255,200,110,.55) 0%,rgba(255,150,60,.18) 40%,rgba(255,150,60,0) 70%);animation:flick 2.3s ease-in-out infinite}
+.flicker:nth-child(2n){animation-duration:1.7s;animation-delay:-.6s}
+@keyframes flick{0%,100%{opacity:.75;transform:scale(1)}30%{opacity:1;transform:scale(1.08)}55%{opacity:.6;transform:scale(.96)}75%{opacity:.95;transform:scale(1.04)}}
+@media (prefers-reduced-motion: reduce){.flicker{animation:none}}
+.lantern.big.p3{width:112px;height:112px;font-size:52px}
+.doorTip{z-index:62}
+/* ---- wow round ---- */
+.coin{position:absolute;display:flex;align-items:center;justify-content:center;background:url(assets/fx_coin_spin.webp) 0 0/1200% 100% no-repeat;filter:brightness(1.15) saturate(1.35) drop-shadow(0 6px 10px rgba(0,0,0,.45))}
+.cface{display:inline-block;font-weight:900;color:#5a1fa8;text-shadow:0 2px 0 #fff3c4;line-height:1}
+.winOff{position:absolute;border-radius:45%;background:radial-gradient(ellipse,#160c2c 0%,#1c1236 60%,rgba(28,18,54,0) 72%);pointer-events:none}
+.winGlow{position:absolute;border-radius:50%;pointer-events:none;mix-blend-mode:screen;background:radial-gradient(circle,rgba(255,226,140,.9) 0%,rgba(255,170,70,.45) 30%,rgba(255,150,60,0) 65%)}
+.lid{position:absolute;border-radius:50% 50% 45% 45%;background:linear-gradient(#7a5434,#5c3c22);pointer-events:none}
+.flash{position:absolute;inset:0;z-index:140;pointer-events:none;background:radial-gradient(circle at 50% 45%,#fff8e0,#ffd27a 45%,#ff9ad8)}
+.doorLight{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle,#fff6d0 0%,#ffd27a 40%,#ff9a3c 75%,rgba(255,140,60,.2) 100%);box-shadow:0 0 60px 20px rgba(255,190,90,.7)}
+.doorBeam{position:absolute;pointer-events:none;mix-blend-mode:screen;clip-path:polygon(38% 0,62% 0,100% 100%,0 100%);background:linear-gradient(rgba(255,214,130,.75),rgba(255,180,90,.25) 60%,rgba(255,170,80,0))}
+.liquid{position:absolute;border-radius:50%;pointer-events:none;mix-blend-mode:screen;opacity:0}
+.tbub{position:absolute;border-radius:50%;border:4px solid #c8fff4;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.8),rgba(159,240,230,.35) 40%,rgba(159,240,230,.12) 70%);pointer-events:none;z-index:46}
+.tfriend{object-fit:contain;pointer-events:none;z-index:46}
+.beam{position:absolute;pointer-events:none;z-index:44;mix-blend-mode:screen;background:linear-gradient(90deg,rgba(255,220,140,0),rgba(255,240,190,.95) 35%,#fffbe8 50%,rgba(255,240,190,.95) 65%,rgba(255,220,140,0));filter:blur(2px)}
+.ink{position:absolute;z-index:58;padding:12px 26px;border-radius:14px;background:linear-gradient(#fbf0d2,#efdcaa);border:5px solid #b98a3c;box-shadow:0 10px 0 rgba(0,0,0,.3);text-align:center;pointer-events:none}
+.ink .inkline{display:inline-block;font-size:44px;font-weight:800;color:#7a3a00;white-space:nowrap}
+.ink .inkline b{color:#7a3a00}
+.ink .lm{color:#6a2bc4}.ink .ld{color:#d4520a}.ink .ln{color:#2a1606}.ink .lo{color:#a06a20}
+.ink .quill{position:absolute;top:10px;font-style:normal;font-size:36px;color:#ffd76a;text-shadow:0 0 12px #fff3c4}
+.jarFill{position:absolute;overflow:hidden;border-radius:32% 32% 40% 40% / 18% 18% 36% 36%;pointer-events:none;mix-blend-mode:screen}
+.jarFill .lvl{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(#fff3b0,#ffc547 30%,#e8891a);box-shadow:0 0 24px 6px rgba(255,200,80,.8),inset 0 6px 8px rgba(255,255,255,.6);opacity:.85}
+.lockpop{position:absolute;left:50%;top:60px;margin-left:-22px;font-size:44px;pointer-events:none;filter:drop-shadow(0 0 10px #ffd76a)}
+.map .walked{filter:drop-shadow(0 0 8px rgba(255,215,106,.9))}
+.room.done .th{box-shadow:0 10px 0 rgba(0,0,0,.35),0 0 26px 6px rgba(255,200,90,.55);animation:roomglow 2.4s ease-in-out infinite}
+@keyframes roomglow{50%{box-shadow:0 10px 0 rgba(0,0,0,.35),0 0 40px 12px rgba(255,214,120,.8)}}
+@media (prefers-reduced-motion: reduce){.room.done .th{animation:none}}
+/* a sleeping bin greys its jar or chest and label, but the gold already in the jar keeps glowing */
+.bin.locked{filter:none!important}
+.bin.locked > img,.bin.locked .binLbl{filter:grayscale(.65) brightness(.62)}
+.bin.answer.locked > img{filter:drop-shadow(0 0 22px #7dffa8) drop-shadow(0 0 8px #7dffa8)}
+.bin.wrong.locked > img{filter:drop-shadow(0 0 18px rgba(255,70,90,.95)) drop-shadow(0 0 6px rgba(255,70,90,.9))}

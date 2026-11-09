@@ -4,8 +4,10 @@ import { gsap, el, stage } from "./engine.js";
 const KEY = "nnp_qa";
 let saved = {};
 try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) {}
-export const qa = { on: !!saved.on, auto: !!saved.auto, fast: !!saved.fast, showAns: saved.showAns !== false, answer: "" };
-function save() { try { localStorage.setItem(KEY, JSON.stringify({ on: qa.on, auto: qa.auto, fast: qa.fast, showAns: qa.showAns })); } catch (e) {} }
+// QA mode is never remembered between visits: a player never sees the badge or the answers. It is on only for a
+// #qa-… address (the jump links) or after pressing Q; the options inside it are remembered.
+export const qa = { on: /^#qa-/.test(location.hash), auto: !!saved.auto, fast: !!saved.fast, showAns: saved.showAns !== false, answer: "" };
+function save() { try { localStorage.setItem(KEY, JSON.stringify({ auto: qa.auto, fast: qa.fast, showAns: qa.showAns })); } catch (e) {} }
 let drove = false;
 function apply() {
   if (qa.on || drove) {
@@ -28,7 +30,7 @@ export function setAnswer(a) {
 
 /** Parse the QA jump from the address: #qa-p2-5 -> { at: "p2", n: 5 } */
 export function qaJump() {
-  const m = location.hash.match(/^#qa-(title|story|map|p1|p2|p3|fin|party|wizard)(?:-(\d+))?$/);
+  const m = location.hash.match(/^#qa-(title|story|map|p1|p2|p3|party)(?:-(\d+))?$/);
   return m ? { at: m[1], n: m[2] ? +m[2] : 1 } : null;
 }
 function go(at, n) {
@@ -67,9 +69,9 @@ function open() {
   row(j, "Part 1 · Neel's Party List", "p1", 8);
   row(j, "Part 2 · Write the Party Plan", "p2", 9);
   row(j, "Part 3 · Neel Decides", "p3", 8);
-  row(j, "Party dance", "party"); row(j, "Wizard card", "wizard");
+  row(j, "The party (end of Part 3)", "party");
   const off = el("button", "qab wide", panel, {}, "Turn QA mode off");
-  off.onpointerdown = (e) => { e.stopPropagation(); qa.on = false; save(); apply(); close(); };
+  off.onpointerdown = (e) => { e.stopPropagation(); qa.on = false; save(); apply(); close(); if (/^#qa-/.test(location.hash)) history.replaceState(null, "", location.pathname); };
   gsap.from(panel, { x: 60, opacity: 0, duration: 0.25 });
 }
 function close() { panel?.remove(); panel = null; }

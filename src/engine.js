@@ -19,6 +19,21 @@ export { gsap };
 
 export const W = 1600, H = 900;
 export const A = (n) => `assets/${n}.webp`;
+// pacing, in seconds: one place to tune how brisk the game feels
+export const PACE = {
+  wps: 3.2,         // reading speed for the line timer, words per second
+  minRead: 1.8,     // shortest time a line stays up
+  extra: 0.6,       // added to every line's reading time
+  breath: 0.25,     // pause after a line before the next one
+  stagger: 0.03,    // word-by-word reveal step
+  revealMax: 0.8,   // a long line still appears within this time
+  voiceStart: 1.6,  // a voice that has not started by now is not waited for
+  voiceOver: 3,     // and a voice is never waited for longer than the line's time plus this
+  rate: 1.05,       // browser voice speed
+  curtain: 0.55,    // curtain closing
+  open: 0.8,        // curtain opening
+  titleHold: 0.6,   // part title card stays this long once written
+};
 export const $ = (s, r = document) => r.querySelector(s);
 export const wait = (s) => new Promise((r) => setTimeout(r, s * 1000 / (window.__speed || 1)));
 export const rnd = (a, b) => a + Math.random() * (b - a);
@@ -128,13 +143,14 @@ export function curtainClose() {
   if (calm) { curtainShut(); return gsap.fromTo(curtain, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }); }
   gsap.set(cL, { x: -OPEN.x }); gsap.set(cR, { x: OPEN.x }); gsap.set(cV, { y: OPEN.y }); gsap.set(curtain, { autoAlpha: 1 });
   sfx("whoosh");
+  const d = PACE.curtain;
   return gsap.timeline()
-    .to(cV, { y: 0, duration: 0.5, ease: "bounce.out" }, 0)
-    .to(cL, { x: 0, duration: 0.7, ease: "power3.in" }, 0.05)
-    .to(cR, { x: 0, duration: 0.7, ease: "power3.in" }, 0.05)
+    .to(cV, { y: 0, duration: d * 0.7, ease: "bounce.out" }, 0)
+    .to(cL, { x: 0, duration: d, ease: "power3.in" }, 0.05)
+    .to(cR, { x: 0, duration: d, ease: "power3.in" }, 0.05)
     // the halves meet with a soft bump, like heavy velvet
-    .to(cL, { x: -14, duration: 0.12, ease: "power1.out" }, 0.75).to(cL, { x: 0, duration: 0.22, ease: "power2.in" })
-    .to(cR, { x: 14, duration: 0.12, ease: "power1.out" }, 0.75).to(cR, { x: 0, duration: 0.22, ease: "power2.in" }, "<");
+    .to(cL, { x: -10, duration: 0.08, ease: "power1.out" }, d + 0.05).to(cL, { x: 0, duration: 0.12, ease: "power2.in" })
+    .to(cR, { x: 10, duration: 0.08, ease: "power1.out" }, d + 0.05).to(cR, { x: 0, duration: 0.12, ease: "power2.in" }, "<");
 }
 /** frame: true stops at the stage-frame pose instead of opening fully */
 export function curtainOpen({ frame = false } = {}) {
@@ -147,10 +163,11 @@ export function curtainOpen({ frame = false } = {}) {
     .to(cV, { y: FRAME.y, duration: 0.8, ease: "power2.inOut" }, 0.35);
   sfx("magic");
   // timing follows curtain-opening.svg: the halves overshoot a little and settle, the valance lifts after them
+  const d = PACE.open;
   return gsap.timeline({ onComplete: done })
-    .to(cL, { keyframes: [{ x: -OPEN.x, duration: 0.95, ease: "power3.inOut" }, { x: -1120 * CS, duration: 0.15, ease: "sine.out" }] }, 0.1)
-    .to(cR, { keyframes: [{ x: OPEN.x, duration: 0.95, ease: "power3.inOut" }, { x: 1120 * CS, duration: 0.15, ease: "sine.out" }] }, 0.1)
-    .to(cV, { y: OPEN.y, duration: 0.8, ease: "power2.inOut" }, 0.35);
+    .to(cL, { keyframes: [{ x: -OPEN.x, duration: d, ease: "power3.inOut" }, { x: -1120 * CS, duration: 0.12, ease: "sine.out" }] }, 0.05)
+    .to(cR, { keyframes: [{ x: OPEN.x, duration: d, ease: "power3.inOut" }, { x: 1120 * CS, duration: 0.12, ease: "sine.out" }] }, 0.05)
+    .to(cV, { y: OPEN.y, duration: d * 0.8, ease: "power2.inOut" }, 0.2);
 }
 /** slide the curtains in from off-screen to the stage-frame pose (the party) */
 export function curtainFrame() {
@@ -260,9 +277,11 @@ export let sceneName = "";
 export async function setScene(name, { fast = false, plain = false } = {}) {
   let shut = false;
   if (!fast && sceneName) { await curtainClose(); shut = true; }
+  // fast into the same place (title -> story): the props fade in over the sky instead of a curtain
+  const grow = fast && !plain && sceneName === name;
   for (const k of ["far", "mid", "fore"]) {
     layers[k].innerHTML = "";
-    if (!plain || k === "far") img(`bg_${name}_${k}`, layers[k], {}, "plate");
+    if (!plain || k === "far") { const p = img(`bg_${name}_${k}`, layers[k], {}, "plate"); if (grow && k !== "far") gsap.from(p, { opacity: 0, duration: 0.6 }); }
   }
   world.innerHTML = "";
   gsap.set(layers.fore, { opacity: 1 });
@@ -273,20 +292,20 @@ export async function setScene(name, { fast = false, plain = false } = {}) {
   ambient(name);
   if (shut && !calm) {
     // establishing shot: start high and close on the top of the scene, tilt down to the floor as the curtain parts
-    camSet({ x: W / 2, y: 0, s: 1.1 });
-    await wait(0.15);
-    camTo({ s: 1, dur: 2.2, ease: "power2.inOut" });
+    camSet({ x: W / 2, y: 0, s: 1.08 });
+    camTo({ s: 1, dur: 1.4, ease: "power2.inOut" });
     await curtainOpen();
   } else {
     camSet();
-    gsap.fromTo(layers.far, { scale: 1.06 }, { scale: 1, duration: 2.2, ease: "power2.out", transformOrigin: "50% 60%" });
-    if (shut) { await wait(0.15); await curtainOpen(); }
+    if (!grow) gsap.fromTo(layers.far, { scale: 1.06 }, { scale: 1, duration: 2.2, ease: "power2.out", transformOrigin: "50% 60%" });
+    if (shut) await curtainOpen();
   }
 }
-// every focus filter lists the same functions in the same order, so tweens between them never pass through black
-const FILTER_OFF = "blur(0px) brightness(1) saturate(1)";
+// every focus filter lists the same functions in the same order, so tweens between them never pass through black.
+// No blur: a blurred full-screen layer that moves every frame is the most expensive thing a cheap tablet can draw
+const FILTER_OFF = "brightness(1) saturate(1)";
 export function setFocus(on, dur = 0.6) {
-  const f = { soft: "blur(0px) brightness(0.86) saturate(0.95)", story: "blur(1.5px) brightness(0.92) saturate(1)", table: "blur(4px) brightness(0.62) saturate(0.8)" }[on] || (on ? "blur(3px) brightness(0.8) saturate(0.95)" : FILTER_OFF);
+  const f = { soft: "brightness(0.86) saturate(0.95)", story: "brightness(0.9) saturate(1)", table: "brightness(0.6) saturate(0.8)" }[on] || (on ? "brightness(0.76) saturate(0.92)" : FILTER_OFF);
   gsap.to([layers.far, layers.mid], { filter: f, duration: dur });
 }
 // host mode: only ONE character is on screen – whoever is speaking – standing on a spot.
@@ -301,14 +320,33 @@ export const SPOTS = {
   // slots are spaced from the measured art so both stay whole in frame, even in wide poses (Neel's happy, Maya's celebrate)
   duo: { pair: [820, 1270], y: 895, bw: 520, size: { neel: 540, agni: 480, maya: 550 }, faceR: { agni: true }, faceL: { maya: true } },
   duoGame: { pair: [205, 435], y: 890, bw: 400, size: { neel: 380, agni: 350, maya: 390 }, faceR: { agni: true }, faceL: { maya: true } },
+  // all three friends together, each on their own seat, facing Neel in the middle: nobody leaves when someone else talks.
+  // trio: story scenes and bridges (Agni left, Neel, Maya right). trioGame: the cauldron. trioTable: the hall of doors.
+  trio: { seats: { agni: 770, neel: 1085, maya: 1390 }, y: 895, bw: 480, size: { neel: 500, agni: 440, maya: 510 }, face: { agni: true, maya: true } },
+  trioGame: { seats: { neel: 205, agni: 1160, maya: 1420 }, y: 890, bw: 430, size: { neel: 420, agni: 380, maya: 430 }, face: { maya: true } },
+  trioTable: { seats: { neel: 165, agni: 1170, maya: 1395 }, y: 895, bw: 400, size: { neel: 380, agni: 340, maya: 390 }, face: { maya: true } },
+  // the party, in front of the table: Agni and Maya either side of Neel, the guests beyond them
+  trioParty: { seats: { agni: 575, neel: 815, maya: 1060 }, y: 895, bw: 440, size: { neel: 380, agni: 330, maya: 390 }, face: { agni: true, maya: true } },
 };
 export const host = { on: false, cur: null, spot: SPOTS.game, slot: {} };
 /** switch to one-character mode on a spot (or a two-character conversation spot); the next speaker slides in */
 export function solo(spot = "story") {
   host.on = true; host.spot = SPOTS[spot]; host.cur = null; host.slot = {};
   for (const k in C) if (C[k].visible) hideChar(k, 0.2);
-  if (spot === "story" || spot === "duo") setFocus("story"); // the speakers stand out from a slightly soft background
-  if (host.spot.pair) camRest(0.6); // a conversation is framed wide, so neither speaker is pushed off the edge
+  if (spot === "story" || spot === "duo" || spot === "trio") setFocus("story"); // the speakers stand out from a slightly soft background
+  if (host.spot.pair || host.spot.seats) camRest(0.6); // a conversation is framed wide, so nobody is pushed off the edge
+}
+/** put the three friends on their seats of a trio spot at once. enter: the first-time entrances play together */
+export function trio(spot = "trio", { enter = false } = {}) {
+  solo(spot);
+  const s = host.spot, all = [];
+  for (const k of Object.keys(s.seats)) {
+    placeChar(k, s.seats[k], s.y, s.size[k], { flip: !!s.face[k] });
+    host.slot[k] = 1;
+    if (enter && !entered[k] && !calm) { entered[k] = true; all.push(ENTER[k](C[k])); }
+    else all.push(gsap.from(C[k].box, { y: 30, opacity: 0, duration: 0.35, ease: "back.out(1.4)" }));
+  }
+  return Promise.all(all);
 }
 async function pairSwap(k) {
   const s = host.spot;
@@ -316,7 +354,7 @@ async function pairSwap(k) {
   if (host.slot[k] != null) { host.cur = k; return; }
   const on = Object.keys(host.slot);
   let i = [0, 1].find((n) => !on.some((o) => host.slot[o] === n));
-  if (i == null) { const out = on.find((o) => o !== host.cur) || on[0]; i = host.slot[out]; delete host.slot[out]; hideChar(out, 0.15); }
+  if (i == null) { const out = on.find((o) => o !== host.cur) || on[0]; i = host.slot[out]; delete host.slot[out]; hideChar(out, 0); }
   host.slot[k] = i; host.cur = k;
   placeChar(k, s.pair[i], s.y, s.size[k], { flip: !!(i === 0 ? s.faceR : s.faceL)[k] });
   if (s === SPOTS.duo && !entered[k] && !calm) { entered[k] = true; return ENTER[k](C[k]); }
@@ -324,8 +362,15 @@ async function pairSwap(k) {
 }
 export async function hostSwap(k) {
   if (host.spot.pair) return pairSwap(k);
+  if (host.spot.seats) {
+    // a trio: everyone keeps their seat; someone not on stage yet takes theirs
+    host.cur = k;
+    if (!C[k].visible && host.spot.seats[k] != null) { const s = host.spot; placeChar(k, s.seats[k], s.y, s.size[k], { flip: !!s.face[k] }); await gsap.from(C[k].box, { y: 30, opacity: 0, duration: 0.3 }); }
+    return;
+  }
   if (host.cur === k && C[k].visible) return;
-  for (const o in C) if (o !== k && C[o].visible) hideChar(o, 0.15);
+  // the old speaker is gone before the new one arrives: two characters never fade over each other
+  for (const o in C) if (o !== k && C[o].visible) hideChar(o, 0);
   host.cur = k;
   const s = host.spot;
   placeChar(k, s.x, s.y, s.size[k], { flip: !!(s.flip && s.flip[k]) });
@@ -390,7 +435,7 @@ const ANIM = {
   maya: { idle: "idle", talk: "talk", explain: "talk", cast: "cast", happy: "happy", hint: "hint", oops: "hint", shocked: "hint", celebrate: "celebrate", cheer: "happy", dance: "celebrate" },
 };
 const LOOP = new Set(["idle", "talk", "dance", "oops", "hint", "celebrate"]);
-export const NAMES = { neel: "Neel", agni: "Agni", maya: "Maya", nar: "" };
+export const NAMES = { neel: "Neel", agni: "Agni", maya: "Maya", nar: "Narrator" };
 const TAG = { neel: "#4a8fe0", agni: "#e8742a", maya: "#2f9b62", nar: "#7a3fd1" };
 export const C = {};
 // where the feet are in each character's frames (measured on the idle sheets), for the contact shadow
@@ -438,6 +483,8 @@ gsap.ticker.add((time, dms) => {
     let moved = false;
     while (c.t >= c.m.ms) {
       c.t -= c.m.ms; c.f++; moved = true;
+      // Agni's idle loop has a long eyes-shut stretch: skipped, so he looks awake while others talk to him
+      if (c.anim === "anim_agni_idle" && c.f >= 21 && c.f <= 25) c.f = 26;
       if (c.f >= c.m.n) {
         if (c.loopAnim) c.f = 0;
         else { c.f = c.m.n - 1; c.t = 0; const back = c.talking ? "talk" : ANIM[k][c.base] || "idle"; setAnim(c, LOOP.has(back) ? back : "idle"); c.pose = c.base; moved = false; break; }
@@ -565,7 +612,7 @@ export function music(name) { mus.want = name; if (mus.unlocked) startTrack(name
 export function musicRefresh() { if (mus.cur) setLevel(mus.cur, level(mus.cur), 0.5); }
 function duckMusic(on) { mus.duck = on ? 0.4 : 1; musicRefresh(); }
 stage.addEventListener("pointerdown", () => { if (mus.unlocked) return; mus.unlocked = true; ac(); if (mus.want) startTrack(mus.want); }, true);
-const VOICE = { neel: { pitch: 0.75, rate: 0.95 }, agni: { pitch: 1.45, rate: 1.05 }, maya: { pitch: 1.2, rate: 0.95 }, nar: { pitch: 1, rate: 0.95 } };
+const VOICE = { neel: { pitch: 0.75, rate: 1 }, agni: { pitch: 1.45, rate: 1.1 }, maya: { pitch: 1.2, rate: 1 }, nar: { pitch: 1, rate: 1 } };
 let voices = [];
 if ("speechSynthesis" in window) { const lv = () => (voices = speechSynthesis.getVoices()); lv(); speechSynthesis.onvoiceschanged = lv; }
 const VO = new Set(VO_IDS);
@@ -580,7 +627,9 @@ async function playVo(ids) {
     await new Promise((r) => { a.onended = a.onerror = r; a.play().catch(r); });
   }
 }
-function speak(text, who) {
+const sayable = (w) => w.replace(/×/g, " times ").replace(/−/g, " minus ").replace(/=/g, " equals ");
+/** words: the line's words as shown (so word boundaries map to them); onWord(i): the voice has reached word i */
+function speak(text, who, { words, onWord } = {}) {
   return new Promise((res) => {
     if (!settings.voice || window.__auto) return res(false);
     // the character's own recorded voice when every part of the line has been recorded
@@ -591,19 +640,36 @@ function speak(text, who) {
       return;
     }
     if (!("speechSynthesis" in window)) return res(false);
-    const u = new SpeechSynthesisUtterance(text.replace(/<[^>]+>/g, "").replace(/×/g, " times ").replace(/−/g, " minus "));
+    // the spoken text is built from the shown words, so a word boundary from the voice points at a word on screen
+    const list = words || text.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean);
+    let said = "", starts = [];
+    for (const w of list) { starts.push(said.length); said += sayable(w) + " "; }
+    const u = new SpeechSynthesisUtterance(said.trim());
     const v = voices.find((v) => /en[-_]IN/i.test(v.lang)) || voices.find((v) => /^en/i.test(v.lang));
     if (v) u.voice = v;
     Object.assign(u, VOICE[who] || VOICE.nar);
+    u.rate *= PACE.rate;
     // the music steps back while someone is speaking
-    const done = () => { duckMusic(false); res(true); };
-    u.onend = u.onerror = done;
+    let over = false, started = false;
+    const done = (ok = true) => { if (over) return; over = true; duckMusic(false); res(ok); };
+    u.onend = u.onerror = () => done(true);
+    u.onstart = () => (started = true);
+    if (onWord) u.onboundary = (e) => { if (e.name && e.name !== "word") return; let i = 0; while (i + 1 < starts.length && starts[i + 1] <= e.charIndex) i++; onWord(i); };
     speechSynthesis.cancel();
     duckMusic(true);
     speechSynthesis.speak(u);
-    setTimeout(done, Math.max(12000, text.split(/\s+/).length * 600 + 3000));
+    // some browsers never start (or never finish) a synthetic voice: then the line runs on its own timer
+    setTimeout(() => { if (!started) done(false); }, PACE.voiceStart * 1000);
+    setTimeout(() => done(true), (list.length / 2.2 + 3) * 1000);
   });
 }
+/** resolves once the browser voice has gone quiet (it may have started after the line stopped waiting for it) */
+async function stillSpeaking() {
+  try { while ("speechSynthesis" in window && speechSynthesis.speaking) await wait(0.15); } catch (e) {}
+  return true;
+}
+/** read a line out again (the 🔊 on the chalkboard) */
+export const speakAgain = (text, who) => speak(text, who);
 export function hush() {
   voRun++;
   if (voEl) { voEl.pause(); voEl = null; duckMusic(false); }
@@ -645,74 +711,118 @@ function reflowBubble() {
   bubble.style.left = left + "px"; bubble.style.top = top + "px"; bubble.style.bottom = "auto";
   bubble.querySelector(".tail").style.left = Math.max(30, Math.min(w - 62, foot.x - left - 16)) + "px";
 }
-// A tap on a control that isn't listening yet (a hint or question is still being read) ends the line,
-// then reaches the control as soon as it listens, so a quick player is never ignored.
-let cutLine = null;
+// ---------- lines: one at a time ----------
+// Lines are queued, so two never overlap: an idle nudge can't talk over a question, and the name on the bubble
+// always belongs to the character on screen. busy() is true while a line is waiting or being read;
+// skipLine() ends the line being read (a tap on the bubble, or the child acting).
+let lineQ = Promise.resolve(), lineBusy = 0, skipNow = null, tapLine = null;
+export const busy = () => lineBusy > 0;
+/** minAge: only a line that has been up this long (s) is ended; a quick double tap can never skip a hint */
+export function skipLine(minAge = 0) { skipNow && skipNow(minAge); }
 const listening = (t) => { for (let n = t; n && n !== stage; n = n.parentElement) if (n.onpointerdown || n.dataset.tap) return n; return null; };
+/** a locked control is visibly asleep; a tap on it gives a little wiggle and ends the line being read, but never acts */
+export function lock(nodes, on = true) { for (const n of [].concat(nodes)) if (n) n.classList.toggle("locked", on); }
 stage.addEventListener("pointerdown", (e) => {
-  const t = e.target;
-  if (!cutLine || !e.isTrusted || t.closest("#bubble, #hud, .menu, .qapanel") || listening(t)) return;
-  if (getComputedStyle(t).cursor !== "pointer") return;
-  cutLine();
-  const end = performance.now() + 6000;
-  const retry = () => {
-    if (!t.isConnected || performance.now() > end) return;
-    const n = listening(t);
-    if (n && !n.disabled && getComputedStyle(n).pointerEvents !== "none") t.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
-    else setTimeout(retry, 100);
-  };
-  setTimeout(retry, 200);
+  const t = e.target, l = t.closest && t.closest(".locked");
+  if (l) { e.stopPropagation(); gsap.fromTo(l, { x: -6 }, { x: 0, duration: 0.45, ease: "elastic.out(1.2,.3)" }); skipLine(1.2); return; }
+  // tap-to-continue mode: a tap on the scene (not on a control) moves the line on
+  if (!settings.autoplay && tapLine && !t.closest("#bubble, #hud, .menu, .qapanel, .icon") && !listening(t)) tapLine();
 }, true);
-/** voice: false shows the line without reading it aloud (a prompt that stays up) */
-export async function say(who, text, { p, wait: needTap = true, auto = 0, voice: aloud = true } = {}) {
+bubble.addEventListener("pointerdown", (e) => { if (e.target.closest(".rp")) return; e.stopPropagation(); tapLine && tapLine(); });
+
+/** a line from who ("nar" = narrator). wait: false shows it and goes on (a prompt that stays up); auto: n seconds;
+ *  voice: false is not read aloud; into: an element the words are written on instead of the bubble (the chalkboard) */
+export function say(who, text, opts = {}) {
+  const holds = opts.wait !== false || !!opts.auto;
+  if (holds) lineBusy++;
+  const prev = lineQ;
+  let release;
+  lineQ = new Promise((r) => (release = r));
+  return prev.then(() => line(who, text, opts)).finally(() => { if (holds) lineBusy--; release(); });
+}
+async function line(who, text, { p, wait: needTap = true, auto = 0, voice: aloud = true, into = null } = {}) {
   if (host.on && C[who] && host.cur !== who) await hostSwap(who);
   const c = C[who];
   // the speaker is lit, everyone else on stage steps back a little
-  for (const k in C) { C[k].box.classList.remove("speaking"); C[k].box.classList.toggle("quiet", !!(c && c.visible) && (!host.on || !!host.spot.pair) && k !== who && C[k].visible); }
+  const group = !host.on || !!host.spot.pair || !!host.spot.seats;
+  for (const k in C) { C[k].box.classList.remove("speaking"); C[k].box.classList.toggle("quiet", !!(c && c.visible) && group && k !== who && C[k].visible); }
   if (c && p) pose(who, p);
-  bubble.className = "";
-  bubble.innerHTML = (NAMES[who] ? `<div class="who" style="background:${TAG[who]}">${NAMES[who]}</div>` : "") + `<div class="txt">${wordify(chipify(text))}</div>` + `<div class="tail"></div>` + (needTap ? (settings.autoplay ? `<div class="prog"><i></i></div>` : `<div class="nx">tap ▶</div>`) : "") + `<div class="rp" title="Hear again">🔊</div>`;
-  placeBubble(c);
+  const html = wordify(chipify(text)), holds = needTap || !!auto;
+  let box;
+  if (into) {
+    // the words are written on the board as they are said; the bubble stays away
+    closeBubble(true);
+    box = el("div", "said", into, {}, html);
+  } else {
+    gsap.killTweensOf(bubble);
+    bubble.className = "";
+    bubble.style.pointerEvents = "auto";
+    bubble.innerHTML = (NAMES[who] ? `<div class="who" style="background:${TAG[who]}">${NAMES[who]}</div>` : "") + `<div class="txt">${html}</div>` + `<div class="tail"></div>` + (holds ? `<div class="nx">tap ▶</div>` : "") + (needTap && settings.autoplay ? `<div class="prog"><i></i></div>` : "") + `<div class="rp" title="Hear again">🔊</div>`;
+    box = bubble.querySelector(".txt");
+    placeBubble(c);
+  }
+  // a highlighted word (m, d, variable, constant) appears in one piece with its coloured box, never as an empty box
+  box.querySelectorAll(".cm, .cd, .v, .c").forEach((s) => { s.textContent = s.textContent; s.classList.add("w"); });
   // a new speaker gives a small hop (squash and stretch from the feet)
   if (c && c.visible && who !== lastWho && !calm) { const sx = c.flip ? -1 : 1; gsap.fromTo(c.box, { scaleY: 0.93, scaleX: sx * 1.05 }, { scaleY: 1, scaleX: sx, duration: 0.45, ease: "back.out(3)" }); }
+  const wordEls = [...box.querySelectorAll(".w")], words = wordEls.map((w) => w.textContent), n = Math.max(1, words.length);
+  const readFor = Math.max(PACE.minRead, n / PACE.wps + PACE.extra);
   // story camera: push in slowly about the speaker's head for the length of the line; a new speaker also gets a dolly
-  const words = text.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length, readFor = Math.max(2.8, words / 2.6 + 1.2);
   if (host.on && host.spot === SPOTS.story) {
     if (c && c.visible) camTo({ x: c.x, y: c.y - c.h * 0.8, s: 1.045, dur: readFor, ease: "sine.inOut", from: who !== lastWho ? { tx: -26 } : undefined });
     else camRest(1);
   }
   lastWho = who;
-  bubble.querySelector(".rp").onpointerdown = (e) => { e.stopPropagation(); sfx("tap"); speak(text, who); };
-  gsap.fromTo(bubble, { opacity: 0, y: 14, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.25, ease: "back.out(2)" });
+  if (!into) {
+    bubble.querySelector(".rp").onpointerdown = (e) => { e.stopPropagation(); sfx("tap"); speak(text, who); };
+    gsap.fromTo(bubble, { opacity: 0, y: 14, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.22, ease: "back.out(2)" });
+  }
+  // the words come in quickly in the bubble; on a board they keep pace with the voice
+  const stag = into ? Math.max(0.05, (readFor * 0.8) / n) : Math.min(PACE.stagger, PACE.revealMax / n);
+  const reveal = gsap.fromTo(wordEls, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.16, stagger: stag, ease: "power1.out" });
+  const total = (n - 1) * stag + 0.16;
+  const onWord = (i) => { const q = Math.min(1, (i * stag + 0.16) / total); if (q > reveal.progress()) reveal.progress(q); };
   let voice = Promise.resolve(false);
-  const wordEls = bubble.querySelectorAll(".w");
-  const reveal = gsap.fromTo(wordEls, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.18, stagger: Math.min(0.09, 2.2 / Math.max(1, wordEls.length)), ease: "power1.out" });
   if (c && c.visible) {
     c.box.classList.add("speaking");
     talk(who, true);
     const stopTalk = () => talk(who, false);
-    voice = aloud ? speak(text, who) : Promise.resolve(false);
+    voice = aloud ? speak(text, who, { words, onWord }) : Promise.resolve(false);
     voice.then((ok) => { if (!ok) setTimeout(stopTalk, Math.min(2600, 600 + text.length * 38)); else stopTalk(); });
     bubble._stop = stopTalk;
-  } else voice = aloud ? speak(text, who) : Promise.resolve(false);
+  } else voice = aloud ? speak(text, who, { words, onWord }) : Promise.resolve(false);
+  // a tap while the words are still coming shows the whole line; the next tap moves on
   let cut = null;
-  const cutP = new Promise((r) => (cut = cutLine = r));
+  const cutP = new Promise((r) => (cut = r)), t0 = performance.now();
+  const myTap = () => {
+    if (performance.now() - t0 < 250) return; // a double tap can't skip the next line too
+    if (reveal.progress() < 1) { reveal.progress(1); return; }
+    if (holds) { sfx("tap"); cut(); }
+  };
+  tapLine = myTap;
+  if (into) { into.onpointerdown = (e) => { e.stopPropagation(); myTap(); }; into.dataset.tap = 1; }
+  const mySkip = (minAge = 0) => { if (performance.now() - t0 < minAge * 1000) return; reveal.progress(1); cut(); };
+  if (holds) skipNow = mySkip;
   if (window.__auto) { reveal.progress(1); await wait(0.35); }
   else if (needTap && settings.autoplay) {
-    // steady pace: the line stays until the words have appeared, the voice has finished and there was
-    // time to read it (about 2.6 words a second, plus a moment), then a short breath before the next line
-    const read = readFor;
-    gsap.fromTo(bubble.querySelector(".prog i"), { scaleX: 0 }, { scaleX: 1, duration: read, ease: "none" });
-    await Promise.race([Promise.all([reveal, wait(read), voice]).then(() => wait(0.45)), cutP]);
+    // steady pace: the line stays until the words are in, the voice has finished (or never started) and there was
+    // time to read it, then a short breath before the next line
+    gsap.fromTo(bubble.querySelector(".prog i"), { scaleX: 0 }, { scaleX: 1, duration: readFor, ease: "none" });
+    // a voice that started late is still heard to the end (up to the cap), not cut off
+    const heard = Promise.race([voice.then((ok) => (ok ? true : stillSpeaking())), wait(readFor + PACE.voiceOver)]);
+    await Promise.race([Promise.all([reveal, wait(readFor), heard]).then(() => wait(PACE.breath)), cutP]);
   }
-  else if (needTap) await Promise.race([(async () => { while (reveal.progress() < 1) { await Promise.race([tapAnywhere(0.15), new Promise((r) => reveal.eventCallback("onComplete", r))]); reveal.progress(1); } await tapAnywhere(0.2); })(), cutP]);
-  else if (auto) await wait(auto);
-  if (cutLine === cut) cutLine = null;
+  else if (needTap) await cutP;
+  else if (auto) await Promise.race([Promise.all([wait(auto), Promise.race([voice, wait(auto + 1.5)])]), cutP]);
+  if (skipNow === mySkip) skipNow = null;
+  if (holds && tapLine === myTap) tapLine = null;
+  if (into) { into.onpointerdown = null; reveal.progress(1); }
   bubble._stop && bubble._stop();
   bubble._stop = null;
-  if (needTap) hush();
+  if (holds) hush();
   if (c) c.box.classList.remove("speaking");
-  if (needTap || auto) await gsap.to(bubble, { opacity: 0, duration: 0.15 });
+  // the fade-out wins over a fade-in that may still be running (a line ended in its first moments)
+  if (holds && !into) { gsap.killTweensOf(bubble); await gsap.to(bubble, { opacity: 0, y: 0, scale: 1, duration: 0.15 }); bubble.style.pointerEvents = "none"; }
 }
 // word-by-word reveal and colour chips for maths words
 function chipify(t) {
@@ -730,7 +840,13 @@ export function colorMD(t) {
 function wordify(h) {
   return h.split(/(<[^>]+>)/).map((p) => (p.startsWith("<") ? p : p.replace(/(\S+)/g, '<span class="w">$1</span>'))).join("");
 }
-export function closeBubble() { bubble._c = null; gsap.to(bubble, { opacity: 0, duration: 0.15 }); lastWho = null; for (const k in C) C[k].box.classList.remove("speaking", "quiet"); }
+export function closeBubble(now = false) {
+  bubble._c = null; lastWho = null;
+  gsap.killTweensOf(bubble);
+  if (now) gsap.set(bubble, { opacity: 0 });
+  gsap.to(bubble, { opacity: 0, duration: now ? 0 : 0.15, onComplete: () => (bubble.style.pointerEvents = "none") });
+  for (const k in C) C[k].box.classList.remove("speaking", "quiet");
+}
 export function tapAnywhere(delay = 0) {
   return new Promise((res) => {
     setTimeout(() => {
@@ -757,11 +873,11 @@ export async function partTitle(k, t) {
   sfx("magic");
   playFx("firework", W / 2, 330, { scale: 3 });
   await gsap.timeline()
-    .from(d.querySelector(".k"), { scaleX: 0, duration: 0.45, ease: "back.out(1.6)" })
-    .from(d.querySelectorAll(".ch"), { y: -70, opacity: 0, rotation: () => gsap.utils.random(-25, 25), duration: 0.5, stagger: 0.045, ease: "back.out(2.2)" }, 0.2)
-    .fromTo(d.querySelector(".ul path"), { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.6, ease: "power2.inOut" }, "-=0.25");
-  await wait(1.2);
-  await gsap.to(d, { opacity: 0, scale: 1.15, duration: 0.4 });
+    .from(d.querySelector(".k"), { scaleX: 0, duration: 0.35, ease: "back.out(1.6)" })
+    .from(d.querySelectorAll(".ch"), { y: -70, opacity: 0, rotation: () => gsap.utils.random(-25, 25), duration: 0.4, stagger: 0.025, ease: "back.out(2.2)" }, 0.12)
+    .fromTo(d.querySelector(".ul path"), { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.45, ease: "power2.inOut" }, "-=0.25");
+  await wait(PACE.titleHold);
+  await gsap.to(d, { opacity: 0, scale: 1.15, duration: 0.3 });
   d.remove();
 }
 export function card(html, style, cls = "card pill") {
@@ -783,21 +899,19 @@ export async function pointHand(x, y, dur = 2.4) {
   return h;
 }
 
-// ---------- checklist ----------
-const check = $("#check");
-export function checklist(icons) {
-  check.innerHTML = "";
-  icons.forEach((n) => { const s = el("div", "slot", check); img(n, s, {}, ""); });
-  gsap.to(check, { opacity: 1, duration: 0.4 });
+// ---------- question progress: "Question 3 of 8" and a dot per question, top right under the stars ----------
+const prog = el("div", "", stage); prog.id = "prog";
+gsap.set(prog, { autoAlpha: 0 });
+let progN = 0, progCur = 0;
+const progDone = new Set();
+function drawProg() {
+  prog.innerHTML = `<b>Question ${progCur + 1} of ${progN}</b><span class="dots">${Array.from({ length: progN }, (_, i) => `<i class="${progDone.has(i) ? "done" : i === progCur ? "cur" : ""}"></i>`).join("")}</span>`;
 }
-export function checkCur(i) { [...check.children].forEach((s, j) => s.classList.toggle("cur", j === i)); }
-export function checkDone(i) {
-  const s = check.children[i];
-  if (!s) return;
-  s.classList.add("done"); s.classList.remove("cur");
-  gsap.fromTo(s, { scale: 1.6 }, { scale: 1, duration: 0.5, ease: "back.out(3)" });
-}
-export function hideChecklist() { gsap.to(check, { opacity: 0, duration: 0.3 }); }
+/** list: one entry per question (its length is the part's question count) */
+export function checklist(list) { progN = list.length; progCur = 0; progDone.clear(); drawProg(); }
+export function checkCur(i) { progCur = i; drawProg(); gsap.to(prog, { autoAlpha: 1, duration: 0.3 }); gsap.fromTo(prog.querySelector("b"), { scale: 1.15 }, { scale: 1, duration: 0.35, ease: "back.out(3)" }); }
+export function checkDone(i) { progDone.add(i); drawProg(); }
+export function hideChecklist() { gsap.to(prog, { autoAlpha: 0, duration: 0.3 }); }
 
 export { playFx };
 
