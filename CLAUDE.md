@@ -55,4 +55,8 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
   word helper bottom-right, answer gems under the table, smaller speaker bottom-left (SPOTS.table).
 - No blue guest monster anywhere it could be read as a second Neel (gu_monster_blue).
 - Keep the UI uncluttered and keep m purple / d orange everywhere.
-- Keep assets WebP, total game under 20 MB.
+- Keep assets WebP, total game under 20 MB. Re-encode from the lossless originals, never WebP from WebP:
+  tools/optimize_images.py (sprite sheets q74, backgrounds at their drawn 2000 x 900).
+- Smoothness: only the sprite sheet being played is displayed (a sheet decodes to about 38 MB); sheets are decoded
+  ahead of use (warmChars, WARM in engine.js), backdrops decode behind the closed curtain, and a normal start loads only
+  the title and story art (FIRST in main.js) before the rest loads one file at a time.

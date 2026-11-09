@@ -108,7 +108,8 @@ gsap.ticker.add((t) => {
     const lt = LT[k];
     lt.x = (-px * 70 + sway * 40) * SPEED[k] + (camOff.x * (CAMDEPTH[k] - 1)) / camOff.s;
     lt.y = -py * 10 * SPEED[k] + (k === "mid" ? bob : 0);
-    layers[k].style.transform = `translate(${lt.x}px,${lt.y}px)`;
+    const tf = `translate(${lt.x.toFixed(1)}px,${lt.y.toFixed(1)}px)`;
+    if (layers[k]._tf !== tf) { layers[k]._tf = tf; layers[k].style.transform = tf; } // no style write when nothing moved
   }
 });
 
@@ -219,7 +220,8 @@ function camApply() {
   ox = (ox - cam.px) * cam.k + cam.px + cam.j; oy = (oy - cam.py) * cam.k + cam.py;
   oy = clampN(oy, H * (1 - S), 0);
   camOff = { x: ox, y: oy, s: S };
-  camEl.style.transform = `translate(${ox}px,${oy}px) scale(${S})`;
+  const tf = `translate(${ox.toFixed(1)}px,${oy.toFixed(1)}px) scale(${S.toFixed(4)})`;
+  if (camEl._tf !== tf) { camEl._tf = tf; camEl.style.transform = tf; }
   if (bubble._c) reflowBubble();
 }
 gsap.ticker.add(camApply);
@@ -279,10 +281,14 @@ export async function setScene(name, { fast = false, plain = false } = {}) {
   if (!fast && sceneName) { await curtainClose(); shut = true; }
   // fast into the same place (title -> story): the props fade in over the sky instead of a curtain
   const grow = fast && !plain && sceneName === name;
+  const plates = [];
   for (const k of ["far", "mid", "fore"]) {
     layers[k].innerHTML = "";
-    if (!plain || k === "far") { const p = img(`bg_${name}_${k}`, layers[k], {}, "plate"); if (grow && k !== "far") gsap.from(p, { opacity: 0, duration: 0.6 }); }
+    if (!plain || k === "far") { const p = img(`bg_${name}_${k}`, layers[k], {}, "plate"); plates.push(p); if (grow && k !== "far") gsap.from(p, { opacity: 0, duration: 0.6 }); }
   }
+  // the new backdrop is decoded while the curtain is still shut, so the curtain never stutters as it opens
+  // (and a backdrop that grows in over the title is decoded before it starts to show)
+  if (shut || grow) await Promise.race([Promise.all(plates.map((p) => (p.decode ? p.decode() : Promise.resolve()).catch(() => {}))), wait(0.6)]);
   world.innerHTML = "";
   gsap.set(layers.fore, { opacity: 1 });
   // reset to the neutral filter, never "none": tweening from "none" starts brightness at 0 and flashes the scene black
@@ -448,15 +454,25 @@ for (const k of Object.keys(ANIM)) {
   gsap.set(box, { display: "none" });
 }
 export const ANIM_FILES = Object.keys(META);
-// build every animation layer up front so all sheets are decoded before they are needed
+// one layer per animation. Only the layer being played is displayed: a sheet is 3750 x 2550, so painting every
+// sheet of every character at once (the old way) held about 700 MB of decoded images on a tablet.
 for (const key of ANIM_FILES) { const k = key.split("_")[1]; if (C[k]) layer(C[k], key, META[key]); }
-// one layer per animation so switching never shows an undecoded (blank) frame
+// a sheet is decoded ahead of its first use, so switching to it never shows a blank frame
+const DECODED = new Set(), decoding = {};
+function decode(key) {
+  if (!decoding[key]) { const im = new Image(); im.src = `assets/${key}.webp`; decoding[key] = (im.decode ? im.decode() : Promise.resolve()).catch(() => {}).then(() => DECODED.add(key)); }
+  return decoding[key];
+}
+/** decode the three idle sheets (after loading), so nobody is ever invisible on their first appearance */
+export const warmChars = () => Promise.all(["neel", "agni", "maya"].map((k) => decode(`anim_${k}_idle`)));
+// the poses a character uses most are decoded as soon as they step on stage
+const WARM = { neel: ["idle", "talk", "happy"], agni: ["idle", "talk", "cheer"], maya: ["idle", "talk", "happy"] };
 function layer(c, key, m) {
   c.layers = c.layers || {};
   if (!c.layers[key]) {
     const d = el("div", "spr", c.box);
     const rows = Math.ceil(m.n / m.cols);
-    Object.assign(d.style, { backgroundImage: `url(assets/${key}.webp)`, backgroundSize: `${m.cols * 100}% ${rows * 100}%`, opacity: 0 });
+    Object.assign(d.style, { backgroundImage: `url(assets/${key}.webp)`, backgroundSize: `${m.cols * 100}% ${rows * 100}%`, display: "none" });
     c.layers[key] = d;
   }
   return c.layers[key];
@@ -469,7 +485,13 @@ function setAnim(c, a, restart = true) {
   c.anim = key; c.m = m; c.f = 0; c.t = 0; c.loopAnim = LOOP.has(a);
   c.sp = next;
   frame(c);
-  for (const k in c.layers) c.layers[k].style.opacity = c.layers[k] === next ? 1 : 0;
+  const swap = () => { if (c.sp !== next) return; for (const k in c.layers) c.layers[k].style.display = c.layers[k] === next ? "block" : "none"; next.style.opacity = 1; };
+  if (DECODED.has(key)) swap();
+  else {
+    // not decoded yet: the old pose stays until the new sheet is ready (shown almost invisibly so it gets painted)
+    next.style.display = "block"; next.style.opacity = 0.01;
+    decode(key).then(() => requestAnimationFrame(() => requestAnimationFrame(swap)));
+  }
 }
 function frame(c) {
   const m = c.m, rows = Math.ceil(m.n / m.cols), col = c.f % m.cols, row = Math.floor(c.f / m.cols);
@@ -509,6 +531,7 @@ export function placeChar(k, x, y, size, { p = "idle", flip = false, show = true
   const m = META[`anim_${k}_idle`], h = size * (k === "agni" ? 0.92 : 1.02), w = (h * m.w) / m.h;
   gsap.set(c.box, { display: "block", left: x - w / 2, top: y - h, width: w, height: h, scaleX: flip ? -1 : 1, opacity: 1, x: 0, y: 0, rotation: 0 });
   c.x = x; c.y = y; c.size = size; c.flip = flip; c.visible = show; c.h = h;
+  if (show) WARM[k].forEach((a) => decode(`anim_${k}_${a}`));
   c.talking = false;
   c.box.classList.remove("quiet", "speaking");
   gsap.set(c.shadow, { opacity: 1 });

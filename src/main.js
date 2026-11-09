@@ -1,6 +1,6 @@
 import "./style.css";
 import "./qa.js";
-import { confetti, camPt, camRest, camSet, ANIM_FILES, setFore, score, showHud, music, curtainShut, curtainOpen, setTint, punch, shake, solo, trio, setFocus, gsap, $, el, img, ui, world, wait, sfx, say, setScene, placeChar, hideAllChars, pose, dance, partTitle, button, waitClick, playFx, preload, hideChecklist, setDim, C, closeBubble, camTo, W } from "./engine.js";
+import { confetti, camPt, camRest, camSet, ANIM_FILES, warmChars, setFore, score, showHud, music, curtainShut, curtainOpen, setTint, punch, shake, solo, trio, setFocus, gsap, $, el, img, ui, world, wait, sfx, say, setScene, placeChar, hideAllChars, pose, dance, partTitle, button, waitClick, playFx, preload, hideChecklist, setDim, C, closeBubble, camTo, W } from "./engine.js";
 import { runPart1 } from "./part1.js";
 import { runPart2 } from "./part2.js";
 import { runPart3, partyTable, DOOR_XY } from "./part3.js";
@@ -12,9 +12,11 @@ const ALL = ["bg_forest_far", "bg_forest_mid", "bg_forest_fore", "bg_hall_far", 
   ...ANIM_FILES,
   "gu_monster_green", "gu_monster_pink", "gu_monster_blue", "gu_monster_sad", "gu_dragon_teal", "gu_dragon_red",
   "p1_dial_base", "p1_dial_knob", "p1_variable_jar", "p1_constant_chest_closed", "p1_constant_chest_open", "p2_cauldron", "p2_orb_m", "p2_orb_d", "p2_orb_number", "p2_rune_stone",
-  "p3_door_closed", "p3_door_open", "p3_gold_seal", "p3_gold_seal_cracked", "pr_party_table", "pr_cake", "pr_chair", "pr_sweet", "pr_balloon", "pr_plate", "pr_cushion", "pr_laddoo", "de_string_lights", "de_bunting", "cover_neel", "ui_panel_frame", "ui_button_pill", "ui_title_card", "ui_play_button", "ui_hint_hand"];
+  "p3_door_closed", "p3_door_open", "fx_coin_spin", "pr_party_table_3d", "pr_bowl", "pr_cake", "pr_chair", "pr_sweet", "pr_balloon", "pr_plate", "pr_cushion", "pr_laddoo", "de_string_lights", "de_bunting", "cover_neel", "ui_panel_frame", "ui_button_pill", "ui_title_card", "ui_play_button", "ui_hint_hand"];
 
 
+// what the title and the story need (the rest loads behind them)
+const FIRST = ["bg_forest", "bg_hall", "ui_", "cover_neel", "fx_coin_spin", "gu_monster", "anim_neel_idle", "anim_neel_talk", "anim_neel_happy", "anim_agni_idle", "anim_agni_talk", "anim_agni_crash_in", "anim_agni_shocked", "anim_agni_cheer", "anim_maya_idle", "anim_maya_talk", "anim_maya_cast", "anim_maya_happy"];
 function clearUI() { [...ui.children].forEach((c) => { if (c.id !== "bubble") c.remove(); }); world.innerHTML = ""; }
 
 // ---------- staging helpers ----------
@@ -80,7 +82,8 @@ function board() {
 }
 
 // ---------- scenes ----------
-async function title() {
+/** ready: called once the title art is decoded (the curtain opens then, never mid-decode) */
+async function title(ready) {
   music("calm");
   await setScene("forest", { fast: true, plain: true }); // the opening keeps only the moonlit sky and hills
   setDim(0);
@@ -96,6 +99,8 @@ async function title() {
   const play = img("ui_play_button", ui, { left: 440 - 105, top: 640 - 105, width: 210, height: 210 }, "abs playBtn pulse");
   play.alt = "Play";
   gsap.from(play, { scale: 0, duration: 0.6, delay: 0.7, ease: "back.out(2)" });
+  await Promise.race([Promise.all([hero, logo, play, ...document.querySelectorAll("#Lfar .plate")].map((i) => (i.decode ? i.decode() : Promise.resolve()).catch(() => {}))), wait(0.8)]);
+  ready && ready();
   const go = await new Promise((r) => {
     play.onpointerdown = (e) => { e.stopPropagation(); r(0); };
   });
@@ -337,9 +342,15 @@ async function party(opt = {}) {
 const RUN = { 1: part1, 2: part2, 3: part3 };
 async function main() {
   const ld = $("#loader");
-  await preload(ALL, (p) => (ld.textContent = `Loading… ${Math.round(p * 100)}%`));
   const q = qaJump();
   const j = location.hash.match(/^#(p\d|end|map)$/);
+  // a normal start waits only for the title and the story; the rest of the art loads in the background while the
+  // story plays. A jump straight into a part waits for everything
+  const first = q || j ? ALL : ALL.filter((n) => FIRST.some((f) => n.startsWith(f)));
+  await preload(first, (p) => (ld.textContent = `Loading… ${Math.round(p * 100)}%`));
+  // one file at a time, so loading in the background never causes a hitch on screen
+  if (first !== ALL) (async () => { for (const n of ALL.filter((n) => !first.includes(n))) await preload([n]); })();
+  await warmChars();
   // a normal start opens on the title like a stage: the curtain waits shut behind the loader
   if (!q && !j) curtainShut();
   ld.remove(); // gone at once, so it can never show through a title card
@@ -356,9 +367,7 @@ async function main() {
   } else if (j && j[1] === "end") { showHud(true); await party(); }
   else if (j && j[1] !== "map") { showHud(true); await RUN[({ p1: 1, p2: 2, p3: 3 })[j[1]]](); }
   else if (!j) {
-    const t = title();
-    wait(0.4).then(() => curtainOpen());
-    await t;
+    await title(() => curtainOpen());
     await story();
   } else state.unlockAll = true;
   while (true) {
