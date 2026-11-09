@@ -230,11 +230,11 @@ async function ending(opt = {}) {
   const MON = ["gu_monster_green", "gu_monster_pink", "gu_monster_blue", "gu_monster_green"], DRA = ["gu_dragon_teal", "gu_dragon_red"];
   const gs = [];
   for (let i = 0; i < 4; i++) { const g = img(MON[i], world, { left: 150 + i * 105, top: 470, width: 130, height: 130 }); g.dataset.k = "m"; gs.push(g); gsap.from(g, { x: -600, opacity: 0, duration: 0.5, delay: i * 0.1 }); }
-  crowd(gs, { cx: 420, top: 500, size: 130, maxW: 600 });
+  crowd(gs, { cx: 380, top: 500, size: 130, maxW: 560 });
   sb.flip("m", 4);
   if (!skip) await say("neel", "Look! 4 of my monster friends are here!", { p: "happy" });
   for (let i = 0; i < 7; i++) { const g = img(DRA[i % 2], world, { left: 960 + i * 78, top: 470, width: 130, height: 130 }); g.dataset.k = "d"; gs.push(g); gsap.from(g, { x: 900, opacity: 0, duration: 0.5, delay: i * 0.08 }); }
-  crowd(gs, { cx: 420, top: 500, size: 130, maxW: 600 });
+  crowd(gs, { cx: 380, top: 500, size: 130, maxW: 560 });
   sb.flip("d", 7);
   if (!skip) {
     await say("agni", "And 7 of my dragon friends are here too!", { p: "cheer" });
@@ -256,7 +256,7 @@ async function ending(opt = {}) {
   sfx("cheer");
   // Neel, Agni and Maya all dance
   host.on = false;
-  [["agni", 830, 470, true], ["neel", 1090, 520, false], ["maya", 1360, 520, true]].forEach(([k, x, sz, fl]) => { if (!C[k].visible) { placeChar(k, x, 895, sz, { flip: fl }); gsap.from(C[k].box, { opacity: 0, y: 40, duration: 0.4 }); } dance(k); });
+  [["agni", 800, 460, true], ["neel", 1060, 510, false], ["maya", 1310, 500, true]].forEach(([k, x, sz, fl]) => { if (!C[k].visible) { placeChar(k, x, 895, sz, { flip: fl }); gsap.from(C[k].box, { opacity: 0, y: 40, duration: 0.4 }); } dance(k); });
   camSway();
   gs.forEach((g, i) => gsap.to(g, { y: -30, duration: 0.3 + (i % 3) * 0.05, yoyo: true, repeat: -1, ease: "power1.out", delay: i * 0.07 }));
   // fireworks on the left of the stage (Neel dances on the right): shell bursts and rockets take turns

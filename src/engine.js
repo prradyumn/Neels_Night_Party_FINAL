@@ -298,8 +298,9 @@ export const SPOTS = {
   table: { x: 165, y: 895, from: -160, bw: 310, side: true, btop: 648, size: { neel: 360, agni: 335, maya: 370 }, flip: { agni: true } },
   // conversations: the two characters who are talking stand side by side, facing each other (a third speaker
   // takes the place of whoever spoke longer ago). duo: story scenes and bridges; duoGame: inside a level.
-  duo: { pair: [860, 1330], y: 895, bw: 520, size: { neel: 560, agni: 490, maya: 570 }, faceR: { agni: true }, faceL: { maya: true } },
-  duoGame: { pair: [150, 390], y: 890, bw: 400, size: { neel: 400, agni: 370, maya: 410 }, faceR: { agni: true }, faceL: { maya: true } },
+  // slots are spaced from the measured art so both stay whole in frame, even in wide poses (Neel's happy, Maya's celebrate)
+  duo: { pair: [820, 1270], y: 895, bw: 520, size: { neel: 540, agni: 480, maya: 550 }, faceR: { agni: true }, faceL: { maya: true } },
+  duoGame: { pair: [205, 435], y: 890, bw: 400, size: { neel: 380, agni: 350, maya: 390 }, faceR: { agni: true }, faceL: { maya: true } },
 };
 export const host = { on: false, cur: null, spot: SPOTS.game, slot: {} };
 /** switch to one-character mode on a spot (or a two-character conversation spot); the next speaker slides in */
@@ -307,6 +308,7 @@ export function solo(spot = "story") {
   host.on = true; host.spot = SPOTS[spot]; host.cur = null; host.slot = {};
   for (const k in C) if (C[k].visible) hideChar(k, 0.2);
   if (spot === "story" || spot === "duo") setFocus("story"); // the speakers stand out from a slightly soft background
+  if (host.spot.pair) camRest(0.6); // a conversation is framed wide, so neither speaker is pushed off the edge
 }
 async function pairSwap(k) {
   const s = host.spot;
@@ -368,12 +370,12 @@ const ENTER = {
   // arrives on the column of light it fires (the effect's FLASH, 1.52 s in)
   async maya(c) {
     const b = c.box, sx = c.flip ? -1 : 1;
-    playFx("cast", c.x, c.y - 10, { palette: "plum", scale: 3 });
+    playFx("cast", c.x, c.y - 10, { palette: "plum", scale: 3, parent: world }); // the circle and its light stay behind her
     gsap.set(b, { opacity: 0 });
     await wait(1.45);
     sfx("magic");
     await gsap.fromTo(b, { scaleX: sx * 0.12, scaleY: 1.5, opacity: 0 }, { scaleX: sx, scaleY: 1, opacity: 1, duration: 0.55, ease: "expo.out" });
-    playFx("collect", c.x, c.y - c.h * 0.8, { palette: "plum", scale: 2.4 });
+    playFx("collect", c.x, c.y - c.h * 0.8, { palette: "plum", scale: 2.4, parent: world });
   },
 };
 export function setFore(v, dur = 0.5) { gsap.to(layers.fore, { opacity: v, duration: dur }); }
