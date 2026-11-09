@@ -1,34 +1,37 @@
 // PART 1 – Neel's Party List: the Friend Dial. Turn the dial, watch what changes, sort into Variable jar / Constant chest.
 import { qbox, award, actionZone, azTip, setFore, gsap, el, img, ui, world, wait, sfx, say, card, popup, playFx, checklist, checkCur, checkDone, pointHand, setDim, onTap, react, toStage, closeBubble, C, camFocus, lightPool } from "./engine.js";
 import { setAnswer } from "./qa.js";
-import { sideChars, maya, mayaOut, praise, idleWatch } from "./common.js";
+import { sideChars, maya, mayaOut, praise, idleWatch, iconRow } from "./common.js";
 
 const ITEMS = [
   { name: "Number of friends", sub: "Neel has not decided yet.", icon: "gu_monster_green", f: (n) => n, ans: "v", who: "neel", line: "Number of friends coming to the party.",
     h1: "Has Neel decided how many friends will come?", h2: "It can be 5. It can be 10. Is it the same every time?",
-    exp: "Neel has not decided yet. It can be 5 or 10. So the number of friends is a <span class=v>variable</span>.", pop: "The number of friends is a <b>variable</b>.", inact: "Take your time. Has Neel decided yet?" },
-  { name: "Number of cakes", sub: "One big cake, however many friends come.", icon: "pr_cake", f: () => 1, ans: "c", who: "neel", line: "Number of cakes. I will cut one big cake, however many friends come.",
+    exp: "Neel has not decided yet. It can be 5 or 10. So the number of friends is a <span class=v>variable</span>.", pop: "The number of friends is a <b>variable</b>.", inact: "Has Neel decided yet?" },
+  { name: "Number of cakes", sub: "1 big cake", icon: "pr_cake", f: () => 1, ans: "c", who: "neel", line: "Number of cakes. Neel will cut one big cake, however many friends come.",
     h1: "Read it again: one big cake, however many friends come.", h2: "5 friends: 1 cake. 10 friends: still 1 cake. Does it change?",
     exp: "There is always 1 big cake, however many friends come. So the number of cakes is a <span class=c>constant</span>.", pop: "The number of cakes is a <b>constant</b>.", inact: "One big cake for everyone." },
-  { name: "Number of plates", sub: "One plate for each friend.", icon: "pr_plate", f: (n) => n, ans: "v", who: "agni", line: "Number of plates. One plate for each friend.",
+  { name: "Number of plates", sub: "one plate for each friend", icon: "pr_plate", f: (n) => n, ans: "v", who: "agni", line: "Number of plates. One plate for each friend.",
     h1: "If more friends come, do we need more plates?", h2: "5 friends need 5 plates. 10 friends need 10 plates.",
-    exp: "One plate for each friend. If the friends change, the plates change too. So the number of plates is a <span class=v>variable</span>.", pop: "The number of plates is a <b>variable</b>.", inact: "One plate for each friend." },
-  { name: "Number of lamps", sub: "The hall has 6 lamps.", icon: "pr_lamp", f: () => 6, ans: "c", who: "agni", line: "Number of lamps in the hall. The hall has 6 lamps.",
-    h1: "Does the hall get more lamps when more friends come?", h2: "5 friends: 6 lamps. 8 friends: still 6 lamps.",
-    exp: "The hall always has 6 lamps. It does not depend on the friends. So the number of lamps is a <span class=c>constant</span>.", pop: "The number of lamps is a <b>constant</b>.", inact: "Count the lamps as you turn the dial." },
-  { name: "Sweets in one box", sub: "Every box has 10 sweets.", icon: "pr_sweet", f: () => 10, ans: "c", who: "neel", line: "Number of sweets in one box. Every box has 10 sweets.",
-    h1: "Read it again: every box has 10 sweets.", h2: "Turn the dial. Does one box ever get more sweets?",
-    exp: "Every box has 10 sweets. It never changes. So the sweets in a box is a <span class=c>constant</span>.", pop: "Sweets in one box is a <b>constant</b>.", inact: "Every box has 10 sweets." },
-  { name: "Boxes of sweets", sub: "Enough boxes for all the friends.", icon: "pr_sweet_box", f: (n) => Math.ceil(n / 2), ans: "v", who: "neel", line: "Number of boxes of sweets. I need enough sweets for all my friends.",
-    h1: "More friends need more sweets. Do they need more boxes?", h2: "Turn the dial up. Watch the boxes.",
-    exp: "If more friends come, Neel needs more boxes. So the number of boxes is a <span class=v>variable</span>.", pop: "The number of boxes is a <b>variable</b>.", inact: "Watch the boxes as the friends change." },
-  { name: "Balloons on the door", sub: "10 balloons to decorate the door.", icon: "pr_balloon", f: () => 10, ans: "c", who: "agni", line: "Number of balloons on the door. Neel puts 10 balloons on the door.",
-    h1: "These balloons are only for the door. Do they depend on the friends?", h2: "2 friends: 10 balloons. 8 friends: still 10.",
-    exp: "The door always gets 10 balloons. They do not depend on the friends. So this number is a <span class=c>constant</span>.", pop: "Balloons on the door: <b>constant</b>.", inact: "These balloons are for the door." },
-  { name: "Balloons to give away", sub: "One balloon for each friend.", icon: "pr_balloon", hue: 140, f: (n) => n, ans: "v", who: "maya", line: "Number of balloons to give away. One balloon for each friend.",
-    h1: "Now the balloons are for the friends. One for each friend.", h2: "Turn the dial. More friends, more balloons?",
-    exp: "One balloon for each friend. If the friends change, these balloons change. Same balloons, but a different use! So this is a <span class=v>variable</span>.", pop: "Balloons to give away: <b>variable</b>.", inact: "One balloon for each friend." },
+    exp: "One plate for each friend. If the number of friends changes, the plates change too. So the number of plates is a <span class=v>variable</span>.", pop: "The number of plates is a <b>variable</b>.", inact: "One plate for each friend." },
+  { name: "Number of lamps in the hall", sub: "6 lamps in the hall", icon: "pr_lamp", f: () => 6, ans: "c", who: "agni", line: "Number of lamps in the hall. The hall has 6 lamps.",
+    h1: "Does the hall get more lamps when more friends come?", h2: "5 friends: 6 lamps. 10 friends: still 6 lamps.",
+    exp: "The hall always has 6 lamps. It does not depend on the friends. So the number of lamps is a <span class=c>constant</span>.", pop: "The number of lamps is a <b>constant</b>.", inact: "Does the hall get more lamps?" },
+  { name: "Number of sweets in one box", sub: "every box has 10 sweets", icon: "pr_sweet", f: () => 10, ans: "c", who: "neel", line: "Number of sweets in one box. Every box has 10 sweets.",
+    h1: "Read it again: every box has 10 sweets.", h2: "Box 1 has 10 sweets. Box 2 has 10 sweets. Box 3 has 10 sweets. Is it always the same?",
+    exp: "Every box has 10 sweets. It never changes. So the number of sweets in a box is a <span class=c>constant</span>.", pop: "The number of sweets in a box is a <b>constant</b>.", inact: "Every box has 10 sweets." },
+  { name: "Number of boxes of sweets", sub: "enough boxes for all friends", icon: "pr_sweet_box", f: (n) => Math.ceil(n / 5), ans: "v", who: "neel", line: "Number of boxes of sweets. Neel needs enough sweets for all his friends.",
+    h1: "More friends need more sweets. Do they need more boxes?", h2: "5 friends need 1 box. 10 friends need 2 boxes.",
+    exp: "If more friends come, Neel needs more boxes. So the number of boxes is a <span class=v>variable</span>.", pop: "The number of boxes of sweets is a <b>variable</b>.", inact: "More friends, more boxes?" },
+  { name: "Number of balloons on the door", sub: "10 balloons on the door", icon: "pr_balloon", f: () => 10, ans: "c", who: "agni", line: "Number of balloons on the door. Neel puts 10 balloons on the door to decorate it.",
+    h1: "These balloons are only for the door. Do they depend on the friends?", h2: "5 friends: 10 door balloons. 10 friends: still 10 door balloons.",
+    exp: "The door always gets 10 balloons. They do not depend on the friends. So this number is a <span class=c>constant</span>.", pop: "The number of balloons on the door is a <b>constant</b>.", inact: "These balloons are only for the door." },
+  { name: "Number of balloons to give away", sub: "one balloon for each friend", icon: "pr_balloon", hue: 140, f: (n) => n, ans: "v", who: "maya", line: "Number of balloons to give away. Neel gives one balloon to each friend.",
+    h1: "Now the balloons are for the friends. One for each friend.", h2: "5 friends get 5 balloons. 10 friends get 10 balloons.",
+    exp: "One balloon for each friend. If the friends change, these balloons change. So this number is a <span class=v>variable</span>. Same balloons, but a different use!", pop: "The number of balloons to give away is a <b>variable</b>.", inact: "One balloon for each friend." },
 ];
+// who praises each right answer (from the script)
+const PRAISE = ["agni:yes", "agni:super", "neel:great", "neel:well", "agni:yes", "agni:super", "neel:great", "neel:well"];
+const ANS = { v: "Variable (it can change)", c: "Constant (it stays the same)" };
 
 // read left to right: the dial (cause) beside the speaker, the display (effect) in the middle, jar + chest (decision) on the right
 const ZONE = { x: 780, y: 190, w: 460, h: 280 };
@@ -114,10 +117,10 @@ function buildScene() {
   // bins
   jar = el("div", "abs", ui, { left: BIN.v[0] - 75, top: 610, width: 150, height: 190, cursor: "pointer" });
   img("p1_variable_jar", jar, { width: 150, height: 190, left: 0, top: 0, objectFit: "contain" });
-  el("div", "lbl binLbl", jar, { left: -10, top: 196, width: 170, color: "#ffe066" }, "VARIABLE");
+  el("div", "lbl binLbl", jar, { left: -10, top: 196, width: 170, color: "#ffe066" }, "VARIABLE<small>it can change</small>");
   chest = el("div", "abs", ui, { left: BIN.c[0] - 85, top: 635, width: 170, height: 160, cursor: "pointer" });
   chest.im = img("p1_constant_chest_closed", chest, { width: 170, height: 160, left: 0, top: 0, objectFit: "contain" });
-  el("div", "lbl binLbl", chest, { left: 0, top: 171, width: 170, color: "#d8dae6" }, "CONSTANT");
+  el("div", "lbl binLbl", chest, { left: -10, top: 171, width: 190, color: "#d8dae6" }, "CONSTANT<small>it stays the same</small>");
   gsap.set([jar, chest], { opacity: 0.6, pointerEvents: "none" });
 }
 function binsActive(on) {
@@ -134,7 +137,7 @@ function choose() {
   });
 }
 
-async function success(it, tries = 0) {
+async function success(it, tries = 0, q = 0) {
   binsActive(false);
   const bin = it.ans === "v" ? jar : chest;
   const [bx, by] = BIN[it.ans];
@@ -153,8 +156,9 @@ async function success(it, tries = 0) {
   showBox.innerHTML = "";
   QB.sub(`<span class="win">${it.pop} ✓</span>`);
   await award(tries, ZONE.x + ZONE.w / 2, 300, 1);
-  await praise();
-  await maya(it.exp, "happy");
+  if (tries >= 3) return; // Maya has just shown the answer
+  await praise(PRAISE[q]);
+  await maya("Correct! " + it.exp, "happy");
   await mayaOut();
 }
 async function reject(choice) {
@@ -169,20 +173,39 @@ async function demoDial() {
   for (const n of [3, 7, 3]) { setFriends(n); await wait(0.7); }
 }
 
+// Maya explains on a chalkboard: each line she says adds one part to the board
+async function chalkboard() {
+  const b = el("div", "chalk", ui, { left: 480, top: 118, width: 900 }, `<div class="tag">Maya explains</div><h2>Variable and Constant</h2><div class="cols"><div class="col v"></div><div class="col c"></div></div>`);
+  const [V, K] = b.querySelectorAll(".col");
+  gsap.set(b.querySelector("h2"), { opacity: 0 });
+  gsap.from(b, { y: -30, opacity: 0, duration: 0.4 });
+  const add = (parent, html) => { const e = el("div", "", parent, {}, html); gsap.from(e, { opacity: 0, y: 8, duration: 0.35 }); sfx("chalk"); return e; };
+  gsap.to(b.querySelector("h2"), { opacity: 1, duration: 0.4 }); sfx("chalk");
+  await maya("Let's learn two new words: variable and constant.", "explain");
+  add(V, `<h3>VARIABLE</h3><p>= a number that can change</p>`);
+  gsap.fromTo(jar, { opacity: 0.6 }, { opacity: 1, scale: 1.12, yoyo: true, repeat: 1, duration: 0.4 });
+  await maya("A <span class=v>variable</span> is a number that can change.", "cast");
+  add(V, `<p class="ex">Example: Number of invitation cards.<br>5 friends need 5 cards.<br>10 friends need 10 cards.<br><b>It changes.</b></p>`);
+  await maya("The number of invitation cards is a variable. Neel gives one card to each friend. If 5 friends come, he needs 5 cards. If 10 friends come, he needs 10 cards.", "explain");
+  add(K, `<h3>CONSTANT</h3><p>= a number that stays the same</p><p class="ex">Example: Number of tables.<br>5 friends: 1 table.<br>10 friends: still 1 table.<br><b>It stays the same.</b></p>`);
+  gsap.fromTo(chest, { opacity: 0.6 }, { opacity: 1, scale: 1.12, yoyo: true, repeat: 1, duration: 0.4 });
+  await maya("A <span class=c>constant</span> is a number that stays the same. The number of tables is a constant. Neel has 1 table. If 5 friends come, there is 1 table. If 10 friends come, there is still 1 table.", "cast");
+  await maya("Now help Neel check his party list. For each thing, tap Variable or Constant.", "explain");
+  await mayaOut();
+  await gsap.to(b, { opacity: 0, y: -20, duration: 0.4 });
+  b.remove();
+}
+
 export async function runPart1(start = 1) {
   buildScene();
   checklist(ITEMS.map((i) => i.icon));
   for (let i = 0; i < start - 1; i++) checkDone(i);
   setDim(0.25);
   if (start <= 1) {
-  await maya("Some numbers depend on how many friends come. If more friends come, they change. A number that can change is a <span class=v>variable</span>.", "explain");
-  gsap.to(jar, { opacity: 1, scale: 1.12, yoyo: true, repeat: 1, duration: 0.4 });
-  playFx("collect", BIN.v[0], 720, { palette: "gold", parent: ui });
-  await maya("Some numbers stay the same, however many friends come. A number that stays the same is a <span class=c>constant</span>.", "cast");
-  gsap.to(chest, { opacity: 1, scale: 1.12, yoyo: true, repeat: 1, duration: 0.4 });
-  playFx("poof", BIN.c[0], 760, { palette: "stone", parent: ui });
-  await maya("Turn the magic dial to change the friends. Watch what changes. Then put each thing in the jar or the chest!", "explain");
-  await mayaOut();
+    const row = iconRow(ITEMS);
+    await say("nar", "Part 1 of 3: Neel's Party List. There are 8 things on Neel's party list. Let's check if they are variable or constant.");
+    row.remove();
+    await chalkboard();
   }
   gsap.to([dialEl, dialLbl, flow], { opacity: 1, duration: 0.4 });
   friends = 4; dialTurns = 0;
@@ -217,11 +240,11 @@ export async function runPart1(start = 1) {
     // phase B: choose
     let tries = 0;
     iw.stop();
-    const iw2 = idleWatch(16, async () => { await maya(it.inact + " Tap Variable or Constant.", "hint"); await mayaOut(); iw2.arm(); });
+    const iw2 = idleWatch(16, async () => { await maya("Take your time. " + it.inact + " Tap Variable or Constant.", "hint"); await mayaOut(); iw2.arm(); });
     while (true) {
       const ch = await choose();
       iw2.arm();
-      if (ch === it.ans) { iw2.stop(); azTip(""); await success(it, tries); break; }
+      if (ch === it.ans) { iw2.stop(); azTip(""); await success(it, tries, q); break; }
       tries++;
       await reject(ch);
       if (tries === 1) { await maya("Not yet. Try again. " + it.h1, "hint"); await mayaOut(); }
@@ -230,10 +253,10 @@ export async function runPart1(start = 1) {
         iw2.stop();
         const b = [BIN[it.ans][0] - 10, BIN[it.ans][1] + 10];
         pointHand(b[0], b[1], 2.2);
-        await maya("Let's see the answer together. " + it.exp, "explain");
+        await maya(`Let's see the answer together. The answer is ${ANS[it.ans]}. ` + it.exp, "explain");
         await mayaOut();
         azTip("");
-        await success({ ...it, exp: "Now you know! Let's check the next thing." }, 3);
+        await success(it, 3, q);
         break;
       }
     }

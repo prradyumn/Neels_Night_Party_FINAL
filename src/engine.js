@@ -296,15 +296,32 @@ export const SPOTS = {
   story: { x: 1150, y: 895, from: 160, bw: 600, size: { neel: 600, agni: 520, maya: 600 }, flip: { maya: true } },
   // the table scene: a smaller speaker bottom-left, the bubble beside them (not above), so the table stays the hero
   table: { x: 165, y: 895, from: -160, bw: 310, side: true, btop: 648, size: { neel: 360, agni: 335, maya: 370 }, flip: { agni: true } },
+  // conversations: the two characters who are talking stand side by side, facing each other (a third speaker
+  // takes the place of whoever spoke longer ago). duo: story scenes and bridges; duoGame: inside a level.
+  duo: { pair: [860, 1330], y: 895, bw: 520, size: { neel: 560, agni: 490, maya: 570 }, faceR: { agni: true }, faceL: { maya: true } },
+  duoGame: { pair: [150, 390], y: 890, bw: 400, size: { neel: 400, agni: 370, maya: 410 }, faceR: { agni: true }, faceL: { maya: true } },
 };
-export const host = { on: false, cur: null, spot: SPOTS.game };
-/** switch to one-character mode on a spot; the next speaker slides in */
+export const host = { on: false, cur: null, spot: SPOTS.game, slot: {} };
+/** switch to one-character mode on a spot (or a two-character conversation spot); the next speaker slides in */
 export function solo(spot = "story") {
-  host.on = true; host.spot = SPOTS[spot]; host.cur = null;
+  host.on = true; host.spot = SPOTS[spot]; host.cur = null; host.slot = {};
   for (const k in C) if (C[k].visible) hideChar(k, 0.2);
-  if (spot === "story") setFocus("story"); // the big speaker stands out from a slightly soft background
+  if (spot === "story" || spot === "duo") setFocus("story"); // the speakers stand out from a slightly soft background
+}
+async function pairSwap(k) {
+  const s = host.spot;
+  for (const o in host.slot) if (!C[o].visible) delete host.slot[o];
+  if (host.slot[k] != null) { host.cur = k; return; }
+  const on = Object.keys(host.slot);
+  let i = [0, 1].find((n) => !on.some((o) => host.slot[o] === n));
+  if (i == null) { const out = on.find((o) => o !== host.cur) || on[0]; i = host.slot[out]; delete host.slot[out]; hideChar(out, 0.15); }
+  host.slot[k] = i; host.cur = k;
+  placeChar(k, s.pair[i], s.y, s.size[k], { flip: !!(i === 0 ? s.faceR : s.faceL)[k] });
+  if (s === SPOTS.duo && !entered[k] && !calm) { entered[k] = true; return ENTER[k](C[k]); }
+  await gsap.from(C[k].box, { x: i === 0 ? -160 : 160, opacity: 0, duration: 0.35, ease: "back.out(1.4)" });
 }
 export async function hostSwap(k) {
+  if (host.spot.pair) return pairSwap(k);
   if (host.cur === k && C[k].visible) return;
   for (const o in C) if (o !== k && C[o].visible) hideChar(o, 0.15);
   host.cur = k;
@@ -518,6 +535,8 @@ export function sfx(type) {
     if (type === "cheer" || type === "win") { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.35, i * 0.09, "triangle", 0.12)); }
     if (type === "land") tone(90, 0.18, 0, "sine", 0.3, 50);
     if (type === "star") tone(1568, 0.12, 0, "sine", 0.1);
+    if (type === "chalk") [0, 0.07, 0.15].forEach((at) => tone(2400 + Math.random() * 600, 0.05, at, "sawtooth", 0.025, 1800));
+    if (type === "owl") { tone(420, 0.32, 0, "sine", 0.13, 360); tone(400, 0.5, 0.45, "sine", 0.12, 330); } // hoo-hooo
   } catch (e) {}
 }
 
@@ -647,7 +666,7 @@ export async function say(who, text, { p, wait: needTap = true, auto = 0, voice:
   if (host.on && C[who] && host.cur !== who) await hostSwap(who);
   const c = C[who];
   // the speaker is lit, everyone else on stage steps back a little
-  for (const k in C) { C[k].box.classList.remove("speaking"); C[k].box.classList.toggle("quiet", !!(c && c.visible) && !host.on && k !== who && C[k].visible); }
+  for (const k in C) { C[k].box.classList.remove("speaking"); C[k].box.classList.toggle("quiet", !!(c && c.visible) && (!host.on || !!host.spot.pair) && k !== who && C[k].visible); }
   if (c && p) pose(who, p);
   bubble.className = "";
   bubble.innerHTML = (NAMES[who] ? `<div class="who" style="background:${TAG[who]}">${NAMES[who]}</div>` : "") + `<div class="txt">${wordify(chipify(text))}</div>` + `<div class="tail"></div>` + (needTap ? (settings.autoplay ? `<div class="prog"><i></i></div>` : `<div class="nx">tap ▶</div>`) : "") + `<div class="rp" title="Hear again">🔊</div>`;
@@ -781,7 +800,7 @@ export function hideChecklist() { gsap.to(check, { opacity: 0, duration: 0.3 });
 export { playFx };
 
 // ---------- stars, Party Meter, action zone, menu ----------
-export const score = { stars: 0, max: 90, room: {} };
+export const score = { stars: 0, max: 75, room: {} };
 const hud = el("div", "", stage); hud.id = "hud";
 hud.innerHTML = `<div class="starpill"><span class="st">★</span><span id="scount">0</span></div><div class="meter"><div class="lbl2">Party</div><div class="bar"><i id="mfill"></i></div></div>`;
 const scount = hud.querySelector("#scount"), mfill = hud.querySelector("#mfill");

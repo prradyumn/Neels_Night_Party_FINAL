@@ -1,51 +1,53 @@
 // PART 2 – Write the Party Plan: the Spell Cauldron. Brew a spell (expression) from orbs; the cauldron test-runs it.
-import { qbox, colorMD, award, actionZone, azTip, host, setFore, gsap, el, img, ui, world, wait, sfx, say, card, popup, playFx, checklist, checkCur, checkDone, pointHand, onTap, react, C, closeBubble, enterChar, placeChar, hideChar, button, camFocus, camTo, camPt, groundShadow, lightPool } from "./engine.js";
+import { qbox, colorMD, award, actionZone, azTip, host, SPOTS, solo, setFore, gsap, el, img, ui, world, wait, sfx, say, card, popup, playFx, checklist, checkCur, checkDone, pointHand, onTap, react, C, closeBubble, enterChar, placeChar, hideChar, button, camFocus, camTo, camPt, groundShadow, lightPool } from "./engine.js";
 import { setAnswer } from "./qa.js";
-import { sideChars, maya, mayaOut, mayaIn, praise, idleWatch } from "./common.js";
+import { sideChars, maya, mayaOut, mayaIn, praise, idleWatch, iconRow, wordHelp } from "./common.js";
 
+// a small two-row table for the first questions: friends 1, 2, 3, m and what each needs
+const tbl = (label, cells) => `<table class="qtab"><tr><th>Friends</th><td>1</td><td>2</td><td>3</td><td>m</td></tr><tr><th>${label}</th>${cells.map((c) => `<td>${c}</td>`).join("")}<td>?</td></tr></table>`;
 const Q = [
-  { name: "Chairs", tray: ["m","+","×","1","2"], sub: "One chair for each friend, and 1 extra chair for Neel.", who: "neel", line: "Chairs: one chair for each friend, and 1 extra chair for me. How many chairs for m friends?",
-    icon: "pr_chair", f: (m) => m + 1, sol: ["m", "+", "1"], tests: [[1], [2], [3]],
-    h1: "Look at the test. Each time, we take the number of friends and add 1.", h2: "Extra means add. Try m, then +, then 1.",
-    exp: "One chair for each friend is m chairs. 1 extra chair for Neel means add 1. So the chairs are <b>m + 1</b>.", pop: "The chairs are m + 1" },
-  { name: "Sweets", tray: ["m","+","×","3","1"], sub: "Each friend gets 3 sweets.", who: "agni", line: "Sweets: each friend gets 3 sweets. How many sweets for m friends?",
-    icon: "pr_sweet", f: (m) => 3 * m, sol: ["3", "m"], tests: [[1], [2], [3]],
-    h1: "Each time, we multiply the number of friends by 3.", h2: "Each means multiply. A number next to a letter means multiply: 3m.",
-    exp: "Each friend gets 3 sweets, so we multiply: m × 3. We write it short as <b>3m</b>.", pop: "The sweets are 3m" },
-  { name: "Cups", tray: ["m","+","−","2","1"], sub: "One cup for each friend. Oops! Neel broke 2 cups.", who: "agni", line: "Cups: one cup for each friend. Oops! Neel broke 2 cups. How many cups are left?",
-    icon: "pr_cup_broken", f: (m) => m - 2, sol: ["m", "−", "2"], tests: [[3], [4], [5]],
-    h1: "Neel had one cup for each friend, so m cups. Then 2 cups broke.", h2: "Broke means take away. Try m − 2.",
-    exp: "There was one cup for each friend, so m cups. 2 cups broke, so we take away 2. Now there are <b>m − 2</b> cups.", pop: "The cups are m − 2" },
-  { name: "Candles", tray: ["m","+","×","4","1"], sub: "4 candles for each friend. Neel wrote 4 + m. Is he right?", who: "neel", line: "Candles: 4 candles for each friend. I wrote 4 + m. Am I right? Tap Brew to test my spell!",
-    icon: "pr_candle", f: (m) => 4 * m, sol: ["4", "m"], pre: ["4", "+", "m"], tests: [[1], [2], [3]],
-    h1: "4 candles for each friend. Does each mean add or multiply?", h2: "Each means multiply. Clear Neel's spell and try 4m.",
-    exp: "4 candles for each friend means 4 × m, which we write as <b>4m</b>. So Neel was not right.", pop: "The candles are 4m" },
-  { name: "Balloons", tray: ["m","+","×","2","5"], sub: "2 balloons for each friend, and 5 more for the door.", who: "agni", line: "Balloons: 2 balloons for each friend, and 5 more for the door. How many balloons?",
-    icon: "pr_balloon", f: (m) => 2 * m + 5, sol: ["2", "m", "+", "5"], tests: [[1], [2], [3]],
-    h1: "Do it in two steps. First, balloons for the friends: 2 for each friend.", h2: "First 2m. Then add 5 for the door.",
-    exp: "2 balloons for each friend is 2m. Then we add 5 for the door. So we need <b>2m + 5</b> balloons.", pop: "The balloons are 2m + 5" },
+  { name: "Chairs", tray: ["m","+","×","1","2"], sub: tbl("Chairs", ["1 + 1", "2 + 1", "3 + 1"]), who: "neel", line: "Chairs: one chair for each friend, and 1 extra chair for me. How many chairs?",
+    icon: "pr_chair", f: (m) => m + 1, sol: ["m", "+", "1"], tests: [[1], [2], [3]], ans: "m + 1",
+    h1: "Look at the table. Each time, we take the number of friends and add 1.", h2: "\"Extra\" means add. For m friends, it is m and 1 more.", inact: "Look at the table. What do we always add?",
+    exp: "One chair for each friend is m chairs. 1 extra chair for Neel means add 1. So the chairs are <b>m + 1</b>.", pop: "The chairs are m + 1." },
+  { name: "Sweets", tray: ["m","+","×","3","5"], sub: tbl("Sweets", ["1 × 3 + 5 = 8", "2 × 3 + 5 = 11", "3 × 3 + 5 = 14"]), who: "agni", line: "Sweets: each friend gets 3 sweets, and I get 5 extra sweets. How many sweets for m friends?",
+    icon: "pr_sweet", f: (m) => 3 * m + 5, sol: ["3", "m", "+", "5"], tests: [[1], [2], [3]], ans: "3m + 5",
+    h1: "Look at the table. Each time, we multiply the number of friends by 3, and then we add Agni's 5 sweets.", h2: "\"Each\" means multiply, so m friends get 3m sweets. \"Extra\" means add, so we add Agni's 5 sweets.", inact: "First multiply by 3, then add Agni's 5 sweets.",
+    exp: "Each friend gets 3 sweets, so that is m × 3, which we write as 3m. Agni gets 5 extra sweets, and \"extra\" means add. So the sweets are <b>3m + 5</b>.", pop: "The sweets are 3m + 5." },
+  { name: "Cups", tray: ["m","+","−","2","1"], sub: "m cups, 2 broke", who: "agni", line: "Cups: one cup for each friend. Oops! Neel broke 2 cups. How many cups are left?",
+    icon: "pr_cup_broken", f: (m) => m - 2, sol: ["m", "−", "2"], tests: [[3], [4], [5]], ans: "m − 2",
+    h1: "Neel had one cup for each friend, so m cups. Then 2 cups broke.", h2: "Broken cups are gone, so we take away. If there were 10 cups and 2 broke, 10 − 2 = 8 cups are left.", inact: "2 cups broke. Do we add or take away?",
+    exp: "There was one cup for each friend, so m cups. 2 cups broke, so we take away 2. Now there are <b>m − 2</b> cups.", pop: "The cups are m − 2." },
+  { name: "Candles", tray: ["m","+","×","4","1"], sub: "Neel wrote: 4 + m", who: "neel", line: "Candles: 4 candles for each friend. I wrote 4 + m. Am I right?",
+    icon: "pr_candle", f: (m) => 4 * m, sol: ["4", "m"], pre: ["4", "+", "m"], tests: [[1], [2], [3]], ans: "No, it is 4m",
+    h1: "4 candles for each friend. Does \"each\" mean add or multiply?", h2: "Try 5 friends. 4 + 5 = 9 candles. But 4 candles for each of 5 friends is 4 × 5 = 20 candles. Which one is right?", inact: "4 for each friend. Add or multiply?",
+    exp: "4 candles for each friend means we multiply 4 by the number of friends. That is 4 × m, which we write as <b>4m</b>. So Neel is not right.", pop: "The candles are 4m." },
+  { name: "Balloons", tray: ["m","+","−","2","3"], sub: "2 balloons for each friend, 3 balloons burst", who: "agni", line: "Balloons: 2 balloons for each friend. Oops! 3 balloons burst. How many balloons are left?",
+    icon: "pr_balloon", f: (m) => 2 * m - 3, sol: ["2", "m", "−", "3"], tests: [[2], [3], [4]], ans: "2m − 3",
+    h1: "Do it in two steps. First, balloons for the friends: 2 for each friend.", h2: "2 for each friend is 2m. Then 3 balloons burst. Burst balloons are gone, so we take away 3.", inact: "First the friends' balloons, then take away the burst balloons.",
+    exp: "First, 2 balloons for each friend is 2 × m, which we write as 2m. Then 3 balloons burst. Burst balloons are gone, so we take away 3. So we have <b>2m − 3</b> balloons.", pop: "The balloons are 2m − 3." },
   { beat: true },
-  { name: "Friends in all", tray: ["m","d","+","×","1"], sub: "m monster friends and d dragon friends.", who: "maya", line: "m monster friends and d dragon friends are coming. How many friends in all?",
-    icon: "gu_dragon_teal", f: (m, d) => m + d, sol: ["m", "+", "d"], tests: [[1, 1], [2, 1], [2, 3]],
-    h1: "In all means add the two groups.", h2: "Monsters plus dragons: m + d.",
-    exp: "In all means add. m monsters and d dragons make <b>m + d</b> friends in all.", pop: "The friends in all are m + d" },
-  { name: "Plates", tray: ["m","d","+","×","1"], sub: "One plate for each friend, and 1 extra plate for Maya.", who: "neel", line: "Plates: one plate for each friend, and 1 extra plate for Maya. How many plates?",
-    icon: "pr_plate", f: (m, d) => m + d + 1, sol: ["m", "+", "d", "+", "1"], tests: [[1, 1], [2, 1], [2, 3]],
-    h1: "First, one plate for each friend. All the friends are m + d.", h2: "m + d, then add 1 for Maya.",
-    exp: "One plate for each friend is m + d plates. 1 extra for Maya means add 1. So the plates are <b>m + d + 1</b>.", pop: "The plates are m + d + 1" },
-  { name: "Cushions", tray: ["m","d","+","2","1"], sub: "Each monster needs 1 cushion. Each dragon needs 2.", who: "agni", line: "Cushions: each monster needs 1 cushion. Dragons are big, so each dragon needs 2 cushions. How many in all?",
-    icon: "pr_cushion", f: (m, d) => m + 2 * d, sol: ["m", "+", "2", "d"], tests: [[1, 1], [2, 1], [2, 3]],
-    h1: "Monster cushions: 1 for each monster is m. Dragon cushions: 2 for each dragon.", h2: "m for monsters, 2d for dragons. Add them.",
-    exp: "Monsters need m cushions. Dragons need 2d cushions. In all means add. So the cushions are <b>m + 2d</b>.", pop: "The cushions are m + 2d" },
-  { name: "Laddoos", tray: ["m","d","+","3","2"], sub: "Each monster gets 3 laddoos. Each dragon gets 2.", who: "neel", line: "Laddoos: each monster gets 3 laddoos and each dragon gets 2 laddoos. How many in total?",
-    icon: "pr_laddoo", f: (m, d) => 3 * m + 2 * d, sol: ["3", "m", "+", "2", "d"], tests: [[1, 1], [2, 1], [2, 3]],
-    h1: "Monster laddoos: 3 for each monster is 3m.", h2: "3m for monsters, 2d for dragons. Total means add.",
-    exp: "Monsters get 3m laddoos. Dragons get 2d laddoos. Total means add. So the laddoos are <b>3m + 2d</b>.", pop: "The laddoos are 3m + 2d" },
-  { duel: true, name: "Neel's shortcut", sub: "Neel thinks 3m + 2d is the same as 5md.", who: "neel", line: "I think 3m + 2d is the same as 5md. Am I right? Tap Brew to test my spell!",
-    icon: "pr_laddoo", f: (m, d) => 3 * m + 2 * d, pre: ["5", "m", "d"], tests: [[1, 1], [2, 1], [2, 3]],
-    h1: "m is the number of monsters. d is the number of dragons. Are they the same thing?",
-    exp: "m and d are different numbers, so we cannot join 3m and 2d together. <b>3m + 2d</b> is already as short as it can be. Neel is not right.", pop: "You caught Neel's mistake!" },
+  { example: true },
+  { name: "Plates", tray: ["m","d","+","×","1"], sub: "one for each friend + 1 extra for Maya", who: "neel", line: "Plates: one plate for each friend, and 1 extra plate for Maya. How many plates?",
+    icon: "pr_plate", f: (m, d) => m + d + 1, sol: ["m", "+", "d", "+", "1"], tests: [[1, 1], [2, 1], [2, 3]], ans: "m + d + 1",
+    h1: "First, one plate for each friend. All the friends are m + d.", h2: "\"Extra\" means add. Add 1 plate for Maya.", inact: "One plate for each friend, and 1 extra for Maya.",
+    exp: "One plate for each friend is m + d plates. 1 extra plate for Maya means add 1. So the plates are <b>m + d + 1</b>.", pop: "The plates are m + d + 1." },
+  { name: "Cushions", tray: ["m","d","+","2","1"], sub: "monsters: 1 cushion each · dragons: 2 cushions each", who: "agni", line: "Cushions: each monster needs 1 cushion. Dragons are big, so each dragon needs 2 cushions. How many cushions in all?",
+    icon: "pr_cushion", f: (m, d) => m + 2 * d, sol: ["m", "+", "2", "d"], tests: [[1, 1], [2, 1], [2, 3]], ans: "m + 2d",
+    h1: "Monster cushions: 1 for each monster is m. Dragon cushions: 2 for each dragon.", h2: "2 for each dragon is 2d. \"In all\" means add m and 2d.", inact: "1 cushion for each monster, 2 for each dragon.",
+    exp: "Monsters need m cushions. Dragons need 2 × d = 2d cushions. \"In all\" means add. So the cushions are <b>m + 2d</b>.", pop: "The cushions are m + 2d." },
+  { name: "Laddoos", tray: ["m","d","+","3","2"], sub: "monsters: 3 laddoos each · dragons: 2 laddoos each", who: "neel", line: "Laddoos: each monster gets 3 laddoos and each dragon gets 2 laddoos. How many laddoos in total?",
+    icon: "pr_laddoo", f: (m, d) => 3 * m + 2 * d, sol: ["3", "m", "+", "2", "d"], tests: [[1, 1], [2, 1], [2, 3]], ans: "3m + 2d",
+    h1: "Monster laddoos: 3 for each monster is 3m.", h2: "Dragon laddoos: 2 for each dragon is 2d. \"Total\" means add.", inact: "3 for each monster, 2 for each dragon. \"Total\" means add.",
+    exp: "Monsters get 3m laddoos. Dragons get 2d laddoos. \"Total\" means add. So the laddoos are <b>3m + 2d</b>.", pop: "The laddoos are 3m + 2d." },
+  { duel: true, name: "Neel's shortcut", sub: "3m + 2d – or – 5md", who: "neel", line: "I think 3m + 2d is the same as 5md. Am I right?",
+    icon: "pr_laddoo", f: (m, d) => 3 * m + 2 * d, pre: ["5", "m", "d"], tests: [[1, 1], [2, 1], [2, 3]], ans: "No",
+    h1: "m is the number of monsters. d is the number of dragons. Are they the same thing?", h2: "Try 2 monsters and 1 dragon. 3m + 2d gives 6 + 2 = 8. 5md gives 5 × 2 × 1 = 10. Are they the same?", inact: "Are m and d the same number?",
+    exp: "m and d are different numbers, so we cannot join 3m and 2d together. <b>3m + 2d</b> is already as short as it can be. So Neel is not right.", pop: "You caught Neel's mistake. 3m + 2d is not 5md." },
 ];
+// who praises each right answer (from the script)
+const PRAISE = ["agni:yes", "neel:super", "neel:great", "agni:well", "neel:yes", "agni:great", "neel:well", "agni:yes", "agni:super"];
+const MD = `<span class="mtxt">m</span><span class="dtxt">d</span>`;
 
 // ---------- expression helpers ----------
 const isNum = (t) => /^[0-9]$/.test(t), isVar = (t) => t === "m" || t === "d", isOp = (t) => ["+", "×", "−"].includes(t);
@@ -121,6 +123,7 @@ function buildScene() {
   bar = el("div", "spellbar", ui, { left: CX - 280, top: 396, width: 560 });
   tray = el("div", "abs tray", ui, { left: 0, top: 0, width: 1, height: 1 });
   QB = qbox();
+  wordHelp(QB.box); // the word helper stays under every question
   brewBtn = button("Brew!", 1385, 842, tray);
   undoBtn = el("div", "undo", tray, { left: 1150, top: 804 }, "⌫");
   undoBtn.title = "Undo";
@@ -180,42 +183,74 @@ async function testRun(fn, q) {
 }
 
 async function beat() {
-  // Agni crashes in: dragon friends are coming too.
-  for (const k of ["neel", "maya"]) hideChar(k, 0.1);
-  placeChar("agni", 150, 885, 270, { p: "crash_in", flip: true });
+  // Agni crashes in: dragon friends are coming too. Agni and Maya talk, so both stay on screen.
+  gsap.killTweensOf([tray, bar]);
+  gsap.to([tray, bar, QB.box], { opacity: 0, duration: 0.3 });
+  actionZone(false); azTip("");
+  solo("duoGame");
+  const sp = SPOTS.duoGame;
+  host.slot = { agni: 0 }; host.cur = "agni";
+  placeChar("agni", sp.pair[0], sp.y, sp.size.agni, { p: "crash_in", flip: true });
   sfx("whoosh");
-  host.cur = "agni";
   await gsap.from(C.agni.box, { x: -500, y: -300, rotation: -20, duration: 0.7, ease: "power2.out" });
-  playFx("smoke", 150, 880, { scale: 2, dur: 0.8 });
+  playFx("smoke", sp.pair[0], sp.y - 10, { scale: 2, dur: 0.8 });
   await say("agni", "Wait! My dragon friends are also coming!", { p: "cheer" });
   await maya("Then we need a second letter. m is for monsters, so let's use d for dragons. d is the number of Agni's dragon friends.", "cast");
   addD();
   playFx("cast", CX, 420, { palette: "gold", scale: 2 });
+  const c = card(`<p><img src="assets/gu_monster_green.webp"> <span class="mtxt">m</span> = number of Neel's monster friends</p><p><img src="assets/gu_dragon_teal.webp"> <span class="dtxt">d</span> = number of Agni's dragon friends</p>`, { left: 520, top: 14, width: 760 }, "card lesson defs");
   await maya("And don't forget me. I will need 1 extra of some things too!", "happy");
-  await mayaOut();
+  await gsap.to(c, { opacity: 0, duration: 0.3 }); c.remove();
+}
+// m + d or md? Neel asks, Maya checks with real numbers; each line adds one row to the card
+async function example() {
+  const c = card(`<div class="tag">Maya explains</div>`, { left: 520, top: 14, width: 760 }, "card lesson ex");
+  const row = (h, cls = "") => { const r = el("p", cls, c, {}, h); gsap.from(r, { y: 10, opacity: 0, duration: 0.35 }); sfx("chalk"); return r; };
+  const pics = (k, n) => Array.from({ length: n }, () => `<img src="assets/${k}.webp">`).join("");
+  await say("neel", `Maya, m monster friends and d dragon friends are coming. How many friends are coming in all? Can I write ${MD}?`, { p: "unsure" });
+  row(`${pics("gu_monster_green", 3)} <b>+</b> ${pics("gu_dragon_teal", 2)}`, "pics");
+  row(`Count them: 3 + 2 = 5 friends`);
+  await maya("Let's check with real numbers. Say 3 monsters and 2 dragons come.", "explain");
+  row(colorMD("m + d = 3 + 2 = 5 friends ✓"), "ok");
+  await maya("\"In all\" means we put the two groups together, so we add. m monsters and d dragons make m + d friends.", "cast");
+  row(`${MD} = ${colorMD("m × d")} = 3 × 2 = 6 ✗`, "no");
+  await maya(`Remember, when a letter sits right next to another letter or a number, it means multiply. So ${MD} means m × d.`, "explain");
+  await say("neel", `Oh! ${MD} gives 6, but only 5 friends came. So ${MD} is wrong here.`, { p: "oops" });
+  const last = row(colorMD("Friends in all = m + d"), "big");
+  gsap.fromTo(last, { scale: 1 }, { scale: 1.08, yoyo: true, repeat: 3, duration: 0.35 });
+  await maya(`Yes! When we put two groups together, we add, so we write m + d. We write ${MD} only when we multiply m by d.`, "happy");
+  await gsap.to(c, { opacity: 0, duration: 0.3 }); c.remove();
+  solo("game"); // back to one speaker for the questions
+  actionZone(true);
+  gsap.to([tray, bar], { opacity: 1, duration: 0.4 });
 }
 
 export async function runPart2(start = 1) {
   buildScene();
-  checklist(Q.filter((q) => !q.beat).map((q) => q.icon));
+  checklist(Q.filter((q) => q.icon).map((q) => q.icon));
   for (let i = 0; i < start - 1; i++) checkDone(i);
   if (start <= 1) {
-  // Maya explains one idea per bubble; the lesson card (top centre) shows the same idea
-  const tbl = card(`<h2>2 sweets each</h2><p>1 → 2 &nbsp; 2 → 4 &nbsp; 3 → 6</p>`, { left: 500, top: 14, width: 600 }, "card lesson");
-  await maya("Now we write a plan for m monster friends. Each friend gets 2 sweets.", "explain");
-  const row = (h) => { const r = el("p", "", tbl, {}, h); gsap.from(r, { y: 10, opacity: 0, duration: 0.35 }); };
-  row(colorMD("m friends → m × 2 = 2m"));
-  await maya("For m friends it is m × 2. We write it short as 2m. A number next to a letter means multiply.", "cast");
-  tbl.innerHTML = `<h2>Word clues</h2>`;
-  row(`<b>each</b> → ×`);
-  await maya("Words give clues. <b>Each</b> means multiply.", "explain");
-  row(`<b>extra</b> → +`);
-  await maya("<b>Extra</b> means add.", "explain");
-  row(`<b>broke</b> → −`);
-  await maya("<b>Broke</b> means take away.", "explain");
-  gsap.to(tbl, { opacity: 0, duration: 0.3, onComplete: () => tbl.remove() });
-  await maya("Tap the orbs to brew a spell. Then tap <b>Brew!</b> and the cauldron will test it.", "explain");
-  await mayaOut();
+    const ir = iconRow(Q.filter((q) => q.icon));
+    await say("nar", "Maya and Agni have written down the list of items required for the party but Neel has still not decided as to how many friends are coming. Let's help Maya and Agni to find out how to get the exact number of items required.");
+    ir.remove();
+    // Maya explains one idea per line; the card (top centre) shows the same idea
+    const t = card(`<div class="tag">Maya explains</div><h2>Number of sweets</h2><table class="ttab"><tr><th>Number of friends</th><th>Sweets</th></tr><tr><td>1</td><td>1 × 2 = 2</td></tr><tr><td>2</td><td>2 × 2 = 4</td></tr><tr><td>3</td><td>3 × 2 = 6</td></tr></table>`, { left: 520, top: 14, width: 760 }, "card lesson");
+    await maya("We have to write a plan for m monster friends. Let me show you how. For example: number of sweets. Each friend gets 2 sweets.", "explain");
+    const tr = el("tr", "", t.querySelector("table"), {}, colorMD("<td>m</td><td>m × 2 = 2m</td>"));
+    gsap.from(tr, { opacity: 0, duration: 0.4 });
+    await maya("For m friends, it is m × 2. We write it short as 2m. A number next to a letter means multiply.", "cast");
+    t.innerHTML = `<div class="tag">Maya explains</div><h2>Word clues</h2>`;
+    const row = (h) => { const r = el("p", "clue", t, {}, h); gsap.from(r, { y: 10, opacity: 0, duration: 0.35 }); sfx("chalk"); };
+    row(`<b>+ add:</b> and · more · extra · plus · total · in all · altogether · together · increased by`);
+    await maya("Some words tell us to add: and, more, extra, plus, total, in all.", "explain");
+    row(`<b>× multiply:</b> each · every · per · times`);
+    await maya("Some words tell us to multiply: each, every, per, times.", "explain");
+    row(`<b>− take away:</b> less · fewer · minus · left · broke · gone · said no`);
+    await maya("Some words tell us to take away: less, fewer, minus, left, broke, gone, said no.", "explain");
+    await maya("These words stay under every question to help you. Let's write the plan!", "happy");
+    gsap.to(t, { opacity: 0, duration: 0.3, onComplete: () => t.remove() });
+    await maya("Tap the orbs to brew a spell. Then tap <b>Brew!</b> and the cauldron will test it.", "explain");
+    await mayaOut();
   }
   actionZone(true);
   gsap.to([tray, bar], { opacity: 1, duration: 0.4 });
@@ -223,9 +258,10 @@ export async function runPart2(start = 1) {
   let qi = 0;
   for (const q of Q) {
     if (q.beat) { if (qi >= start - 1) await beat(); continue; }
+    if (q.example) { if (qi >= start - 1) await example(); continue; }
     if (qi < start - 1) { qi++; continue; }
     checkCur(qi);
-    setAnswer(q.duel ? "No, different" : q.sol.join(" "));
+    setAnswer(q.ans);
     tokens = q.pre ? [...q.pre] : [];
     render();
     setTray(q.duel ? null : q.tray);
@@ -238,7 +274,8 @@ export async function runPart2(start = 1) {
     // the very first question: a hand shows the first tap
     if (qi === 0 && !tokens.length && orbs.m && tray.classList.contains("wave")) pointHand(parseFloat(orbs.m.style.left) + 50, parseFloat(orbs.m.style.top) + 55, 2.4);
     let tries = 0, solved = false, testedPre = false;
-    const iw = idleWatch(18, async () => { await maya("Take your time. " + q.h1, "hint"); await mayaOut(); iw.arm(); });
+    let revealed = false;
+    const iw = idleWatch(18, async () => { await maya("Take your time. " + q.inact, "hint"); await mayaOut(); iw.arm(); });
     if (q.duel) {
       brewBtn.classList.add("pulse");
       await new Promise((r) => (brewBtn.onpointerdown = (e) => { e.stopPropagation(); r(); }));
@@ -248,12 +285,18 @@ export async function runPart2(start = 1) {
       brewBtn.disabled = true;
       gsap.set(brewBtn, { autoAlpha: 0 }); // only the two choices in the panel
       azTip("Is 3m + 2d the same as 5md?");
-      const yes = el("div", "choice", ui, { left: 1030, top: 640 }, "Yes, same");
-      const no = el("div", "choice", ui, { left: 1290, top: 640 }, "No, different");
+      const yes = el("div", "choice", ui, { left: 1030, top: 640 }, "Yes");
+      const no = el("div", "choice", ui, { left: 1290, top: 640 }, "No");
+      let pickNow = null;
+      onTap(yes, () => pickNow && pickNow("y")); onTap(no, () => pickNow && pickNow("n"));
       while (!solved) {
-        const pick = await new Promise((r) => { onTap(yes, () => r("y")); onTap(no, () => r("n")); });
-        if (pick === "n") solved = true;
-        else { tries++; sfx("boing"); react("neel", "oops"); await maya(tries > 1 ? "Look at the test: 2 monsters and 1 dragon need 8, but 5md makes 10. They are different!" : "Not yet. " + q.h1, "hint"); await mayaOut(); }
+        const pick = await new Promise((r) => (pickNow = r));
+        pickNow = null;
+        if (pick === "n") { solved = true; break; }
+        tries++; sfx("boing"); react("neel", "oops");
+        gsap.fromTo(yes, { x: -8 }, { x: 0, duration: 0.5, ease: "elastic.out(1.2,.3)" });
+        if (tries < 3) { await maya("Not yet. Try again. " + (tries === 1 ? q.h1 : q.h2), "hint"); await mayaOut(); }
+        else { pointHand(1290 + 60, 640 + 40, 2); await maya(`Let's see the answer together. The answer is ${q.ans}. ` + q.exp, "explain"); await mayaOut(); revealed = solved = true; }
       }
       yes.remove(); no.remove();
       gsap.set(brewBtn, { autoAlpha: 1 });
@@ -278,9 +321,10 @@ export async function runPart2(start = 1) {
         if (q.pre && !testedPre) { testedPre = true; await say("neel", "Oh no! My spell gives the wrong number of candles!", { p: "oops" }); tokens = []; render(); azTip("Tap the orbs, then Brew!"); continue; }
         tries++;
         if (tries === 1) { await maya("Not yet. Try again. " + q.h1, "hint"); await mayaOut(); }
-        else if (tries === 2) { await maya("Not yet. " + q.h2, "hint"); q.sol.forEach((t) => orbs[t]?.classList.add("glow")); await mayaOut(); }
+        else if (tries === 2) { await maya("Not yet. Try again. " + q.h2, "hint"); q.sol.forEach((t) => orbs[t]?.classList.add("glow")); await mayaOut(); }
         else {
-          await maya("Let's brew it together.", "cast");
+          revealed = true;
+          await maya(`Let's see the answer together. The answer is ${colorMD(q.ans)}. ` + q.exp, "explain");
           tokens = [];
           render();
           for (const t of q.sol) { const o = orbs[t]; pointHand(parseFloat(o.style.left) + 40, parseFloat(o.style.top) + 40, 0.6); addToken(t, o); await wait(0.75); }
@@ -298,9 +342,7 @@ export async function runPart2(start = 1) {
     gsap.fromTo(bar, { scale: 1.15, boxShadow: "0 0 40px #ffd76a" }, { scale: 1, boxShadow: "0 0 0px #ffd76a", duration: 0.8 });
     QB.sub(`<span class="win">${q.pop} ✓</span>`);
     await award(tries, CX + 40, 560, 2);
-    await praise();
-    await maya(q.exp, "happy");
-    await mayaOut();
+    if (!revealed) { await praise(PRAISE[qi]); await maya("Correct! " + q.exp, "happy"); await mayaOut(); }
     checkDone(qi++);
     testBox?.remove(); testBox = null;
     closeBubble();

@@ -1,32 +1,34 @@
 // PART 3 – Neel Decides: the Magic Doors. Friends arrive, gold seals crack open to reveal numbers, items get delivered.
 import { qbox, valPills, flank, spotOn, spotOff, host, hostSwap, hideChar, TABLE_POP, onTable, toStage, award, actionZone, azTip, setFocus, setFore, gsap, el, img, ui, world, wait, sfx, say, card, popup, playFx, checklist, checkCur, checkDone, pointHand, onTap, react, C, closeBubble, farLayer, camFocus, camTo, camPt, groundShadow, lightPool } from "./engine.js";
 import { setAnswer } from "./qa.js";
-import { sideChars, maya, mayaOut, praise, idleWatch } from "./common.js";
+import { sideChars, maya, mayaOut, praise, idleWatch, iconRow, planScroll, wordHelp } from "./common.js";
 import { show } from "./part2.js";
 
 // door centres in far-layer coordinates (layer is 2000 wide, offset -200)
 const DOORS = [[524, 423], [934, 423], [1326, 423]];
 const DOOR_D = 226;
 const Q = [
-  { name: "Chairs", plan: ["m", "+", "1"], who: "maya", line: "Chairs = m + 1. Neel decided m is 6. Tap the gold m to open it!", means: "a chair for each friend, plus 1 extra", icon: "pr_chair", ask: "How many chairs?", opts: [7, 6, 16], ans: 7,
-    work: "6 + 1 = 7", h1: "Put 6 in place of m.", pop: "Neel needs 7 chairs", exp: "Put 6 in place of m: 6 + 1 = 7. So Neel needs 7 chairs." },
-  { name: "Sweets", plan: ["3", "m"], who: "agni", line: "Sweets = 3m. m is 6. How many sweets?", means: "3 sweets for each friend", icon: "pr_sweet", ask: "How many sweets?", opts: [9, 36, 18], ans: 18,
-    work: "3 × 6 = 18", h1: "3m means 3 × m.", pop: "Neel needs 18 sweets", exp: "3m means 3 × m. Put 6 in place of m: 3 × 6 = 18 sweets. 3m does not mean 36." },
-  { name: "Balloons", plan: ["2", "m", "+", "5"], who: "neel", line: "Balloons = 2m + 5. m is 6. How many balloons?", means: "2 balloons for each friend, plus 5 for the door", icon: "pr_balloon", ask: "How many balloons?", opts: [13, 17, 22], ans: 17,
-    work: "2 × 6 + 5 = 12 + 5 = 17", h1: "First work out 2m. Then add 5.", pop: "Neel needs 17 balloons", exp: "2m is 2 × 6 = 12. Then add 5: 12 + 5 = 17 balloons." },
-  { name: "Friends in all", plan: ["m", "+", "d"], who: "agni", line: "And 4 of my dragon friends are coming! Friends in all = m + d. How many friends?", means: "monster friends plus dragon friends", arrive: { d: 4 }, icon: "gu_dragon_teal", ask: "How many friends in all?", opts: [10, 24, 2], ans: 10,
-    work: "6 + 4 = 10", h1: "Put 6 in place of m and 4 in place of d.", pop: "There are 10 friends in all", exp: "Put 6 in place of m and 4 in place of d: 6 + 4 = 10 friends in all." },
-  { name: "Plates", plan: ["m", "+", "d", "+", "1"], who: "maya", line: "Plates = m + d + 1. How many plates?", means: "a plate for every friend, plus 1 for Maya", icon: "pr_plate", ask: "How many plates?", opts: [10, 25, 11], ans: 11,
-    work: "6 + 4 + 1 = 11", h1: "m is 6 and d is 4. Don't forget the 1 extra plate for Maya.", pop: "Neel needs 11 plates", exp: "Put 6 in place of m and 4 in place of d: 6 + 4 + 1 = 11 plates." },
-  { name: "Two friends said no", plan: ["6", "−", "2"], change: true, who: "neel", line: "Oh no! 2 of my friends said no. Now how many monster friends are coming?", means: "6 friends were coming, 2 said no", icon: "gu_monster_sad", ask: "How many monster friends are coming now?", opts: [8, 4, 6], ans: 4,
-    work: "6 − 2 = 4", h1: "Said no means they are not coming. So we take away.", pop: "Now 4 monster friends are coming", exp: "6 friends were coming. 2 said no, so 6 − 2 = 4. Now m is 4. See? m can change!" },
+  { name: "Chairs", plan: ["m", "+", "1"], who: "maya", line: "Chairs = m + 1. m is 6. How many chairs?", means: "a chair for each friend, plus 1 extra", icon: "pr_chair", ask: "How many chairs?", opts: [7, 6, 16], ans: 7,
+    work: "6 + 1 = 7", h1: "Put 6 in place of m.", h2: "Work out 6 + 1. What do you get?", inact: "Put 6 in place of m.", pop: "Neel needs 7 chairs.", exp: "Put 6 in place of m: 6 + 1 = 7. So Neel needs 7 chairs." },
+  { name: "Sweets", plan: ["3", "m", "+", "5"], who: "agni", line: "Sweets = 3m + 5. m is 6. How many sweets?", means: "3 sweets for each friend, plus 5 extra for Agni", icon: "pr_sweet", ask: "How many sweets?", opts: [18, 41, 23], ans: 23,
+    work: "3 × 6 + 5 = 18 + 5 = 23", h1: "3m means 3 × m. First work out 3m, then add Agni's 5 sweets.", h2: "3 × 6 = 18. Now work out 18 + 5.", inact: "First 3 times 6, then add 5.", pop: "Neel needs 23 sweets.", exp: "3m means 3 × m. Put 6 in place of m: 3 × 6 = 18. Then add Agni's 5 sweets: 18 + 5 = 23 sweets. 3m does not mean 36." },
+  { name: "Balloons", plan: ["2", "m", "−", "3"], who: "neel", line: "Balloons = 2m − 3. m is 6. How many balloons are left?", means: "2 balloons for each friend, 3 burst", icon: "pr_balloon", ask: "How many balloons are left?", opts: [15, 9, 6], ans: 9,
+    work: "2 × 6 − 3 = 12 − 3 = 9", h1: "First work out 2m. Then take away 3.", h2: "2 × 6 = 12. Now work out 12 − 3.", inact: "First 2 times 6, then take away 3.", pop: "Neel has 9 balloons.", exp: "2m is 2 × 6 = 12. Then take away the 3 burst balloons: 12 − 3 = 9 balloons." },
+  { name: "Friends in all", plan: ["m", "+", "d"], who: "agni", line: "And 4 of my dragon friends are coming, so d is 4! Friends in all = m + d. How many friends are coming in all?", means: "monster friends plus dragon friends", arrive: { d: 4 }, icon: "gu_dragon_teal", ask: "How many friends in all?", opts: [10, 24, 2], ans: 10,
+    work: "6 + 4 = 10", h1: "Put 6 in place of m and 4 in place of d.", h2: "Work out 6 + 4. What do you get?", inact: "Put 6 for m and 4 for d.", pop: "There are 10 friends in all.", exp: "Put 6 in place of m and 4 in place of d: 6 + 4 = 10 friends in all." },
+  { name: "Plates", plan: ["m", "+", "d", "+", "1"], who: "maya", line: "Plates = m + d + 1. m is 6 and d is 4. How many plates?", means: "a plate for every friend, plus 1 for Maya", words: true, icon: "pr_plate", ask: "How many plates?", opts: [10, 25, 11], ans: 11,
+    work: "6 + 4 + 1 = 11", h1: "m is 6 and d is 4. Don't forget the 1 extra plate for Maya.", h2: "Work out 6 + 4 + 1. What do you get?", inact: "Don't forget Maya's extra plate.", pop: "Neel needs 11 plates.", exp: "Put 6 in place of m and 4 in place of d: 6 + 4 + 1 = 11 plates." },
+  { name: "Two friends said no", plan: ["6", "−", "2"], change: true, who: "neel", line: "Oh no! 2 of my friends said no. Now how many monster friends are coming?", means: "6 friends were coming, 2 said no", words: true, icon: "gu_monster_sad", ask: "How many monster friends are coming now?", opts: [8, 4, 6], ans: 4,
+    work: "6 − 2 = 4", h1: "\"Said no\" means they are not coming. So we take away.", h2: "Work out 6 − 2. What do you get?", inact: "\"Said no\" means take away.", pop: "Now 4 monster friends are coming.", exp: "6 friends were coming. 2 said no, so we take away 2: 6 − 2 = 4. Now m is 4. See? m can change!" },
   { name: "Cushions", plan: ["m", "+", "2", "d"], who: "agni", line: "Now m is 4 and d is 4. Cushions = m + 2d. How many cushions?", means: "1 for each monster, 2 for each dragon", icon: "pr_cushion", ask: "How many cushions?", opts: [12, 10, 16], ans: 12,
-    work: "4 + 2 × 4 = 4 + 8 = 12", h1: "First work out 2d. Then add m.", pop: "Neel needs 12 cushions", exp: "2d is 2 × 4 = 8. Add m: 4 + 8 = 12 cushions." },
-  { name: "Laddoos", plan: ["3", "m", "+", "2", "d"], who: "agni", line: "Yay! 3 more dragon friends said yes. Now d is 4 + 3 = 7. Laddoos = 3m + 2d. How many laddoos?", means: "3 for each monster, 2 for each dragon", arrive: { d: 3 }, icon: "pr_laddoo", ask: "How many laddoos?", opts: [20, 16, 26], ans: 26,
-    work: "3 × 4 + 2 × 7 = 12 + 14 = 26", h1: "m is still 4. d is now 7.", pop: "Neel needs 26 laddoos", exp: "3m is 3 × 4 = 12. 2d is 2 × 7 = 14. Add them: 12 + 14 = 26 laddoos. The plan still works, even when the numbers change!" },
+    work: "4 + 2 × 4 = 4 + 8 = 12", h1: "First work out 2d. Then add m.", h2: "2 × 4 = 8. Now work out 4 + 8.", inact: "First 2 times d, then add m.", pop: "Neel needs 12 cushions.", exp: "2d is 2 × 4 = 8. Add m: 4 + 8 = 12 cushions." },
+  { name: "Laddoos", plan: ["3", "m", "+", "2", "d"], who: "agni", line: "Yay! 3 more dragon friends said yes. Now d is 4 + 3 = 7, and m is still 4. Laddoos = 3m + 2d. How many laddoos?", means: "3 for each monster, 2 for each dragon", arrive: { d: 3 }, icon: "pr_laddoo", ask: "How many laddoos?", opts: [20, 16, 26], ans: 26,
+    work: "3 × 4 + 2 × 7 = 12 + 14 = 26", h1: "m is still 4. d is now 7.", h2: "3 × 4 = 12 and 2 × 7 = 14. Now work out 12 + 14.", inact: "m is 4 and d is 7 now.", pop: "Neel needs 26 laddoos.", exp: "3m is 3 × 4 = 12. 2d is 2 × 7 = 14. Add them: 12 + 14 = 26 laddoos. The plan still works, even when the numbers change!" },
 ];
+// who praises each right answer (from the script)
+const PRAISE = ["neel:yes", "neel:super", "agni:great", "neel:well", "neel:yes", "agni:super", "neel:great", "neel:well"];
 
-let doors = [], guests = [], vals = { m: 0, d: 0 }, uses = "m", valBox, bar, table, tableItems, QB;
+let doors = [], guests = [], vals = { m: 0, d: 0 }, uses = "m", valBox, bar, table, tableItems, QB, words;
 // the table is the centre of the scene: guests on both sides, the answers under it
 const TABLE3 = { cx: 800, top: 392, w: 740 }, TX = TABLE3.cx;
 const PICK = { cx: 870, top: 690 }; // answer panel, clear of the speaker's side bubble
@@ -50,6 +52,7 @@ function buildScene() {
   QB = qbox();
   QB.box.classList.add("eq"); // the big equation bar
   bar = QB.plan; valBox = QB.vals;
+  words = wordHelp(QB.box); words.style.display = "none"; // the word helper, on the questions that need it
 }
 function drawVals() { valPills(valBox, vals, uses); gsap.set(valBox, { autoAlpha: 1 }); }
 function layoutGuests() { flank(guests, { cx: TX, gap: 220, sideW: 280 }); } // at the table ends, clear of the speaker
@@ -203,13 +206,24 @@ export async function runPart3(start = 1) {
     spawnNow("m", start > 6 ? 4 : 6);
     if (start > 4) spawnNow("d", 4);
   } else {
-  QB.show("Let the friends in!");
-  await say("neel", "I have decided! 6 monster friends are coming. Tap the door to let them in!", { p: "happy" });
-  await knockDoor(0, "m", 6);
-  QB.show("6 monster friends are here");
-  await maya("So now m is 6. To find the exact number, put 6 in place of m in the plan. Then work it out.", "explain");
-  await maya("For example, glasses: 2 for each friend is 2m. Put 6 in place of m: 2 × 6 = 12 glasses. Now you try!", "cast");
-  await mayaOut();
+    const ir = iconRow(Q);
+    await say("nar", "Neel decides who is coming. Find the exact number of things.");
+    ir.remove();
+    QB.show("Neel has decided!");
+    await say("neel", "I have decided! 6 monster friends are coming.", { p: "happy" });
+    await knockDoor(0, "m", 6);
+    QB.show("6 monster friends are here");
+    // the party plan from Part 2 comes out again
+    gsap.to(QB.box, { opacity: 0, duration: 0.3 });
+    const sc = await planScroll({ left: 520, top: 96 });
+    await maya("Look at our party plan. We wrote it when we did not know the number of friends. That is why we used m.", "explain");
+    await maya("Now we know that m is 6. So we just put 6 in place of m, and then work it out.", "cast");
+    await sc.roll();
+    const ex = card(`<div class="tag">Maya explains</div><p>Glasses: ${show(["2", "m"])}</p><p>Put 6 in place of <span class="mtxt">m</span>: 2 × 6 = <b>12</b></p>`, { left: 560, top: 30, width: 680 }, "card lesson");
+    await maya("For example, glasses: 2 for each friend is 2m. Put 6 in place of m: 2 × 6 = 12 glasses.", "explain");
+    await maya("Now you try! Find the exact number of each thing on the plan.", "happy");
+    await mayaOut();
+    await gsap.to(ex, { opacity: 0, duration: 0.3 }); ex.remove();
   }
 
   for (let qi = start - 1; qi < Q.length; qi++) {
@@ -226,14 +240,15 @@ export async function runPart3(start = 1) {
     drawVals();
     const seals = q.change ? 0 : uses.length;
     QB.show(q.name, q.means);
+    words.style.display = q.words ? "" : "none";
     camFocus(TX, 520);
     if (q.change) await leave(2);
     renderPlan(q.plan);
-    if (q.change) bar.insertAdjacentHTML("beforeend", EQ_Q);
+    if (q.change) { bar.insertAdjacentHTML("afterbegin", `<span class="lm">m</span><span class="lo">&thinsp;=&thinsp;</span>`); bar.insertAdjacentHTML("beforeend", EQ_Q); }
     gsap.fromTo(bar, { scale: 0.8 }, { scale: 1, duration: 0.3, ease: "back.out(2)" });
     if (q.who === "maya") { await maya(q.line, "explain"); await mayaOut(); }
     else await say(q.who, q.line);
-    const iw = idleWatch(16, async () => { await maya("Take your time. " + q.h1, "hint"); await mayaOut(); iw.arm(); });
+    const iw = idleWatch(16, async () => { await maya("Take your time. " + q.inact, "hint"); await mayaOut(); iw.arm(); });
     if (!q.change) {
       prompt(seals > 1 ? "Tap the gold seals to see the numbers!" : "Tap the gold seal to see the number!");
       await crackSeals();
@@ -254,11 +269,11 @@ export async function runPart3(start = 1) {
       tries++;
       gsap.to(l, { opacity: 0.3, pointerEvents: "none", duration: 0.3 });
       if (q.change) { sfx("boing"); react("neel", "oops"); }
-      if (tries === 1) { await maya("Not yet. Try again. " + q.h1, "hint"); await mayaOut(); prompt(q.ask); }
+      if (tries < 3) { await maya("Not yet. Try again. " + (tries === 1 ? q.h1 : q.h2), "hint"); await mayaOut(); prompt(q.ask); }
       else {
         const good = ls[q.opts.indexOf(q.ans)];
         pointHand(parseFloat(good.style.left) + 50, parseFloat(good.style.top) + 60, 2);
-        await maya("Let's see it together. " + q.exp, "explain");
+        await maya(`Let's see the answer together. The answer is ${q.ans}. ` + q.exp, "explain");
         await mayaOut();
         if (!q.change) await deliver(q.ans, q.ans, q.icon); else { vals.m = 4; drawVals(); }
         break;
@@ -276,8 +291,7 @@ export async function runPart3(start = 1) {
     playFx("collect", TX, 450, { palette: "gold", scale: 3 });
     QB.sub(`<span class="win">${q.pop} ✓</span>`);
     await award(tries, TX, 300, 3);
-    await praise();
-    if (tries === 0) { await maya(q.exp, "happy"); await mayaOut(); }
+    if (tries < 3) { await praise(PRAISE[qi]); await maya("Correct! " + q.exp, "happy"); await mayaOut(); }
     checkDone(qi);
     closeBubble();
     await wait(0.3);

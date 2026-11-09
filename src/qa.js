@@ -64,10 +64,9 @@ function open() {
   const j = el("div", "qasec", panel);
   el("div", "qasub", j, {}, "Jump to");
   row(j, "Title", "title"); row(j, "Story intro", "story"); row(j, "House map", "map");
-  row(j, "Part 1 · Friend Dial", "p1", 8);
-  row(j, "Part 2 · Spell Cauldron", "p2", 10);
-  row(j, "Part 3 · Magic Doors", "p3", 8);
-  row(j, "Finale · Shopping", "fin", 4);
+  row(j, "Part 1 · Neel's Party List", "p1", 8);
+  row(j, "Part 2 · Write the Party Plan", "p2", 9);
+  row(j, "Part 3 · Neel Decides", "p3", 8);
   row(j, "Party dance", "party"); row(j, "Wizard card", "wizard");
   const off = el("button", "qab wide", panel, {}, "Turn QA mode off");
   off.onpointerdown = (e) => { e.stopPropagation(); qa.on = false; save(); apply(); close(); };

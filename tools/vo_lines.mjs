@@ -14,7 +14,7 @@ function table(file, name) {
   const s = src(file), i = s.indexOf(`const ${name} = [`);
   if (i < 0) throw new Error(`${name} not found in ${file}`);
   let depth = 0, j = s.indexOf("[", i);
-  for (let k = j; k < s.length; k++) { if (s[k] === "[") depth++; else if (s[k] === "]" && --depth === 0) return Function(`return ${s.slice(j, k + 1)}`)(); }
+  for (let k = j; k < s.length; k++) { if (s[k] === "[") depth++; else if (s[k] === "]" && --depth === 0) return Function("tbl", `return ${s.slice(j, k + 1)}`)(() => ""); } // tbl: Part 2's card table, not spoken
 }
 // literal calls: say("who", "text" ...) and maya("text" ...)
 function calls(file) {
@@ -23,44 +23,39 @@ function calls(file) {
   for (const m of s.matchAll(/\bmaya\("((?:[^"\\]|\\.)*)"/g)) add("maya", m[1]);
   for (const m of s.matchAll(/\["(neel|agni|maya)",\s*"((?:[^"\\]|\\.)*)"/g)) add(m[1], m[2]);   // bridge and praise lines
 }
-["main.js", "part1.js", "part2.js", "part3.js", "finale.js", "common.js"].forEach(calls);
+["main.js", "part1.js", "part2.js", "part3.js", "common.js"].forEach(calls);
 
-// Part 1: the speaker's line, Maya's explanation, hints and nudges
+// Part 1: the speaker's line, Maya's explanation, hints, the answer shown, nudges
+const ANS1 = { v: "Variable (it can change)", c: "Constant (it stays the same)" };
 for (const it of table("part1.js", "ITEMS")) {
   add(it.who, it.line);
-  add("maya", it.exp);
-  add("maya", "Let's see the answer together. " + it.exp);
+  add("maya", "Correct! " + it.exp);
+  add("maya", `Let's see the answer together. The answer is ${ANS1[it.ans]}. ` + it.exp);
   for (const h of [it.h1, it.h2]) add("maya", "Not yet. Try again. " + h);
   add("maya", it.inact + " Turn the dial.");
-  add("maya", it.inact + " Tap Variable or Constant.");
+  add("maya", "Take your time. " + it.inact + " Tap Variable or Constant.");
 }
-add("maya", "Now you know! Let's check the next thing.");
 // Part 2
 for (const q of table("part2.js", "Q")) {
-  if (q.beat) continue;
+  if (q.beat || q.example) continue;
   add(q.who, q.line);
-  add("maya", q.exp);
-  add("maya", "Take your time. " + q.h1);
+  add("maya", "Correct! " + q.exp);
+  add("maya", "Take your time. " + q.inact);
   add("maya", "Not yet. Try again. " + q.h1);
-  add("maya", "Not yet. " + q.h1);
-  if (q.h2) add("maya", "Not yet. " + q.h2);
+  if (q.h2) add("maya", "Not yet. Try again. " + q.h2);
+  add("maya", `Let's see the answer together. The answer is ${q.ans}. ` + q.exp);
 }
 // Part 3
 for (const q of table("part3.js", "Q")) {
   add(q.who, q.line);
-  add("maya", q.exp);
-  add("maya", "Take your time. " + q.h1);
+  add("maya", "Correct! " + q.exp);
+  add("maya", "Take your time. " + q.inact);
   add("maya", "Not yet. Try again. " + q.h1);
-  add("maya", "Let's see it together. " + q.exp);
+  add("maya", "Not yet. Try again. " + q.h2);
+  add("maya", `Let's see the answer together. The answer is ${q.ans}. ` + q.exp);
 }
 add("agni", "Listen! Someone is knocking!");
 add("agni", "More knocking! Who is it?");
-// Finale: Neel and Agni take turns asking
-table("finale.js", "ITEMS").forEach((it, q) => {
-  add(q % 2 ? "agni" : "neel", it.line);
-  add("maya", "Not yet. " + it.h1);
-  add("maya", "Here it is: " + it.work + ".");
-});
 
 const segs = new Map();
 for (const { who, text } of lines.values()) for (const seg of segments(text)) segs.set(voId(who, seg), { id: voId(who, seg), who, text: seg });

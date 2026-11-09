@@ -339,3 +339,48 @@ img{-webkit-user-drag:none;user-select:none}
 .rug.ground.d{background:radial-gradient(ellipse at center,rgba(5,2,18,.62) 0%,rgba(5,2,18,.42) 38%,rgba(255,138,61,.42) 60%,rgba(255,138,61,0) 74%)}
 .chips.one{flex-wrap:nowrap;gap:10px}.chips.one .chip{font-size:22px;padding:6px 12px;white-space:nowrap}
 .room .locktip{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:6px;white-space:nowrap;background:#2a1a55;color:#fff;border:3px solid var(--gold);border-radius:16px;padding:6px 14px;font-size:24px;font-weight:800;z-index:5;pointer-events:none}
+/* ---- script v2: tutorials and helpers ---- */
+.card .tag{display:inline-block;font-size:17px;font-weight:800;letter-spacing:1px;color:#2a1a55;background:var(--gold);border-radius:12px;padding:1px 12px;margin-bottom:4px}
+.card.icons{display:flex;gap:14px;padding:6px 18px;white-space:nowrap}
+.card.icons img{width:62px;height:62px;object-fit:contain;filter:grayscale(1) brightness(.8)}
+.card.lesson .ttab{margin:6px auto 0;border-collapse:collapse;font-size:28px;color:#E9E2FF}
+.card.lesson .ttab th{font-size:21px;color:var(--gold);padding:2px 22px;border-bottom:2px solid rgba(255,197,71,.5)}
+.card.lesson .ttab td{padding:2px 22px}
+.card.lesson p.clue{font-size:23px;text-align:left;margin:6px 4px}
+.card.lesson p.clue b{color:var(--gold)}
+.card.lesson.defs p{font-size:28px;display:flex;align-items:center;gap:10px;justify-content:center}
+.card.lesson.defs img{width:54px;height:54px;object-fit:contain}
+.card.lesson.ex p{font-size:28px;margin:6px 0}
+.card.lesson.ex p.pics img{width:50px;height:50px;object-fit:contain;vertical-align:middle}
+.card.lesson.ex p.ok{color:#7dffa8}.card.lesson.ex p.no{color:#ff9aa2}
+.card.lesson.ex p.big{font-size:34px;font-weight:800;color:#fff;text-shadow:0 0 18px rgba(255,197,71,.7)}
+/* the chalkboard (Part 1) */
+.chalk{position:absolute;padding:16px 26px 22px;border-radius:18px;background:#1f3b2c;border:14px solid #8a5a2b;box-shadow:inset 0 0 40px rgba(0,0,0,.45),0 12px 0 rgba(0,0,0,.3);color:#f2f2ea;font-family:inherit;text-align:center}
+.chalk .tag{position:absolute;left:18px;top:-30px;font-size:17px;font-weight:800;color:#2a1a55;background:var(--gold);border-radius:12px;padding:2px 12px}
+.chalk h2{margin:0 0 10px;font-size:40px;color:#fff;text-shadow:0 0 2px #fff}
+.chalk .cols{display:flex;gap:24px;text-align:left}
+.chalk .col{flex:1;min-height:250px}
+.chalk .col.v{border-right:2px dashed rgba(255,255,255,.35);padding-right:20px}
+.chalk h3{margin:0;font-size:36px;letter-spacing:2px}
+.chalk .col.v h3{color:#ffe066}.chalk .col.c h3{color:#d8dae6}
+.chalk p{margin:4px 0 10px;font-size:28px;line-height:1.3}
+.chalk p.ex{font-size:25px;color:#dfe8dc}
+.chalk p.ex b{color:#fff}
+/* Neel's Party Plan scroll */
+.scroll{position:absolute;width:560px;padding:20px 40px 26px;border-radius:22px;background:linear-gradient(#fbf0d2,#efdcaa);border:6px solid #b98a3c;box-shadow:0 14px 0 rgba(0,0,0,.3),inset 0 0 30px rgba(150,100,30,.25);color:#3b2410;transform-origin:50% 0;z-index:40}
+.scroll::before,.scroll::after{content:"";position:absolute;left:-14px;right:-14px;height:22px;border-radius:12px;background:linear-gradient(#a8742f,#7a4f1c)}
+.scroll::before{top:-16px}.scroll::after{bottom:-16px}
+.scroll h2{margin:0 0 8px;text-align:center;font-size:34px;color:#7a3a00}
+.scroll .pl{display:grid;grid-template-columns:1fr 30px 1fr;font-size:27px;font-weight:700;line-height:1.45}
+.scroll .pl b{text-align:center;color:#a06a20}
+.scroll .mtxt{color:#6a2bc4}.scroll .dtxt{color:#d4520a}
+/* word helper under the question */
+.qbox .words{display:flex;flex-direction:column;gap:2px;font-size:18px;font-weight:700;color:#d9d0f5;text-align:left;border-top:1px solid rgba(255,197,71,.35);padding-top:6px}
+.qbox .words b{display:inline-block;width:22px;color:var(--gold);font-size:21px}
+/* the friends / items table in the question card (Part 2, Q1–2) */
+.qtab{border-collapse:collapse;margin:2px auto 0;font-size:21px}
+.qtab th{color:var(--gold);padding:1px 12px;text-align:right}
+.qtab td{padding:1px 12px;border-left:1px solid rgba(255,255,255,.2);white-space:nowrap}
+.binLbl small{display:block;font-size:16px;font-weight:700;opacity:.9;line-height:1.1}
+.mcap{position:absolute;transform:translateX(-50%);white-space:nowrap;font-size:23px;font-weight:800;color:#fff;background:rgba(20,14,44,.85);border:3px solid #9b5cf0;border-radius:18px;padding:4px 18px}
+.qbox.eq .words{order:4;background:rgba(10,7,26,.78);border:2px solid rgba(255,197,71,.45);border-radius:16px;padding:6px 16px;font-size:20px}

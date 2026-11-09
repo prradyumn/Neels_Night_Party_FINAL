@@ -2,10 +2,10 @@
 import { gsap, el, img, ui, wait, sfx, setScene, setFocus, setDim, hideAllChars, onTap, pointHand, score, showHud, playFx, camUI, camTo, camPt, W, H } from "./engine.js";
 
 export const ROOMS = [
-  { id: 1, name: "Party List", icon: "p1_variable_jar", bg: "bg_hall_far", x: 300, y: 600, max: 24 },
-  { id: 2, name: "Spell Cauldron", icon: "p2_cauldron", bg: "bg_cauldron_far", x: 630, y: 330, max: 30 },
-  { id: 3, name: "Magic Doors", icon: "p3_door_closed", bg: "bg_doors_far", x: 970, y: 600, max: 24 },
-  { id: 4, name: "Party Day", icon: "pr_cake", bg: "bg_hall_far", x: 1300, y: 330, max: 12 },
+  { id: 1, name: "Neel's Party List", icon: "p1_variable_jar", bg: "bg_hall_far", x: 300, y: 600, max: 24 },
+  { id: 2, name: "Write the Party Plan", icon: "p2_cauldron", bg: "bg_cauldron_far", x: 630, y: 330, max: 27 },
+  { id: 3, name: "Neel Decides", icon: "p3_door_closed", bg: "bg_doors_far", x: 970, y: 600, max: 24 },
+  { id: 4, name: "Party Day", icon: "pr_cake", bg: "bg_hall_far", x: 1300, y: 330, max: 0 },
 ];
 
 let neelAt = 0; // index of the room Neel stands at
