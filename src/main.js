@@ -73,11 +73,11 @@ function stampSeal(cx, cy) {
   } });
   return { done: wait(1.3), coin: mc, remove() { rays && rays.stop(); gsap.to([seal, glow], { scale: 0, opacity: 0, duration: 0.4, onComplete: () => { seal.remove(); glow.remove(); } }); } };
 }
-// scoreboard: m = ?, d = ? tiles that flip to a number
+// scoreboard: m = ?, d = ? tiles. A new number pops in at once: a tile is never blank, not even for a moment
 function board() {
   const b = el("div", "board", ui, {}, `<div class="tile m">m = <span class="num">?</span></div><div class="tile d">d = <span class="num">?</span></div>`);
   gsap.from(b.children, { y: -90, opacity: 0, duration: 0.5, stagger: 0.1, ease: "back.out(2)" });
-  const flip = (k, v) => { const n = b.querySelector(`.tile.${k} .num`); gsap.to(n, { rotationX: 90, duration: 0.14, ease: "power1.in", onComplete: () => { n.textContent = v; gsap.fromTo(n, { rotationX: -90 }, { rotationX: 0, duration: 0.28, ease: "back.out(2)" }); } }); sfx("pop"); };
+  const flip = (k, v) => { const n = b.querySelector(`.tile.${k} .num`); n.textContent = v; gsap.fromTo(n, { scale: 1.5, color: "#ffe066" }, { scale: 1, color: "#ffffff", duration: 0.35, ease: "back.out(2)" }); sfx("pop"); };
   return { el: b, flip, hide() { gsap.to(b, { autoAlpha: 0, duration: 0.3 }); }, show() { gsap.to(b, { autoAlpha: 1, duration: 0.3 }); } };
 }
 
@@ -137,23 +137,23 @@ async function story() {
   // Agni's panic: a quick camera punch toward Agni with speed lines
   const hd = camPt(...headOf("agni"));
   punch(hd.x, hd.y); speedLines(hd.x, hd.y); sfx("boing");
-  await say("agni", "Neel, you have not decided the number of guests coming? Then how will we plan? How many plates? How many sweets?", { p: "shocked" });
+  await say("agni", "Neel, have you still not decided how many guests are coming? Then how will we plan? How many plates? How many sweets?", { p: "shocked" });
   // the unknown number: friend silhouettes keep changing (top left), then become the letter m
   const SX = 350, SY = 250, mystery = mysteryFriends(SX, SY);
   await say("maya", "Don't worry. When we don't know a number, we can write it as a letter.", { p: "explain" });
   await mystery.collapse();
   const seal = stampSeal(SX, SY);
   await seal.done;
-  await say("maya", "Neel's friends are monsters. So let's use the letter <b>m</b>, for the number of monster friends.", { p: "cast" });
+  await say("maya", "Neel's friends are monsters. So let's use the letter <b>m</b> for the number of monster friends.", { p: "cast" });
   const cap = el("div", "mcap", ui, { left: SX, top: SY + 120 }, `<span class="mtxt">m</span> = number of Neel's monster friends`);
   gsap.from(cap, { y: 14, opacity: 0, duration: 0.4 });
   await say("maya", "Let's say <b>m</b> monster friends are coming.", { p: "explain" });
   await say("agni", "But Maya, m is not a number.", { p: "shocked" });
   // the coin spins through numbers while Maya says it: m can be 3, 5, 8… and lands on m again
   seal.coin.spin(4, ["3", "5", "8", "m"], 3.4);
-  await say("maya", "<b>m</b> is a <span class=v>variable</span> that represents a number. A variable is a number that is not fixed yet and can change.", { p: "explain" });
+  await say("maya", "<b>m</b> is a <span class=v>variable</span> that represents a number. A variable is a number that is not fixed yet. It can change.", { p: "explain" });
   await say("maya", "When Neel decides who is coming, we can easily find the exact number of things we need.", { p: "happy" });
-  await say("agni", "Hmm! Variable! Let's plan!", { p: "cheer" });
+  await say("agni", "Hmm! A variable! Let's plan!", { p: "cheer" });
   seal.remove(); gsap.to(cap, { opacity: 0, duration: 0.3, onComplete: () => cap.remove() });
 }
 
@@ -176,14 +176,14 @@ async function part1(start = 1) {
   clearUI();
   await setScene("hall");
   setTint("rgba(255,150,70,.10)"); // early evening
-  await partTitle("PART 1 OF 3", "Neel's Party List");
+  partTitle("PART 1 OF 3", "Neel's Party List"); // the part sets up under the title card
   await runPart1(start);
   setAnswer("");
   // the hall lights up
   const lights = img("de_string_lights", $("#Lmid"), { left: 500, top: 0, width: 1000 });
   gsap.from(lights, { y: -200, duration: 0.8, ease: "bounce.out", onComplete: () => lightsUp($("#Lmid"), 500, 0, 1000) });
   setDim(0, 1.2);
-  await bridge([["neel", "Thank you for helping to check my party list."], ["maya", "Great! Now you know that the number that can change is a <span class=v>variable</span>.", "happy"], ["maya", "And the numbers that stay the same are <span class=c>constants</span>.", "explain"], ["agni", "Come on! Let's write the party plan!"]]);
+  await bridge([["neel", "Thank you for helping me check my party list."], ["maya", "Great! Now you know that a number that can change is a <span class=v>variable</span>.", "happy"], ["maya", "And a number that stays the same is a <span class=c>constant</span>.", "explain"], ["agni", "Come on! Let's write the party plan!"]]);
   hideChecklist();
 }
 async function part2(start = 1) {
@@ -193,7 +193,7 @@ async function part2(start = 1) {
   setDim(0, 0.01);
   setTint("rgba(120,60,200,.10)"); // night falls
   playFx("campfire", 720, 505, { scale: 3, parent: $("#Lfar") });
-  await partTitle("PART 2 OF 3", "Write the Party Plan");
+  partTitle("PART 2 OF 3", "Write the Party Plan");
   await runPart2(start);
   setAnswer("");
   // Neel stands still on the floor for this one (no dance): he is holding his finished plan
@@ -213,7 +213,7 @@ async function part3(start = 1) {
   await setScene("doors");
   setDim(0, 0.01);
   setTint("rgba(20,30,120,.18)"); // deep night
-  await partTitle("PART 3 OF 3", "Neel Decides");
+  partTitle("PART 3 OF 3", "Neel Decides");
   await runPart3(start);
   setAnswer("");
   await bridge([["neel", "Yay! Now I know exactly what we need!"], ["agni", "Even when the numbers changed, the plan still worked!"], ["maya", "That is the magic of variables. m and d can be any number.", "celebrate"]], false);
@@ -281,8 +281,8 @@ async function party(opt = {}) {
   await trio("trioParty");
   const sb = board();
   sfx("creak");
-  // the guests come in through the doors and stand apart, so each one can be counted:
-  // 4 monsters on the left in one row, 7 dragons on the right in two rows
+  // the guests come in through the doors and stand apart, so each one can be counted: 4 monsters on the left
+  // and 7 dragons on the right, each group in one row, beside the table and clear of the friends in front
   const doorImg = [...$("#Lfar").querySelectorAll("img")].filter((i) => /p3_door/.test(i.src));
   doorImg.forEach((d) => (d.src = "assets/p3_door_open.webp"));
   const gs = [];
@@ -294,12 +294,11 @@ async function party(opt = {}) {
     gsap.from(g, { left: from.x - size / 2, top: from.y - size / 2, scale: 0.4, opacity: 0, duration: 0.6, delay: i * 0.12, ease: "power2.out" });
     return g;
   };
-  PARTY_MON.forEach(([a, h], i) => guest(a, h, 140 + i * 92, 705, 100, DOOR_XY[0], i));
+  PARTY_MON.forEach(([a, h], i) => guest(a, h, 90 + i * 74, 575, 84, DOOR_XY[0], i));
   sb.flip("m", 4);
   if (!quick) await say("neel", "Look! 4 of my monster friends are here!", { p: "happy" });
-  [[1235, 715, 100], [1330, 715, 100], [1425, 715, 100], [1520, 715, 100], [1282, 645, 88], [1377, 645, 88], [1472, 645, 88]]
-    .forEach(([x, f, z], i) => { const g = guest(PARTY_DRA[i % 2], 0, x, f, z, DOOR_XY[2], i); if (f < 700) g.classList.add("back"); });
-  sb.flip("d", 7);
+  for (let i = 0; i < 7; i++) guest(PARTY_DRA[i % 2], 0, 1180 + i * 62, 572, 80, DOOR_XY[2], i);
+  sb.flip("d", 7); // d is filled before Agni says it
   if (!quick) {
     await say("agni", "And 7 of my dragon friends are here too!", { p: "cheer" });
     await say("neel", "My friends changed their minds, but our plan still worked!", { p: "happy" });

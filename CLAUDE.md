@@ -19,9 +19,13 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
   camTo/camFocus/camRest/punch/shake move it; camPt(x, y, layer) converts a scene point to screen (use it to aim
   UI at scene objects). Put UI-anchored effects in ui (playFx parent: ui), scene effects in the default #fxl.
 - src/part1.js: Friend Dial (sort items into Variable jar / Constant chest)
-- src/part2.js: Spell Cauldron (build expressions from orbs, test-run with m/d values)
+- src/part2.js: Spell Cauldron (build expressions from orbs; Brew! tests 3 values at once, about 2 s, and Maya speaks
+  straight after; the 3rd wrong try puts the answer in the slot as Maya starts saying it)
 - src/part3.js: Magic Doors. Replies arrive as cards through the doors (no guests until the party), gold seals open
-  independently, each right answer puts its things around the table and they stay; partyTable()/partyClear() for the party
+  independently, each right answer puts its things around the table and they stay; partyTable()/partyClear() for the party.
+  Table places (layout()): balloons at the back corners, sweets bowl, plates, laddoo bowl on top, cushions on the floor
+  at the right end, chairs in a row in front; one small count tag each. When m or d changes, FORM works every group out
+  again and restock() moves/adds/removes things (after Q6: "Now m is 4..."; after the 3 dragons in Q8). Party: no tags
 - src/finale.js: Party Day shopping. Not in the current script, so it is out of the flow (no room 4)
 - src/map.js: level select (3 rooms, title fixed on screen) · src/qa.js: QA mode (press Q, or a #qa-p2-7 link);
   never remembered between visits, so players never see the badge or answers
@@ -30,10 +34,15 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
   gold-ink plan (part2 bubbleTest/spellWorks), the jar that fills and the chest that locks (part1), the living map, and
   the arrival: friends walk up the path, the camera flies in through the round window to the party (main.js arrival()).
 - src/common.js: praise cues, idleWatch (open()/pause(): nudges only while answers are open and nobody speaks),
-  Party Plan scroll (dock/glow), word helper
+  Party Plan scroll (dock/glow). No word box on screen in Parts 2-3: Maya says the clue word in her hint
 - Dialogue (engine.js say()): lines are queued, never overlap; busy()/skipLine(); a bubble tap shows the whole line, the
-  next tap moves on; into: el writes the words on a board (Part 1 chalkboard). Timing lives in PACE.
-- Inputs: lock(el) makes a control visibly asleep while someone talks; a tap on it wiggles and ends the line.
+  next tap moves on; into: el writes the words on a board (Part 1 chalkboard); onStart shows a board row with the line
+  that says it, never before. partTitle() is not awaited: the part sets up under the card and its first line waits
+  (afterTitle()). Bubbles keep "md" as one chip and a sum ("m + d") on one line (chipify). Timing lives in PACE.
+  gsap.ticker.lagSmoothing(0): on a slow tablet animations keep clock time (they skip frames, never stretch).
+- Inputs: lock(el) makes a control visibly asleep while someone talks; a tap on it wiggles and ends the line, or says
+  why it is asleep (el._why). A tap made while a control was locked but delivered late (busy device) is dropped.
+- setScene(name, {setup}): the old cast leaves behind the shut curtain; setup builds the new scene before it opens.
 - Hints in every part: wrong 1 = clue, wrong 2 = clue with the numbers on screen, wrong 3 = answer (highlighted).
 - src/fx.js + pixelfx/: pixel particle effects (MIT, vendored)
 - Audio: src/sfx/*.mp3 (bundled as data URLs via esbuild's mp3 loader) and assets/audio/*.mp3 music;
@@ -50,9 +59,11 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
   Part 2 beat and m + d example, ending) both stay on screen: solo("duo") / solo("duoGame"); questions stay one speaker.
   All tappable controls in the bottom-right action zone, ★ counter top-right.
   The three friends together (story, bridges, Part 2 dragon beat, Part 3 intro, party) use trio(): SPOTS.trio*.
-  Question progress ("Question x of N") top-right under the stars. Part 2: word helper top-right, test results over
-  the cauldron. Part 3: equation bar (item = plan) top-centre, reply cards top-left, plan scroll docked top-right,
-  word helper bottom-right, answer gems under the table, smaller speaker bottom-left (SPOTS.table).
+  Question progress ("Question x of N") top-right under the stars. Part 2: test results over the cauldron, under the
+  card and above the spell; nothing animates over the spell. Part 3: equation bar (item = plan) top-centre, reply cards
+  top-left (7 cards fit a row; numbered once counted), plan scroll docked top-right, answer gems bottom-right, smaller
+  speaker bottom-left (SPOTS.table) whose side bubble grows upwards. Party: bubbles high (SPOTS.trioParty.ftop),
+  monsters left and dragons right, one row each.
 - No blue guest monster anywhere it could be read as a second Neel (gu_monster_blue).
 - Keep the UI uncluttered and keep m purple / d orange everywhere.
 - Keep assets WebP, total game under 20 MB. Re-encode from the lossless originals, never WebP from WebP:

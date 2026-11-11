@@ -1,9 +1,9 @@
 // PART 3 – Neel Decides: the Magic Doors. Replies come through the doors as cards (no guests yet: they come to the
 // party), gold seals crack open to show the numbers, and every right answer puts its things around the party table,
-// where they stay until the party.
-import { qbox, valPills, host, trio, solo, award, setFocus, setFore, gsap, el, img, ui, world, wait, sfx, say, card, popup, playFx, checklist, checkCur, checkDone, pointHand, onTap, closeBubble, farLayer, camTo, camRest, camPt, toStage, lightPool, lock } from "./engine.js";
+// where they stay until the party. When m or d changes, the plan is worked out again and the table follows.
+import { qbox, valPills, host, trio, solo, award, afterTitle, setFocus, setFore, gsap, el, img, ui, world, wait, sfx, say, card, popup, playFx, checklist, checkCur, checkDone, pointHand, onTap, closeBubble, farLayer, camRest, camPt, toStage, lightPool, lock } from "./engine.js";
 import { setAnswer } from "./qa.js";
-import { maya, praise, idleWatch, iconRow, planScroll, wordHelp, garland, coin } from "./common.js";
+import { maya, praise, idleWatch, iconRow, planScroll, garland, coin } from "./common.js";
 import { show } from "./part2.js";
 
 // door centres in far-layer coordinates (layer is 2000 wide, offset -200)
@@ -12,102 +12,136 @@ const DOOR_D = 226;
 /** where someone coming through each door appears on the stage */
 export const DOOR_XY = DOORS.map(([x, y]) => ({ x: x - 200, y: y + 50 }));
 // h1, h2, inact are worked from the numbers on screen (the seals have already put them in): they never ask for a
-// substitution that is done, they say the next step
+// substitution that is done, they say the next step. The clue word of the plan ("extra", "burst", "in all") is said
+// in the hint, since no word box stays on screen
 const tens = (a, b) => `${a - (a % 10)} + ${b - (b % 10)} is ${a - (a % 10) + b - (b % 10)}, and ${a % 10} + ${b % 10} is ${(a % 10) + (b % 10)}`;
 const Q = [
   { name: "Chairs", plan: ["m", "+", "1"], who: "maya", line: "Chairs = m + 1. m is 6. How many chairs?", means: "a chair for each friend, plus 1 extra", prep: "chairs", icon: "pr_chair", ask: "How many chairs?", opts: [7, 6, 16], ans: 7,
-    work: "6 + 1 = 7", h1: (v) => `The seal put ${v.m} in place of m. Now add the 1 extra chair: ${v.m} + 1.`, h2: (v) => `Start at ${v.m} and count 1 more.`, inact: (v) => `Work out ${v.m} + 1.`, pop: "Neel needs 7 chairs.", exp: "Put 6 in place of m: 6 + 1 = 7. So Neel needs 7 chairs." },
+    work: "6 + 1 = 7", h1: (v) => `"Extra" means add. The seal put ${v.m} in place of m, so add the 1 extra chair: ${v.m} + 1.`, h2: (v) => `Start at ${v.m} and count 1 more.`, inact: (v) => `Work out ${v.m} + 1.`, pop: "Neel needs 7 chairs.", exp: "Put 6 in place of m: 6 + 1 = 7. So Neel needs 7 chairs." },
   { name: "Sweets", plan: ["3", "m", "+", "5"], who: "agni", line: "Sweets = 3m + 5. m is 6. How many sweets?", means: "3 sweets for each friend, plus 5 extra for Agni", prep: "sweets", icon: "pr_sweet", ask: "How many sweets?", opts: [18, 41, 23], ans: 23,
-    work: "3 × 6 + 5 = 18 + 5 = 23", h1: (v) => `3 × ${v.m} is ${3 * v.m}. Now add Agni's 5 sweets.`, h2: (v) => `${3 * v.m} + 5. Start at ${3 * v.m} and count on 5.`, inact: (v) => `3 × ${v.m} is ${3 * v.m}. Then add 5.`, pop: "Neel needs 23 sweets.", exp: "3m means 3 × m. Put 6 in place of m: 3 × 6 = 18. Then add Agni's 5 sweets: 18 + 5 = 23 sweets. 3m does not mean 36." },
+    work: "3 × 6 + 5 = 18 + 5 = 23", h1: (v) => `3 × ${v.m} is ${3 * v.m}. "Extra" means add, so add Agni's 5 sweets.`, h2: (v) => `${3 * v.m} + 5. Start at ${3 * v.m} and count on 5.`, inact: (v) => `3 × ${v.m} is ${3 * v.m}. Then add 5.`, pop: "Neel needs 23 sweets.", exp: "3m means 3 × m. Put 6 in place of m: 3 × 6 = 18. Then add Agni's 5 sweets: 18 + 5 = 23 sweets. 3m does not mean 36." },
   { name: "Balloons", plan: ["2", "m", "−", "3"], who: "neel", line: "Balloons = 2m − 3. m is 6. How many balloons are left?", means: "2 balloons for each friend, 3 burst", prep: "balloons", icon: "pr_balloon", ask: "How many balloons are left?", opts: [15, 9, 6], ans: 9,
-    work: "2 × 6 − 3 = 12 − 3 = 9", h1: (v) => `2 × ${v.m} is ${2 * v.m}. Now take away the 3 burst balloons.`, h2: (v) => `${2 * v.m} − 3. Start at ${2 * v.m} and count back 3.`, inact: (v) => `2 × ${v.m} is ${2 * v.m}. Then take away 3.`, pop: "Neel has 9 balloons.", exp: "2m is 2 × 6 = 12. Then take away the 3 burst balloons: 12 − 3 = 9 balloons." },
+    work: "2 × 6 − 3 = 12 − 3 = 9", h1: (v) => `2 × ${v.m} is ${2 * v.m}. "Burst" means take away, so take away the 3 burst balloons.`, h2: (v) => `${2 * v.m} − 3. Start at ${2 * v.m} and count back 3.`, inact: (v) => `2 × ${v.m} is ${2 * v.m}. Then take away 3.`, pop: "Neel has 9 balloons.", exp: "2m is 2 × 6 = 12. Then take away the 3 burst balloons: 12 − 3 = 9 balloons." },
   { name: "Friends in all", plan: ["m", "+", "d"], who: "agni", line: "And 4 of my dragon friends are coming, so d is 4! Friends in all = m + d. How many friends are coming in all?", means: "monster friends plus dragon friends", arrive: { d: 4 }, prep: "friends", icon: "gu_dragon_teal", ask: "How many friends in all?", opts: [10, 24, 2], ans: 10,
-    work: "6 + 4 = 10", h1: (v) => `${v.m} monster friends and ${v.d} dragon friends. Add them: ${v.m} + ${v.d}.`, h2: (v) => `Count all the Yes! cards. Start at ${v.m} and count on ${v.d}.`, inact: (v) => `Work out ${v.m} + ${v.d}.`, pop: "There are 10 friends in all.", exp: "Put 6 in place of m and 4 in place of d: 6 + 4 = 10 friends in all." },
+    work: "6 + 4 = 10", h1: (v) => `"In all" means add. ${v.m} monster friends and ${v.d} dragon friends: ${v.m} + ${v.d}.`, h2: (v) => `Count all the Yes! cards. Start at ${v.m} and count on ${v.d}.`, inact: (v) => `Work out ${v.m} + ${v.d}.`, pop: "There are 10 friends in all.", exp: "Put 6 in place of m and 4 in place of d: 6 + 4 = 10 friends in all." },
   { name: "Plates", plan: ["m", "+", "d", "+", "1"], who: "maya", line: "Plates = m + d + 1. m is 6 and d is 4. How many plates?", means: "a plate for every friend, plus 1 for Maya", prep: "plates", icon: "pr_plate", ask: "How many plates?", opts: [10, 25, 11], ans: 11,
-    work: "6 + 4 + 1 = 11", h1: (v) => `${v.m} + ${v.d} is ${v.m + v.d}. Don't forget my extra plate: add 1.`, h2: (v) => `${v.m + v.d} + 1. Count 1 more.`, inact: () => "Don't forget my extra plate.", pop: "Neel needs 11 plates.", exp: "Put 6 in place of m and 4 in place of d: 6 + 4 + 1 = 11 plates." },
+    work: "6 + 4 + 1 = 11", h1: (v) => `${v.m} + ${v.d} is ${v.m + v.d}. "Extra" means add: don't forget the 1 extra plate for me.`, h2: (v) => `${v.m + v.d} + 1. Count 1 more.`, inact: () => "Don't forget my extra plate.", pop: "Neel needs 11 plates.", exp: "Put 6 in place of m and 4 in place of d: 6 + 4 + 1 = 11 plates." },
   { name: "Two friends said no", plan: ["6", "−", "2"], change: true, who: "neel", line: "Oh no! 2 of my friends said no. Now how many monster friends are coming?", means: "6 friends were coming, 2 said no", prep: null, icon: "gu_monster_sad", ask: "How many monster friends are coming now?", opts: [8, 4, 6], ans: 4,
     work: "6 − 2 = 4", h1: () => "\"Said no\" means they are not coming. So we take away 2.", h2: () => "6 − 2. Start at 6 and count back 2.", inact: () => "\"Said no\" means take away.", pop: "Now 4 monster friends are coming.", exp: "6 friends were coming. 2 said no, so we take away 2: 6 − 2 = 4. Now m is 4. See? m can change!" },
   { name: "Cushions", plan: ["m", "+", "2", "d"], who: "agni", line: "Now m is 4 and d is 4. Cushions = m + 2d. How many cushions?", means: "1 for each monster, 2 for each dragon", prep: "cushions", icon: "pr_cushion", ask: "How many cushions?", opts: [12, 10, 16], ans: 12,
     work: "4 + 2 × 4 = 4 + 8 = 12", h1: (v) => `2 × ${v.d} is ${2 * v.d}. Now add m, which is ${v.m}.`, h2: (v) => `${v.m} + ${2 * v.d}. Start at ${2 * v.d} and count on ${v.m}.`, inact: (v) => `2 × ${v.d} is ${2 * v.d}. Then add ${v.m}.`, pop: "Neel needs 12 cushions.", exp: "2d is 2 × 4 = 8. Add m: 4 + 8 = 12 cushions." },
   { name: "Laddoos", plan: ["3", "m", "+", "2", "d"], who: "agni", line: "Yay! 3 more dragon friends said yes. Now d is 4 + 3 = 7, and m is still 4. Laddoos = 3m + 2d. How many laddoos?", means: "3 for each monster, 2 for each dragon", arrive: { d: 3 }, prep: "laddoos", icon: "pr_laddoo", ask: "How many laddoos?", opts: [20, 16, 26], ans: 26,
-    work: "3 × 4 + 2 × 7 = 12 + 14 = 26", h1: (v) => `3 × ${v.m} is ${3 * v.m}, and 2 × ${v.d} is ${2 * v.d}. Now add them.`, h2: (v) => `${3 * v.m} + ${2 * v.d}: ${tens(3 * v.m, 2 * v.d)}.`, inact: (v) => `Add ${3 * v.m} and ${2 * v.d}.`, pop: "Neel needs 26 laddoos.", exp: "3m is 3 × 4 = 12. 2d is 2 × 7 = 14. Add them: 12 + 14 = 26 laddoos. The plan still works, even when the numbers change!" },
+    work: "3 × 4 + 2 × 7 = 12 + 14 = 26", h1: (v) => `3 × ${v.m} is ${3 * v.m}, and 2 × ${v.d} is ${2 * v.d}. "Total" means add, so add them.`, h2: (v) => `${3 * v.m} + ${2 * v.d}: ${tens(3 * v.m, 2 * v.d)}.`, inact: (v) => `Add ${3 * v.m} and ${2 * v.d}.`, pop: "Neel needs 26 laddoos.", exp: "3m is 3 × 4 = 12. 2d is 2 × 7 = 14. Add them: 12 + 14 = 26 laddoos. The plan still works, even when the numbers change!" },
 ];
 // who praises each right answer (from the script)
 const PRAISE = ["neel:yes", "neel:super", "agni:great", "neel:well", "neel:yes", "agni:super", "neel:great", "neel:well"];
 const ITEM = { chairs: "Chairs", sweets: "Sweets", balloons: "Balloons", friends: "Friends in all", plates: "Plates", cushions: "Cushions", laddoos: "Laddoos" };
+// the plan for each thing on the table: when m or d changes, the table is worked out again from it
+const FORM = { chairs: (v) => v.m + 1, sweets: (v) => 3 * v.m + 5, balloons: (v) => 2 * v.m - 3, plates: (v) => v.m + v.d + 1, cushions: (v) => v.m + 2 * v.d, laddoos: (v) => 3 * v.m + 2 * v.d };
 
-let doors = [], vals = { m: 0, d: 0 }, uses = "m", valBox, bar, table, back, front, QB, words, scroll, rsvp, lights;
+let doors = [], vals = { m: 0, d: 0 }, uses = "m", valBox, bar, table, back, front, QB, scroll, rsvp, lights, numbered = false;
+const groups = {}; // what is on the table now: kind -> { n, els, tag }
 // the party table (tools/blender/table.py): rendered at the hall floor's own angle and standing on the floor's magic
 // circle. The art is 961 px wide; the table itself is 822 px of it, from x 51, and 281 px tall from the top
 const TB = { cx: 760, foot: 725, w: 700 }, TK = TB.w / 822, TX = TB.cx;
 const TOP = TB.foot - 281 * TK;         // back edge of the tabletop
 const TOP_FRONT = TOP + 34;             // front edge (the gold piping)
-const PICK = { cx: 800, top: 768, w: 480 }; // answer panel, under the table and clear of the speaker's side bubble
+// the answers: bottom right, in the action zone like the controls of the other parts (clear of the table, the
+// speaker's bubble and the plan scroll)
+const PICK = { cx: 1390, top: 748, w: 400 };
 const CARD_ART = { m: ["gu_monster_green", "gu_monster_pink"], d: ["gu_dragon_teal", "gu_dragon_red"] }; // no blue monster: it looks like Neel
 
-// ---------- the party table: each answer is one tidy group with its count, and it stays ----------
+// ---------- the party table: each kind of thing has its own place, with a small count tag beside it ----------
 const ICON = { chairs: "pr_chair", sweets: "pr_sweet", balloons: "pr_balloon", plates: "pr_plate", cushions: "pr_cushion", laddoos: "pr_laddoo" };
-/** where n things of a kind go: items {x: centre, y: bottom, w, h, under: behind the table, flip, hue, bowl},
- *  and where their count tag sits */
+/** where n things of a kind go: items {x: centre, y: bottom, w, h, under: behind the table, hue, bowl}, and where
+ *  their count tag sits. Places, left to right: balloons (left back corner), sweets bowl, plates, laddoo bowl,
+ *  balloons (right back corner); cushions on the floor at the right end; the chairs in a row in front of the table */
 function layout(kind, n) {
   const it = [];
   let tag = { x: TX, y: TOP - 60 };
   if (kind === "chairs") {
-    // one chair at the right end of the table, the rest behind it (their backs show above the tabletop). The left
-    // end is where the speaker's bubble sits, so nothing that has to be counted goes there
-    const ends = Math.min(1, n), behind = n - ends, s = behind > 8 ? 0.82 : 1, step = Math.min(82, 600 / Math.max(1, behind));
-    for (let i = 0; i < behind; i++) it.push({ x: TX - ((behind - 1) * step) / 2 + i * step, y: TOP + 34, w: 70 * s, h: 104 * s, under: true });
-    if (ends > 0) it.push({ x: TX + 395, y: TB.foot + 12, w: 93, h: 140, flip: true });
-    tag = { x: TX + 450, y: TB.foot - 150 }; // over the end chair, clear of the things on the table
+    // a row on the floor in front of the table, ready for the guests, so every chair can be counted
+    const cx = TX + 90, y = TB.foot + 72, step = Math.min(66, 470 / Math.max(1, n - 1));
+    for (let i = 0; i < n; i++) it.push({ x: cx - ((n - 1) * step) / 2 + i * step, y, w: 64, h: 96 });
+    tag = { x: cx + ((n - 1) * step) / 2 + 60, y: y - 66 };
   }
   if (kind === "plates") {
-    // stacks of up to 6 in the middle of the table
-    const stacks = Math.ceil(n / 6), gap = Math.min(70, 300 / stacks);
+    // stacks of up to 5 in the middle of the table
+    const stacks = Math.ceil(n / 5), gap = 66, tall = Math.ceil(n / stacks);
     for (let i = 0; i < n; i++) { const st = i % stacks, h = Math.floor(i / stacks); it.push({ x: TX - ((stacks - 1) * gap) / 2 + st * gap, y: TOP_FRONT - 4 - h * 6, w: 62, h: 38 }); }
-    tag = { x: TX + ((stacks - 1) * gap) / 2 + 40, y: TOP_FRONT - 4 - Math.ceil(n / stacks) * 6 - 50 };
+    tag = { x: TX, y: TOP_FRONT - 4 - (tall - 1) * 6 - 38 - 30 };
   }
   if (kind === "sweets" || kind === "laddoos") {
-    // a heap in a gold bowl: the bowl holds them all, the heap shows a handful, the tag says how many
-    const bx = TX + (kind === "sweets" ? -215 : 215), by = TOP_FRONT - 4;
+    // a heap in a gold bowl: the bowl holds them all, the heap shows a handful, the tag says how many.
+    // Each tag sits on the inner side of its bowl, away from the balloons
+    const L = kind === "sweets", bx = TX + (L ? -205 : 205), by = TOP_FRONT - 4;
     it.push({ x: bx, y: by, w: 130, h: 65, bowl: true });
-    const rows = [5, 4, 3, 2, 1], w = kind === "sweets" ? 34 : 32, h = kind === "sweets" ? 28 : 32;
+    const rows = [5, 4, 3, 2, 1], w = L ? 34 : 32, h = L ? 28 : 32;
     let left = Math.min(n, 15);
     rows.forEach((c, r) => { const k = Math.min(c, left); left -= k; for (let j = 0; j < k; j++) it.push({ x: bx - ((k - 1) * w * 0.78) / 2 + j * w * 0.78, y: by - 46 - r * h * 0.5, w, h }); });
-    tag = { x: bx + 62, y: by - 112 };
+    tag = { x: bx + (L ? 74 : -74), y: by - 124 };
   }
   if (kind === "cushions") {
-    // two neat piles side by side on the floor at the front right corner of the table
+    // two neat piles on the floor just past the right end of the table
     const a = Math.ceil(n / 2);
-    for (let i = 0; i < n; i++) { const L = i < a, k = L ? i : i - a; it.push({ x: TX + (L ? 240 : 310), y: TB.foot + 40 - k * 14, w: 58, h: 39 }); }
-    tag = { x: TX + 360, y: TB.foot + 40 - a * 14 - 40 };
+    for (let i = 0; i < n; i++) { const L = i < a, k = L ? i : i - a; it.push({ x: TX + (L ? 382 : 442), y: TB.foot - k * 13, w: 58, h: 39 }); }
+    tag = { x: TX + 412, y: TB.foot - a * 13 - 62 };
   }
   if (kind === "balloons") {
-    // two bunches tied at the back corners
+    // two bunches tied at the back corners, outside the bowls
     const a = Math.ceil(n / 2);
-    for (let i = 0; i < n; i++) { const L = i < a, k = L ? i : i - a, g = L ? a : n - a; it.push({ x: TX + (L ? -300 : 300) + (k - (g - 1) / 2) * 22, y: TOP + 6 - (k % 2) * 24, w: 47, h: 78, hue: (i * 47) % 360 }); }
-    tag = { x: TX + 300 + a * 11 + 30, y: TOP - 120 };
+    for (let i = 0; i < n; i++) { const L = i < a, k = L ? i : i - a, g = L ? a : n - a; it.push({ x: TX + (L ? -350 : 350) + (k - (g - 1) / 2) * 18, y: TOP + 6 - (k % 2) * 24, w: 47, h: 78, hue: (i * 47) % 360 }); }
+    tag = { x: TX + 350, y: TOP - 124 }; // over the right bunch: the reply board can reach down over the left one
   }
   return { it, tag };
 }
+function thing(kind, o) {
+  const e = img(o.bowl ? "pr_bowl" : ICON[kind], o.under ? back : front, { left: o.x - o.w / 2, top: o.y - o.h, width: o.w, height: o.h, objectFit: "contain" });
+  if (o.hue != null) e.style.filter = `hue-rotate(${o.hue}deg) saturate(2.4)`;
+  return e;
+}
+function countUp(t, a, b, dur) {
+  const c = { v: a };
+  return gsap.to(c, { v: b, duration: dur, ease: "power1.out", onUpdate: () => (t.textContent = Math.round(c.v)), onComplete: () => { sfx("pop"); gsap.fromTo(t, { scale: 1.35 }, { scale: 1, duration: 0.35, ease: "back.out(3)" }); } });
+}
 /** put n things of a kind at the table. from: they fly in from the answer panel and land with a bounce, and the
- *  count tag counts up. Returns everything placed (to take it away again after a wrong number) */
-function place(kind, n, from) {
-  const { it, tag } = layout(kind, n), out = [];
+ *  count tag counts up. tag: false for the party (no numbers on the party table) */
+function place(kind, n, from, tag = true) {
+  const { it, tag: at } = layout(kind, n), els = [];
   it.forEach((o, i) => {
-    const e = img(o.bowl ? "pr_bowl" : ICON[kind], o.under ? back : front, { left: o.x - o.w / 2, top: o.y - o.h, width: o.w, height: o.h, objectFit: "contain" });
-    if (o.flip) e.style.transform = "scaleX(-1)";
-    if (o.hue != null) e.style.filter = `hue-rotate(${o.hue}deg) saturate(2.4)`;
-    if (from) gsap.from(e, o.bowl ? { opacity: 0, scale: 0.6, duration: 0.3 } : { left: from.x, top: from.y - 120, opacity: 0, duration: 0.5, delay: 0.1 + Math.min(i * 0.035, 0.8), ease: "bounce.out" });
-    out.push(e);
+    const e = thing(kind, o);
+    if (from) gsap.from(e, o.bowl ? { opacity: 0, scale: 0.6, duration: 0.3 } : { left: from.x, top: from.y - 60, opacity: 0, duration: 0.5, delay: 0.1 + Math.min(i * 0.035, 0.6), ease: "bounce.out" });
+    els.push(e);
   });
-  const t = el("div", "ctag", front, { left: tag.x, top: tag.y }, from ? "0" : String(n));
-  out.push(t);
-  if (from) {
-    const c = { v: 0 };
-    gsap.from(t, { scale: 0, duration: 0.3, ease: "back.out(3)" });
-    gsap.to(c, { v: n, duration: Math.min(1.1, 0.3 + n * 0.04), delay: 0.2, ease: "power1.out", onUpdate: () => (t.textContent = Math.round(c.v)), onComplete: () => { sfx("pop"); gsap.fromTo(t, { scale: 1.35 }, { scale: 1, duration: 0.35, ease: "back.out(3)" }); } });
+  let t = null;
+  if (tag) {
+    t = el("div", "ctag", front, { left: at.x, top: at.y }, from ? "0" : String(n));
+    if (from) { gsap.from(t, { scale: 0, duration: 0.3, ease: "back.out(3)" }); countUp(t, 0, n, Math.min(1, 0.3 + n * 0.03)).delay(0.2); }
   }
-  return out;
+  return { n, els, tag: t };
+}
+const removeGroup = (g) => [...g.els, g.tag].filter(Boolean).forEach((e) => e.remove());
+/** the plan is worked out again (m or d changed): the things on the table move, go or come, the tag counts */
+function restock(kind, n) {
+  const g = groups[kind];
+  if (!g || g.n === n) return;
+  const { it, tag } = layout(kind, n), was = g.n;
+  it.forEach((o, i) => {
+    const e = g.els[i];
+    if (e) gsap.to(e, { left: o.x - o.w / 2, top: o.y - o.h, width: o.w, height: o.h, duration: 0.6, ease: "power2.inOut" });
+    else { g.els[i] = thing(kind, o); gsap.from(g.els[i], { opacity: 0, y: -30, duration: 0.45, delay: 0.25 + (i - was) * 0.05, ease: "bounce.out" }); }
+  });
+  g.els.splice(it.length).forEach((e, i) => gsap.to(e, { opacity: 0, y: -40, scale: 0.6, duration: 0.45, delay: i * 0.08, onComplete: () => e.remove() }));
+  if (g.tag) { gsap.to(g.tag, { left: tag.x, top: tag.y, duration: 0.6 }); g.tag.classList.add("chg"); countUp(g.tag, was, n, 0.8).eventCallback("onComplete", () => { g.tag.classList.remove("chg"); sfx("pop"); }); }
+  g.n = n;
+}
+/** after m or d changed: everything on the table is worked out again from its plan, one kind after another */
+async function rework() {
+  const todo = Object.keys(groups).filter((k) => groups[k].n !== FORM[k](vals));
+  if (!todo.length) return;
+  sfx("magic");
+  for (const k of todo) { restock(k, FORM[k](vals)); await wait(0.3); }
+  await wait(0.6);
 }
 function buildTable() {
   const L = farLayer();
@@ -125,12 +159,13 @@ function buildTable() {
   table = img("pr_party_table_3d", world, { left: TX - (51 + 411) * TK, top: TOP - TK, width: 961 * TK });
   lightPool(TX, TB.foot - 40, 1400, 360);
   front = el("div", "abs", world, { left: 0, top: 0, width: 1, height: 1 });
+  for (const k in groups) delete groups[k];
 }
-/** the finished table, for a party reached directly (a QA jump) */
+/** the finished table for the party: what the plan gives for the friends who came (m = 4, d = 7), no count tags */
 export function partyTable() {
   buildTable();
   lights.light(1);
-  for (const q of Q) if (q.prep && ICON[q.prep]) place(q.prep, q.ans);
+  for (const k in FORM) groups[k] = place(k, FORM[k]({ m: 4, d: 7 }), null, false);
 }
 /** Part 3's cards and helpers step away for the party; the table and what is on it stay */
 export function partyClear() { [...ui.children].forEach((c) => { if (c.id !== "bubble") c.remove(); }); }
@@ -147,6 +182,10 @@ function countCards() {
     g.style.display = n || g.querySelector(".cards.no")?.childElementCount ? "" : "none";
   }
 }
+/** once the friends have been counted, every Yes card keeps a number: 1, 2, 3 … with no gaps */
+function renumber() {
+  [...rsvp.querySelectorAll(".cards.yes .rc:not(.out)")].forEach((c, i) => { (c.querySelector(".num") || el("i", "num", c)).textContent = String(i + 1); });
+}
 /** a reply card flies from the door into its place on the board. kind: "m" | "d" yes, or "no" (a monster who can't come) */
 function rsvpCard(kind, from, i) {
   const g = rsvp.querySelector(".grp." + (kind === "d" ? "d" : "m"));
@@ -156,6 +195,7 @@ function rsvpCard(kind, from, i) {
   const c = el("div", "rc " + (kind === "no" ? "sorry" : "yes"), list, {}, `<img src="assets/${art}.webp"><span>${kind === "no" ? "Sorry, I can't come" : "Yes!"}</span>`);
   gsap.set(rsvp, { autoAlpha: 1 });
   countCards();
+  if (numbered && kind !== "no") renumber(); // a friend who says yes after the count gets the next number
   const r = c.getBoundingClientRect(), p = toStage({ clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 });
   gsap.from(c, { x: from.x - p.x, y: from.y - p.y, scale: 0.3, rotation: (i % 2 ? 1 : -1) * 25, duration: 0.55, ease: "power2.out" });
   sfx("pop");
@@ -172,9 +212,9 @@ async function knockDoor(di, kind, count) {
   sfx("knock");
   const knock = setInterval(() => { sfx("knock"); gsap.fromTo(d, { x: -4 }, { x: 4, duration: 0.05, repeat: 5, yoyo: true }); }, 2600);
   closeBubble();
-  // the door must be in clear view: the scroll and helper step back, and the camera stays wide so the speaker
-  // is never pushed off the edge
-  gsap.to([scroll?.el, words].filter(Boolean), { opacity: 0.12, duration: 0.3 });
+  // the door must be in clear view: the scroll steps back, and the camera stays wide so the speaker is never
+  // pushed off the edge
+  gsap.to([scroll?.el].filter(Boolean), { opacity: 0.12, duration: 0.3 });
   const dx = +d.dataset.x, dy = +d.dataset.y;
   await camRest(0.4);
   const dp = camPt(dx, dy, "far");
@@ -199,7 +239,7 @@ async function knockDoor(di, kind, count) {
   }
   pf.stop();
   await wait(0.4);
-  gsap.to([scroll?.el, words].filter(Boolean), { opacity: 1, duration: 0.3 });
+  gsap.to([scroll?.el].filter(Boolean), { opacity: 1, duration: 0.3 });
   gsap.to(d, { rotationY: 0, duration: 0.5, ease: "power2.in" });
   gsap.to([light, beam], { opacity: 0, duration: 0.5, onComplete: () => { light.remove(); beam.remove(); } });
   gsap.to(d, { filter: "brightness(.55) saturate(.8)", duration: 0.6 });
@@ -212,11 +252,13 @@ async function twoSaidNo() {
   await gsap.to([...yes, ...rsvp.querySelectorAll(".cards.no .rc")], { opacity: 0, scale: 0.6, duration: 0.35 });
   yes.forEach((c) => c.remove()); rsvp.querySelector(".cards.no").innerHTML = "";
   countCards();
+  if (numbered) renumber();
 }
 // friends in all: every Yes card gets its number, one by one
 async function countAll() {
   const cs = [...rsvp.querySelectorAll(".cards.yes .rc:not(.out)")];
   for (const [i, c] of cs.entries()) { el("i", "num", c, {}, String(i + 1)); sfx("star"); gsap.from(c.lastChild, { scale: 0, duration: 0.25, ease: "back.out(3)" }); await wait(0.16); }
+  numbered = true;
 }
 
 // ---------- the equation bar: item name = plan, with gold seals over the letters ----------
@@ -225,10 +267,13 @@ const EQ_Q = `<span class="lo">&thinsp;=&thinsp;</span><span class="q">?</span>`
 function renderPlan(q) {
   const head = q.change ? `<span class="lm">m</span>` : `<span class="item">${q.name}</span>`;
   bar.innerHTML = head + `<span class="lo">&thinsp;=&thinsp;</span>` + q.plan.map((t) => OPS.includes(t) ? `&thinsp;${show([t])}&thinsp;` : (t === "m" || t === "d") ? `<span class="seal" data-k="${t}" style="color:${t === "m" ? "#5a1fa8" : "#c2410c"}"><i class="sl">${t}</i></span>` : show([t])).join("");
+  // the seals are asleep (grey) while the question is read: a tap on one ends the line, and they wake after it
+  lock([...bar.querySelectorAll(".seal")]);
 }
 // each seal opens on its own tap, even while another one is still opening
 async function crackSeals() {
   const seals = [...bar.querySelectorAll(".seal")];
+  lock(seals, false);
   const help = setTimeout(() => { const s = bar.querySelector(".seal:not(.open)"); if (!s) return; const r = s.getBoundingClientRect(), p = toStage({ clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }); pointHand(p.x, p.y, 2.4); }, 10000);
   await Promise.all(seals.map((s) => new Promise((res) => {
     s.classList.add("pulse");
@@ -236,6 +281,7 @@ async function crackSeals() {
   })));
   clearTimeout(help);
 }
+// a seal opens in about a second: the number flies in, the coin turns once, the plain number shows
 async function openSeal(s) {
   const k = s.dataset.k, v = String(vals[k]), sl = s.querySelector(".sl");
   const rr = s.getBoundingClientRect(), pp = toStage({ clientX: rr.left + rr.width / 2, clientY: rr.top + rr.height / 2 });
@@ -245,14 +291,14 @@ async function openSeal(s) {
     const pr = pill.getBoundingClientRect(), a = toStage({ clientX: pr.left + pr.width / 2, clientY: pr.top + pr.height / 2 });
     const fly = el("div", "flynum " + k, ui, { left: a.x, top: a.y }, v);
     gsap.fromTo(pill, { scale: 1.25 }, { scale: 1, duration: 0.4 });
-    await gsap.fromTo(fly, { scale: 0.6 }, { left: pp.x, top: pp.y, scale: 1.1, opacity: 0.2, duration: 0.4, ease: "power2.inOut" });
+    await gsap.fromTo(fly, { scale: 0.6 }, { left: pp.x, top: pp.y, scale: 1.1, opacity: 0.2, duration: 0.3, ease: "power2.inOut" });
     fly.remove();
   }
   // the m coin spins; when it is edge-on the letter becomes the number, so the swap is never seen
   sfx("whoosh");
   const o = { a: 0 };
   let swapped = false;
-  await gsap.to(o, { a: 1, duration: 0.8, ease: "power2.inOut", onUpdate: () => {
+  await gsap.to(o, { a: 1, duration: 0.55, ease: "power2.inOut", onUpdate: () => {
     const fr = Math.floor(((o.a % 0.5) / 0.5) * 12) % 12;
     s.style.backgroundPosition = `${(fr / 11) * 100}% 0`;
     sl.style.transform = `scaleX(${Math.max(0.02, Math.abs(Math.cos(o.a * 2 * Math.PI)))})`;
@@ -267,12 +313,12 @@ async function openSeal(s) {
   s.classList.add("open");
   s.style.backgroundImage = "none";
   s.innerHTML = (afterNum ? '<span class="lo">×</span>' : "") + v;
-  await gsap.fromTo(s, { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" });
+  await gsap.fromTo(s, { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.25, ease: "back.out(2)" });
 }
-// the answers: three gems in a pill panel under the table, shown and switched on together
+// the answers: three gems in a pill panel, bottom right, shown and switched on together
 async function chooseNum(opts) {
-  const panel = el("div", "pickbar", ui, { left: PICK.cx - PICK.w / 2, top: PICK.top, width: PICK.w, height: 124 });
-  const ls = opts.map((v, i) => el("div", "lantern big p3", ui, { left: PICK.cx - 56 + (i - 1) * 150, top: PICK.top + 6 }, String(v)));
+  const panel = el("div", "pickbar", ui, { left: PICK.cx - PICK.w / 2, top: PICK.top, width: PICK.w, height: 132 });
+  const ls = opts.map((v, i) => el("div", "lantern big p3", ui, { left: PICK.cx - 56 + (i - 1) * 128, top: PICK.top + 10 }, String(v)));
   lock(ls);
   await gsap.from([panel, ...ls], { y: 40, opacity: 0, duration: 0.35, ease: "back.out(1.6)" });
   ls.forEach((l, i) => gsap.fromTo(l, { y: 0 }, { y: -8, yoyo: true, repeat: -1, duration: 1 + i * 0.2, ease: "sine.inOut" }));
@@ -288,15 +334,15 @@ async function chooseNum(opts) {
 async function deliver(q, n) {
   if (q.prep === "friends") { if (n === q.ans) await countAll(); return n === q.ans; }
   const from = camPt(PICK.cx, PICK.top + 50);
-  const items = place(q.prep, n, from);
-  await wait(0.5 + Math.min(n * 0.04, 0.9));
-  if (n === q.ans) return true;
+  const g = place(q.prep, n, from);
+  await wait(0.5 + Math.min(n * 0.03, 0.7));
+  if (n === q.ans) { groups[q.prep] = g; return true; }
   sfx("bad");
-  items[items.length - 1].classList.add("bad"); // the count tag turns red
+  g.tag.classList.add("bad"); // the count tag turns red
   popup(n < q.ans ? `${n} is not enough!` : `${n} is too many!`, 1.6, 300);
   await wait(1.7);
-  await gsap.to(items, { opacity: 0, duration: 0.3 });
-  items.forEach((i) => i.remove());
+  await gsap.to([...g.els, g.tag], { opacity: 0, duration: 0.3 });
+  removeGroup(g);
   return false;
 }
 
@@ -305,20 +351,19 @@ function buildScene() {
   setFore(0);
   buildTable();
   buildRsvp();
+  numbered = false;
   QB = qbox();
   QB.box.classList.add("eq"); // the big equation bar
   bar = QB.plan; valBox = QB.vals;
-  words = wordHelp(ui, { left: 1200, top: 690, width: 390 }); // bottom right corner, on every question
-  gsap.set(words, { autoAlpha: 0 });
 }
 // a jump into the middle of Part 3 (QA): the cards and the table as they would be by then
 function catchUp(start) {
   const from = { x: 200, y: 200 };
   for (let i = 0; i < 6; i++) rsvpCard("m", from, i);
   vals.m = 6;
-  if (start > 4) { for (let i = 0; i < 4; i++) rsvpCard("d", from, i); vals.d = 4; }
-  if (start > 6) { [...rsvp.querySelectorAll(".grp.m .cards.yes .rc")].slice(-2).forEach((c) => c.remove()); vals.m = 4; countCards(); }
-  for (const q of Q.slice(0, start - 1)) if (q.prep && ICON[q.prep]) place(q.prep, q.ans);
+  if (start > 4) { for (let i = 0; i < 4; i++) rsvpCard("d", from, i); vals.d = 4; renumber(); numbered = true; }
+  if (start > 6) { [...rsvp.querySelectorAll(".grp.m .cards.yes .rc")].slice(-2).forEach((c) => c.remove()); vals.m = 4; countCards(); renumber(); }
+  for (const q of Q.slice(0, start - 1)) if (FORM[q.prep]) groups[q.prep] = place(q.prep, FORM[q.prep](vals));
   lights.light((start - 1) / Q.length);
 }
 
@@ -334,10 +379,11 @@ export async function runPart3(start = 1) {
     scroll = await planScroll({ left: 1205, top: 152 });
     scroll.el.classList.add("docked");
   } else {
-    // Neel tells his friends: all three are here for it
-    await trio("trioTable");
+    // Neel tells his friends: all three are here for it (they stand ready under the title card)
+    trio("trioTable");
+    await afterTitle();
     const ir = iconRow(Q);
-    await say("nar", "Neel decides who is coming. Find the exact number of things.");
+    await say("nar", "Neel has decided who is coming. Let's find the exact number of things we need.");
     ir.remove();
     QB.show("Neel has decided!");
     await say("neel", "I have decided! 6 monster friends are coming.", { p: "happy" });
@@ -348,6 +394,10 @@ export async function runPart3(start = 1) {
     scroll = await planScroll({ left: 520, top: 96 });
     await maya("Look at our party plan. We wrote it when we did not know the number of friends. That is why we used m.", "explain");
     await maya("Now we know that m is 6. So we just put 6 in place of m, and then work it out.", "cast");
+    // the scroll goes to its place at the side, and the friends step back for the questions: Maya alone, bottom
+    // left, so her bubble never covers the scroll
+    closeBubble();
+    solo("table");
     await scroll.dock({ left: 1205, top: 152 });
     const ex = card(`<div class="tag">Maya explains</div><p>Glasses: ${show(["2", "m"])}</p><p>Put 6 in place of <span class="mtxt">m</span>: 2 × 6 = <b>12</b></p>`, { left: 470, top: 30, width: 680 }, "card lesson");
     await maya("For example, glasses: 2 for each friend is 2m. Put 6 in place of m: 2 × 6 = 12 glasses.", "explain");
@@ -356,7 +406,6 @@ export async function runPart3(start = 1) {
     gsap.to(QB.box, { opacity: 1, duration: 0.3 });
   }
   solo("table"); // one speaker at a time for the questions
-  gsap.to(words, { autoAlpha: 1, duration: 0.4 });
 
   for (let qi = start - 1; qi < Q.length; qi++) {
     const q = Q[qi];
@@ -368,6 +417,7 @@ export async function runPart3(start = 1) {
       QB.show(q.arrive.d === 4 ? "Someone is knocking!" : "More knocking!");
       await say("agni", q.arrive.d === 4 ? "Listen! Someone is knocking!" : "More knocking! Who is it?", { p: "shocked" });
       await knockDoor(2, "d", q.arrive.d);
+      if (Object.keys(groups).length) await rework(); // more dragons: the plates and cushions follow the plan
     }
     if (q.change) {
       // two replies come back: "Sorry, I can't come". The six Yes cards stay until the child has answered
@@ -388,6 +438,7 @@ export async function runPart3(start = 1) {
     if (!q.change) {
       prompt(uses.length > 1 ? "Tap the gold seals to see the numbers!" : "Tap the gold seal to see the number!");
       await crackSeals();
+      closeBubble(); // the seal prompt is done: it does not stay in the bubble
       gsap.to(valBox, { autoAlpha: 0, duration: 0.3 }); // the numbers are in the bar now
       bar.insertAdjacentHTML("beforeend", EQ_Q);
     }
@@ -398,6 +449,7 @@ export async function runPart3(start = 1) {
       iw.open();
       const [v, l] = await pick();
       iw.pause();
+      closeBubble(); // the question prompt goes as soon as the child answers
       const ok = q.change ? v === q.ans : await deliver(q, v);
       if (ok) break;
       tries++;
@@ -446,10 +498,16 @@ export async function runPart3(start = 1) {
     QB.sub(`<span class="win">${q.pop} ✓</span>`);
     await award(tries, TX, 300, 3);
     if (tries < 3) { await praise(PRAISE[qi]); await maya("Correct! " + q.exp, "happy"); }
+    if (q.change) {
+      // the table was set for 6 monster friends: Maya works the plan again with m = 4, and the table follows
+      // (2 chairs go, and the sweets, balloons and plates are counted again)
+      await maya("Now m is 4. Our plan still works: chairs = 4 + 1 = 5.", "explain", () => restock("chairs", FORM.chairs(vals)));
+      await rework();
+    }
     checkDone(qi);
     lights.light((qi + 1) / Q.length); // the garland over the table: the party is a bit more ready
     closeBubble();
     await wait(0.3);
   }
-  gsap.to([QB.box, words], { opacity: 0, duration: 0.5 });
+  gsap.to(QB.box, { opacity: 0, duration: 0.5 });
 }

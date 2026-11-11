@@ -10,9 +10,9 @@
   "text": "Neel wants to have a party next week, but he has not decided how many friends to invite. Maya and Agni are helping him plan the party."
  },
  {
-  "id": "agni_50fd1d6b",
+  "id": "agni_cbce6149",
   "who": "agni",
-  "text": "Neel, you have not decided the number of guests coming? Then how will we plan? How many plates? How many sweets?"
+  "text": "Neel, have you still not decided how many guests are coming? Then how will we plan? How many plates? How many sweets?"
  },
  {
   "id": "maya_b0905264",
@@ -20,9 +20,9 @@
   "text": "Don't worry. When we don't know a number, we can write it as a letter."
  },
  {
-  "id": "maya_a3e7b678",
+  "id": "maya_8ad2bc42",
   "who": "maya",
-  "text": "Neel's friends are monsters. So let's use the letter m, for the number of monster friends."
+  "text": "Neel's friends are monsters. So let's use the letter m for the number of monster friends."
  },
  {
   "id": "maya_0b1c0a8c",
@@ -35,9 +35,9 @@
   "text": "But Maya, m is not a number."
  },
  {
-  "id": "maya_e9972083",
+  "id": "maya_9f192825",
   "who": "maya",
-  "text": "m is a variable that represents a number. A variable is a number that is not fixed yet and can change."
+  "text": "m is a variable that represents a number. A variable is a number that is not fixed yet. It can change."
  },
  {
   "id": "maya_f1ee1442",
@@ -45,9 +45,9 @@
   "text": "When Neel decides who is coming, we can easily find the exact number of things we need."
  },
  {
-  "id": "agni_6f01259b",
+  "id": "agni_262e9030",
   "who": "agni",
-  "text": "Hmm! Variable! Let's plan!"
+  "text": "Hmm! A variable! Let's plan!"
  },
  {
   "id": "nar_f7a2e5a4",
@@ -100,19 +100,19 @@
   "text": "agni"
  },
  {
-  "id": "neel_1f327147",
+  "id": "neel_bca5d48e",
   "who": "neel",
-  "text": "Thank you for helping to check my party list."
+  "text": "Thank you for helping me check my party list."
  },
  {
-  "id": "maya_ce1df90e",
+  "id": "maya_aa82e1b6",
   "who": "maya",
-  "text": "Great! Now you know that the number that can change is a variable."
+  "text": "Great! Now you know that a number that can change is a variable."
  },
  {
-  "id": "maya_526e8815",
+  "id": "maya_980d50ab",
   "who": "maya",
-  "text": "And the numbers that stay the same are constants."
+  "text": "And a number that stays the same is a constant."
  },
  {
   "id": "agni_d0024ca1",
@@ -145,9 +145,9 @@
   "text": "neel"
  },
  {
-  "id": "nar_b12cae3d",
+  "id": "nar_684b96d2",
   "who": "nar",
-  "text": "There are 8 things on Neel's party list. Let's check if they are variable or constant."
+  "text": "There are 8 things on Neel's party list. Let's check whether each one is a variable or a constant."
  },
  {
   "id": "maya_947062e2",
@@ -165,9 +165,9 @@
   "text": "Watch the dial."
  },
  {
-  "id": "maya_04fa0cf2",
+  "id": "maya_f2a4cbd9",
   "who": "maya",
-  "text": "Turn the dial to change the number of friends. Did the number change? Put it in the jar for Variable or the chest for Constant."
+  "text": "Now help Neel check his party list. Turn the dial to change the number of friends. Did the number change? Put it in the jar for Variable or the chest for Constant."
  },
  {
   "id": "maya_28e473fa",
@@ -190,9 +190,39 @@
   "text": "Wait! My dragon friends are also coming!"
  },
  {
-  "id": "nar_0fa2fbd2",
+  "id": "neel_4e43d3d7",
+  "who": "neel",
+  "text": "Maya, m monster friends and d dragon friends are coming. How many friends are coming in all? Can I write md?"
+ },
+ {
+  "id": "neel_57ec1dfb",
+  "who": "neel",
+  "text": "Oh! md gives 6, but only 5 friends came. So md is wrong here."
+ },
+ {
+  "id": "nar_35a3fb19",
   "who": "nar",
-  "text": "Maya and Agni have written down the list of items required for the party but Neel has still not decided as to how many friends are coming. Let's help Maya and Agni to find out how to get the exact number of items required."
+  "text": "Maya and Agni have made a list of things they need for the party, but Neel has still not decided how many friends are coming. Let's help Maya and Agni find the exact number of things they need."
+ },
+ {
+  "id": "maya_218d232a",
+  "who": "maya",
+  "text": "For m friends, it is m × 2. We write it in short as 2m. A number next to a letter means multiply."
+ },
+ {
+  "id": "maya_3292cd33",
+  "who": "maya",
+  "text": "Some words tell us to add: and, more, extra, plus, total, in all."
+ },
+ {
+  "id": "maya_ef095041",
+  "who": "maya",
+  "text": "Some words tell us to multiply: each, every, per, times."
+ },
+ {
+  "id": "maya_c60c984a",
+  "who": "maya",
+  "text": "Some words tell us to take away: less, fewer, minus, left, broke, gone, said no."
  },
  {
   "id": "neel_1d2dfb94",
@@ -215,49 +245,14 @@
   "text": "And don't forget me. I will need 1 extra of some things too!"
  },
  {
-  "id": "maya_9a270d96",
+  "id": "maya_8d3f205d",
   "who": "maya",
-  "text": "Let's check with real numbers. Say 3 monsters and 2 dragons come."
+  "text": "We have to write a plan for m monster friends. Let me show you how. For example, let's find the number of sweets. Each friend gets 2 sweets."
  },
  {
-  "id": "maya_71a6442a",
+  "id": "maya_4fc9d0c4",
   "who": "maya",
-  "text": "\\\"In all\\\" means we put the two groups together, so we add. m monsters and d dragons make m + d friends."
- },
- {
-  "id": "maya_8a839db4",
-  "who": "maya",
-  "text": "We have to write a plan for m monster friends. Let me show you how. For example: number of sweets. Each friend gets 2 sweets."
- },
- {
-  "id": "maya_ffffa45a",
-  "who": "maya",
-  "text": "For m friends, it is m × 2. We write it short as 2m."
- },
- {
-  "id": "maya_fe61ff16",
-  "who": "maya",
-  "text": "A number next to a letter means multiply."
- },
- {
-  "id": "maya_3292cd33",
-  "who": "maya",
-  "text": "Some words tell us to add: and, more, extra, plus, total, in all."
- },
- {
-  "id": "maya_ef095041",
-  "who": "maya",
-  "text": "Some words tell us to multiply: each, every, per, times."
- },
- {
-  "id": "maya_c60c984a",
-  "who": "maya",
-  "text": "Some words tell us to take away: less, fewer, minus, left, broke, gone, said no."
- },
- {
-  "id": "maya_07d2c6b8",
-  "who": "maya",
-  "text": "These words stay on the screen to help you. Let's write the plan!"
+  "text": "Let's write the plan!"
  },
  {
   "id": "maya_cb28c0e6",
@@ -275,9 +270,9 @@
   "text": "That spell is not finished. Every + − or × needs something on both sides."
  },
  {
-  "id": "nar_05b2b6a6",
+  "id": "nar_5753e626",
   "who": "nar",
-  "text": "Neel decides who is coming. Find the exact number of things."
+  "text": "Neel has decided who is coming. Let's find the exact number of things we need."
  },
  {
   "id": "neel_5d54b1e7",
@@ -303,6 +298,11 @@
   "id": "maya_3b967dd1",
   "who": "maya",
   "text": "Now you try! Find the exact number of each thing on the plan."
+ },
+ {
+  "id": "maya_90bedc52",
+  "who": "maya",
+  "text": "Now m is 4. Our plan still works: chairs = 4 + 1 = 5."
  },
  {
   "id": "neel_e561c469",
@@ -345,9 +345,9 @@
   "text": "Tap Variable or Constant."
  },
  {
-  "id": "neel_8d87977c",
+  "id": "neel_347e7a5f",
   "who": "neel",
-  "text": "Number of cakes. I will cut one big cake; no matter how many friends come."
+  "text": "Number of cakes. I will cut one big cake, no matter how many friends come."
  },
  {
   "id": "maya_a21b9d8d",
@@ -535,9 +535,9 @@
   "text": "Look at the table. What do we always add?"
  },
  {
-  "id": "maya_1a05dc16",
+  "id": "maya_702d642e",
   "who": "maya",
-  "text": "Look at the table. Each time, we take the number of friends and add 1."
+  "text": "Look at the table. What do we add to the number of friends each time?"
  },
  {
   "id": "maya_038c6754",
@@ -550,9 +550,9 @@
   "text": "The answer is m + 1. One chair for each friend is m chairs. 1 extra chair for Neel means add 1. So the chairs are m + 1."
  },
  {
-  "id": "agni_ce07eab9",
+  "id": "agni_c3cda11c",
   "who": "agni",
-  "text": "Sweets: each friend gets 3 sweets, and I get 5 extra sweets. How many sweets for m friends?"
+  "text": "Sweets: each friend gets 3 sweets, and I get 5 extra sweets. How many sweets do we need for m friends?"
  },
  {
   "id": "maya_38b0c3c8",
@@ -600,9 +600,9 @@
   "text": "Neel had one cup for each friend, so m cups. Then 2 cups broke."
  },
  {
-  "id": "maya_8d475ba1",
+  "id": "maya_3bb37d86",
   "who": "maya",
-  "text": "Broken cups are gone, so we take away. If there were 10 cups and 2 broke, 10 − 2 = 8 cups are left."
+  "text": "\"Broke\" means take away: broken cups are gone. If there were 10 cups and 2 broke, 10 − 2 = 8 cups are left."
  },
  {
   "id": "maya_953fe09f",
@@ -630,9 +630,9 @@
   "text": "4 candles for each friend. Does \"each\" mean add or multiply?"
  },
  {
-  "id": "maya_7f6e0289",
+  "id": "maya_b0778b4a",
   "who": "maya",
-  "text": "Try 5 friends. 4 + 5 = 9 candles. But 4 candles for each of 5 friends is 4 × 5 = 20 candles. Which one is right?"
+  "text": "\"Each\" means multiply. Try 5 friends. 4 + 5 = 9 candles. But 4 candles for each of 5 friends is 4 × 5 = 20 candles. Which one is right?"
  },
  {
   "id": "maya_68b2ab29",
@@ -660,9 +660,9 @@
   "text": "Do it in two steps. First, balloons for the friends: 2 for each friend."
  },
  {
-  "id": "maya_7b9310a7",
+  "id": "maya_709bc0a3",
   "who": "maya",
-  "text": "2 for each friend is 2m. Then 3 balloons burst. Burst balloons are gone, so we take away 3."
+  "text": "2 for each friend is 2m. Then 3 balloons burst. \"Burst\" means take away, so we take away 3."
  },
  {
   "id": "maya_c0aee430",
@@ -780,9 +780,9 @@
   "text": "m is the number of monsters. d is the number of dragons. Are they the same thing?"
  },
  {
-  "id": "maya_ef4f8f53",
+  "id": "maya_88afa009",
   "who": "maya",
-  "text": "Try 2 monsters and 1 dragon. 3m + 2d gives 6 + 2 = 8. 5md gives 5 × 2 × 1 = 10. Are they the same?"
+  "text": "Look at the cauldron. With 2 monsters and 1 dragon, 3m + 2d gives 8, but 5md gives 10. Are they the same?"
  },
  {
   "id": "maya_2c420f1e",
@@ -805,9 +805,9 @@
   "text": "Work out 6 + 1."
  },
  {
-  "id": "maya_74e70bf8",
+  "id": "maya_4f3c5adf",
   "who": "maya",
-  "text": "The seal put 6 in place of m. Now add the 1 extra chair: 6 + 1."
+  "text": "\"Extra\" means add. The seal put 6 in place of m, so add the 1 extra chair: 6 + 1."
  },
  {
   "id": "maya_b0bd3f88",
@@ -835,9 +835,9 @@
   "text": "3 × 6 is 18. Then add 5."
  },
  {
-  "id": "maya_8c67d584",
+  "id": "maya_b58189f7",
   "who": "maya",
-  "text": "3 × 6 is 18. Now add Agni's 5 sweets."
+  "text": "3 × 6 is 18. \"Extra\" means add, so add Agni's 5 sweets."
  },
  {
   "id": "maya_010fb5ee",
@@ -865,9 +865,9 @@
   "text": "2 × 6 is 12. Then take away 3."
  },
  {
-  "id": "maya_979d5e2e",
+  "id": "maya_25d1d1cb",
   "who": "maya",
-  "text": "2 × 6 is 12. Now take away the 3 burst balloons."
+  "text": "2 × 6 is 12. \"Burst\" means take away, so take away the 3 burst balloons."
  },
  {
   "id": "maya_13c2de51",
@@ -895,9 +895,9 @@
   "text": "Work out 6 + 4."
  },
  {
-  "id": "maya_99a7c4c1",
+  "id": "maya_d5ef97bb",
   "who": "maya",
-  "text": "6 monster friends and 4 dragon friends. Add them: 6 + 4."
+  "text": "\"In all\" means add. 6 monster friends and 4 dragon friends: 6 + 4."
  },
  {
   "id": "maya_719c6391",
@@ -925,9 +925,9 @@
   "text": "Don't forget my extra plate."
  },
  {
-  "id": "maya_d4588c06",
+  "id": "maya_0d7ab3c0",
   "who": "maya",
-  "text": "6 + 4 is 10. Don't forget my extra plate: add 1."
+  "text": "6 + 4 is 10. \"Extra\" means add: don't forget the 1 extra plate for me."
  },
  {
   "id": "maya_74fbb13f",
@@ -1015,9 +1015,9 @@
   "text": "Add 12 and 14."
  },
  {
-  "id": "maya_f1c73bc1",
+  "id": "maya_48635cb8",
   "who": "maya",
-  "text": "3 × 4 is 12, and 2 × 7 is 14. Now add them."
+  "text": "3 × 4 is 12, and 2 × 7 is 14. \"Total\" means add, so add them."
  },
  {
   "id": "maya_ca357d73",

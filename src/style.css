@@ -24,6 +24,11 @@ img{-webkit-user-drag:none;user-select:none}
 #chars{pointer-events:none}
 #ui{z-index:50;pointer-events:none}
 #ui>*{pointer-events:auto}
+/* things that only show (the hint hand, pop-ups, stars, tips, flying numbers) never take a tap meant for the control
+   under them: #ui>* above would otherwise switch them back on */
+#ui>.hand,#ui>.popup,#ui>.partTitle,#ui>.starburst,#ui>.starfly,#ui>.ring,#ui>.sealGlow,#ui>.speed,#ui>.board,#ui>.flynum,
+#ui>.dialTip,#ui>.flowArrow,#ui>.pickbar,#ui>.doorTip,#ui>.flash,#ui>.tbub,#ui>.tfriend,#ui>.beam,#ui>.ink,#ui>.mcap,
+#ui>.guess,#ui>.coin,#ui>.sil,#ui>.itemCount,#ui>.dialBadge,#ui>.starburst,#ui>.conf{pointer-events:none}
 .dim{position:absolute;inset:0;background:#0b0820;pointer-events:none;transition:opacity .8s}
 
 /* characters */
@@ -379,7 +384,7 @@ img{-webkit-user-drag:none;user-select:none}
 .qtab th{color:var(--gold);padding:1px 12px;text-align:right}
 .qtab td{padding:1px 12px;border-left:1px solid rgba(255,255,255,.2);white-space:nowrap}
 .binLbl small{display:block;font-size:16px;font-weight:700;opacity:.9;line-height:1.1}
-.mcap{position:absolute;transform:translateX(-50%);white-space:nowrap;font-size:23px;font-weight:800;color:#fff;background:rgba(20,14,44,.85);border:3px solid #9b5cf0;border-radius:18px;padding:4px 18px}
+.mcap{position:absolute;transform:translateX(-50%);white-space:nowrap;font-size:32px;font-weight:800;color:#fff;background:rgba(20,14,44,.85);border:3px solid #9b5cf0;border-radius:18px;padding:4px 18px}
 
 /* ---- review round 3 ---- */
 /* a control that is not available right now: visibly asleep (a tap gives a little wiggle) */
@@ -424,20 +429,14 @@ img{-webkit-user-drag:none;user-select:none}
 .itemCount{font-size:38px}
 .qbox .qt{font-size:34px}
 .qbox .qs{font-size:28px}
-.qtab{font-size:25px}
-/* the word helper: a panel in a corner, the same words Maya says */
-.words{position:absolute;display:flex;flex-direction:column;gap:2px;padding:8px 16px 10px;border-radius:20px;background:rgba(14,10,34,.86);border:3px solid rgba(255,197,71,.6);font-size:22px;font-weight:700;color:#f3eeff;text-align:left;line-height:1.25;z-index:45}
-.words .wh{font-size:18px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}
-.words b{display:inline-block;width:24px;color:var(--gold);font-size:24px}
-/* Part 2: what the shelf refuses, the cauldron's test results */
-.barTip{position:absolute;transform:translateX(-50%);white-space:nowrap;font-size:24px;font-weight:800;color:#ffd0d6;text-shadow:0 2px 0 rgba(0,0,0,.6)}
-.barTip:empty{display:none}
-.tests{position:absolute;display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:20px;background:rgba(14,10,34,.86);border:3px solid rgba(255,197,71,.6);z-index:45}
-.tests .th{font-size:18px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}
-.tests .chip{font-size:26px;padding:4px 12px;white-space:nowrap}
-.tests .chip img{height:34px}
-.tests .chip small{font-size:20px}
-.choice{translate:-50% -50%;white-space:nowrap;font-size:36px;text-align:center}
+.qtab{font-size:30px}
+/* Part 2: the cauldron's test results, centred over the cauldron, big enough to read on a tablet */
+.tests{position:absolute;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;padding:8px 12px;border-radius:20px;background:rgba(14,10,34,.86);border:3px solid rgba(255,197,71,.6);z-index:45}
+.tests .chip{font-size:30px;line-height:1.1;padding:3px 14px;white-space:nowrap}
+.tests .chip img{height:40px}
+.tests .chip small{font-size:24px}
+.choice{white-space:nowrap;font-size:36px;text-align:center}
+.choice .nope{left:auto;right:-34px;top:50%;font-size:64px}
 .choice.wrong{border-color:#ff4d61;box-shadow:0 0 18px rgba(255,70,90,.8)}
 .card.lesson .ttab .mrow td{color:#fff;font-weight:800;border-top:2px dashed rgba(255,197,71,.6)}
 .card.lesson p.rule{font-size:30px;color:#fff}
@@ -456,12 +455,12 @@ img{-webkit-user-drag:none;user-select:none}
 .rsvp .gl{font-size:24px;font-weight:800;margin:4px 0}
 .rsvp .grp.m .gl{color:#3c1268}.rsvp .grp.d .gl{color:#6e2700}
 .rsvp .gl b{color:#1e0d00;font-size:28px}
-.rsvp .cards{display:flex;flex-wrap:wrap;gap:5px;padding-top:4px}
+.rsvp .cards{display:flex;flex-wrap:wrap;gap:5px;padding-top:6px}
 .rsvp .cards:empty{display:none}
-.rc{position:relative;width:51px;height:70px;border-radius:10px;background:#fff6e2;border:3px solid #4cd38a;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2px 0 3px;box-shadow:0 4px 0 rgba(0,0,0,.3)}
+.rc{position:relative;width:44px;height:60px;border-radius:10px;background:#fff6e2;border:3px solid #4cd38a;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2px 0 3px;box-shadow:0 4px 0 rgba(0,0,0,.3)}
 .grp.d .rc{border-color:#ff8a3d}
-.rc img{width:42px;height:42px;object-fit:contain}
-.rc span{font-size:16px;font-weight:800;color:#1f7a45;line-height:1}
+.rc img{width:34px;height:34px;object-fit:contain}
+.rc span{font-size:15px;font-weight:800;color:#1f7a45;line-height:1}
 .rc.sorry{width:170px;height:58px;flex-direction:row;gap:6px;padding:2px 8px;border-color:#ff5c6c;margin-top:4px}
 .rc.sorry span{font-size:18px;color:#b02035;line-height:1.1;text-align:left}
 .rc.out{filter:grayscale(1) brightness(.7)}
@@ -490,7 +489,7 @@ img{-webkit-user-drag:none;user-select:none}
 .rsvp .rc:nth-child(3n){transform:rotate(-1deg)}
 .rsvp .rc::before{content:"";position:absolute;top:-6px;left:50%;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff9a9a,#c41f2f);box-shadow:0 2px 2px rgba(0,0,0,.4)}
 /* count tags on the party table */
-.ctag{position:absolute;transform:translate(-50%,-50%);min-width:46px;height:46px;padding:0 10px;border-radius:23px;background:linear-gradient(#fff3c4,#ffd76a);border:3px solid #b8741a;color:#4a2a08;font-size:28px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35);font-variant-numeric:tabular-nums}
+.ctag{position:absolute;transform:translate(-50%,-50%);min-width:38px;height:38px;padding:0 8px;border-radius:19px;background:linear-gradient(#fff3c4,#ffd76a);border:3px solid #b8741a;color:#4a2a08;font-size:23px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35);font-variant-numeric:tabular-nums}
 .ctag.bad{background:linear-gradient(#ffd6da,#ff8a96);border-color:#b02035;color:#5a0010}
 /* lanterns breathe */
 .flicker{position:absolute;border-radius:50%;pointer-events:none;mix-blend-mode:screen;background:radial-gradient(circle,rgba(255,200,110,.55) 0%,rgba(255,150,60,.18) 40%,rgba(255,150,60,0) 70%);animation:flick 2.3s ease-in-out infinite}
@@ -529,3 +528,19 @@ img{-webkit-user-drag:none;user-select:none}
 .bin.locked > img,.bin.locked .binLbl{filter:grayscale(.65) brightness(.62)}
 .bin.answer.locked > img{filter:drop-shadow(0 0 22px #7dffa8) drop-shadow(0 0 8px #7dffa8)}
 .bin.wrong.locked > img{filter:drop-shadow(0 0 18px rgba(255,70,90,.95)) drop-shadow(0 0 6px rgba(255,70,90,.9))}
+/* ---- review draft 2 ---- */
+/* md is one word in one box (m purple, d orange); a sum like m + d never breaks across two lines */
+#bubble .cmd,.said .cmd{display:inline-flex;border-radius:10px;overflow:hidden;line-height:1.15;vertical-align:baseline}
+#bubble .cmd b,.said .cmd b{padding:0 3px;color:#fff;font-weight:800}
+#bubble .cmd b.m{background:#7a3fd1;padding-left:7px}#bubble .cmd b.d{background:#e8742a;padding-right:7px}
+.said .cmd b.m{background:#7a3fd1}.said .cmd b.d{background:#e8742a}
+.nw{white-space:nowrap}
+/* the jar and the chest asleep until the dial has been turned: clearly grey, with a lock */
+.bin.locked > img{filter:grayscale(1) brightness(.5)!important;opacity:.7}
+.bin.locked .binLbl{filter:grayscale(1) brightness(.6);opacity:.75}
+.bin.locked::after{content:"🔒";position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);font-size:46px;pointer-events:none;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
+.bin.wrong.locked::after,.bin.answer.locked::after{display:none}
+.bin.wrong.locked > img{opacity:1;filter:drop-shadow(0 0 18px rgba(255,70,90,.95)) drop-shadow(0 0 6px rgba(255,70,90,.9))!important}
+.bin.answer.locked > img{opacity:1;filter:drop-shadow(0 0 22px #7dffa8) drop-shadow(0 0 8px #7dffa8)!important}
+/* a count tag that is being worked out again (m or d changed) */
+.ctag.chg{background:linear-gradient(#e9dcff,#b98cff);border-color:#6a2bc4;color:#2a0d55}

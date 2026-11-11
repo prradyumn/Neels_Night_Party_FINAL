@@ -5,6 +5,9 @@ import CURTAIN from "./curtain.svg";
 // recorded character voices (tools/make_vo.py): which (speaker, segment) recordings exist
 import { segments, voId } from "./vo.js";
 import VO_IDS from "./vo_manifest.json";
+// a slow tablet that drops frames still runs every animation in its own time (GSAP's lag smoothing would stretch a
+// 1 s turn into 10 s there): timing follows the clock, a dropped frame just skips ahead
+gsap.ticker.lagSmoothing(0);
 // sound effects (Kenney audio packs, CC0), bundled as data URLs so they also work when index.html is opened from disk
 import S_TAP from "./sfx/tap.mp3";
 import S_POP from "./sfx/pop.mp3";
@@ -275,10 +278,11 @@ export function groundShadow(x, y, w, h = w * 0.12, parent = world) {
 }
 
 export let sceneName = "";
-/** plain: back layer only (no mid/fore props), for a calm, uncluttered backdrop */
-export async function setScene(name, { fast = false, plain = false } = {}) {
+/** plain: back layer only (no mid/fore props), for a calm, uncluttered backdrop.
+ *  setup: builds the new scene's things while the curtain is still shut, so it opens on a scene that is ready */
+export async function setScene(name, { fast = false, plain = false, setup } = {}) {
   let shut = false;
-  if (!fast && sceneName) { await curtainClose(); shut = true; }
+  if (!fast && sceneName) { await curtainClose(); shut = true; hideAllChars(); } // the cast leaves with the old scene
   // fast into the same place (title -> story): the props fade in over the sky instead of a curtain
   const grow = fast && !plain && sceneName === name;
   const plates = [];
@@ -296,6 +300,7 @@ export async function setScene(name, { fast = false, plain = false } = {}) {
   host.on = false; host.cur = null;
   sceneName = name;
   ambient(name);
+  if (setup) setup();
   if (shut && !calm) {
     // establishing shot: start high and close on the top of the scene, tilt down to the floor as the curtain parts
     camSet({ x: W / 2, y: 0, s: 1.08 });
@@ -320,19 +325,21 @@ export const SPOTS = {
   game: { x: 190, y: 890, from: -160, bw: 420, size: { neel: 470, agni: 430, maya: 480 }, flip: { agni: true } }, // Agni's art looks left
   story: { x: 1150, y: 895, from: 160, bw: 600, size: { neel: 600, agni: 520, maya: 600 }, flip: { maya: true } },
   // the table scene: a smaller speaker bottom-left, the bubble beside them (not above), so the table stays the hero
-  table: { x: 165, y: 895, from: -160, bw: 310, side: true, btop: 648, size: { neel: 360, agni: 335, maya: 370 }, flip: { agni: true } },
+  table: { x: 165, y: 895, from: -160, bw: 320, side: true, btop: 648, size: { neel: 360, agni: 335, maya: 370 }, flip: { agni: true } },
   // conversations: the two characters who are talking stand side by side, facing each other (a third speaker
   // takes the place of whoever spoke longer ago). duo: story scenes and bridges; duoGame: inside a level.
   // slots are spaced from the measured art so both stay whole in frame, even in wide poses (Neel's happy, Maya's celebrate)
   duo: { pair: [820, 1270], y: 895, bw: 520, size: { neel: 540, agni: 480, maya: 550 }, faceR: { agni: true }, faceL: { maya: true } },
-  duoGame: { pair: [205, 435], y: 890, bw: 400, size: { neel: 380, agni: 350, maya: 390 }, faceR: { agni: true }, faceL: { maya: true } },
+  // duoGame: the cauldron between them, so they never stand on top of each other
+  duoGame: { pair: [205, 1290], y: 890, bw: 400, size: { neel: 380, agni: 350, maya: 390 }, faceR: { agni: true }, faceL: { maya: true } },
   // all three friends together, each on their own seat, facing Neel in the middle: nobody leaves when someone else talks.
   // trio: story scenes and bridges (Agni left, Neel, Maya right). trioGame: the cauldron. trioTable: the hall of doors.
   trio: { seats: { agni: 770, neel: 1085, maya: 1390 }, y: 895, bw: 480, size: { neel: 500, agni: 440, maya: 510 }, face: { agni: true, maya: true } },
   trioGame: { seats: { neel: 205, agni: 1160, maya: 1420 }, y: 890, bw: 430, size: { neel: 420, agni: 380, maya: 430 }, face: { maya: true } },
   trioTable: { seats: { neel: 165, agni: 1170, maya: 1395 }, y: 895, bw: 400, size: { neel: 380, agni: 340, maya: 390 }, face: { maya: true } },
-  // the party, in front of the table: Agni and Maya either side of Neel, the guests beyond them
-  trioParty: { seats: { agni: 575, neel: 815, maya: 1060 }, y: 895, bw: 440, size: { neel: 380, agni: 330, maya: 390 }, face: { agni: true, maya: true } },
+  // the party, in front of the table: Agni and Maya either side of Neel, the guests beyond them. The bubbles sit high
+  // (ftop), over the garland, so they never cover the things on the table
+  trioParty: { seats: { agni: 500, neel: 740, maya: 980 }, y: 895, bw: 440, ftop: 132, size: { neel: 380, agni: 330, maya: 390 }, face: { agni: true, maya: true } },
 };
 export const host = { on: false, cur: null, spot: SPOTS.game, slot: {} };
 /** switch to one-character mode on a spot (or a two-character conversation spot); the next speaker slides in */
@@ -714,7 +721,7 @@ function placeBubble(c) {
   const tail = bubble.querySelector(".tail");
   bubble._c = null;
   if (!on) { Object.assign(bubble.style, { left: (W - w) / 2 + "px", top: "40px", bottom: "auto" }); tail.style.display = "none"; return; }
-  tail.style.display = "";
+  tail.style.display = host.on && host.spot.ftop ? "none" : "";
   bubble._c = c; bubble._w = w; bubble._h = bubble.offsetHeight;
   reflowBubble();
 }
@@ -726,11 +733,12 @@ function reflowBubble() {
     // to the right of the speaker's face, tail pointing back at them
     const a = camPt(c.x + c.h * 0.3, c.y - c.h * 0.74);
     bubble.style.left = Math.max(24, Math.min(W - 24 - w, a.x)) + "px";
-    bubble.style.top = Math.max(host.spot.btop || 84, Math.min(H - 16 - bubble._h, a.y - 34)) + "px"; bubble.style.bottom = "auto";
+    // a long line grows the bubble upwards: it is never cut off at the bottom of the screen
+    bubble.style.top = Math.max(84, Math.min(Math.max(host.spot.btop || 84, a.y - 34), H - 16 - bubble._h)) + "px"; bubble.style.bottom = "auto";
     return;
   }
   const head = camPt(c.x, c.y - c.h * 0.88), foot = camPt(c.x, 0);
-  const left = Math.max(24, Math.min(W - 24 - w, foot.x - w / 2)), top = Math.max(84, head.y - 30 - bubble._h);
+  const left = Math.max(24, Math.min(W - 24 - w, foot.x - w / 2)), top = host.on && host.spot.ftop ? host.spot.ftop : Math.max(84, head.y - 30 - bubble._h);
   bubble.style.left = left + "px"; bubble.style.top = top + "px"; bubble.style.bottom = "auto";
   bubble.querySelector(".tail").style.left = Math.max(30, Math.min(w - 62, foot.x - left - 16)) + "px";
 }
@@ -743,18 +751,28 @@ export const busy = () => lineBusy > 0;
 /** minAge: only a line that has been up this long (s) is ended; a quick double tap can never skip a hint */
 export function skipLine(minAge = 0) { skipNow && skipNow(minAge); }
 const listening = (t) => { for (let n = t; n && n !== stage; n = n.parentElement) if (n.onpointerdown || n.dataset.tap) return n; return null; };
-/** a locked control is visibly asleep; a tap on it gives a little wiggle and ends the line being read, but never acts */
-export function lock(nodes, on = true) { for (const n of [].concat(nodes)) if (n) n.classList.toggle("locked", on); }
+/** a locked control is visibly asleep; a tap on it gives a little wiggle and ends the line being read, but never acts.
+ *  A control can say why it is asleep (node._why, called when nobody is talking) */
+export function lock(nodes, on = true) {
+  for (const n of [].concat(nodes)) if (n) {
+    if (!on && n.classList.contains("locked")) n._openAt = performance.now();
+    n.classList.toggle("locked", on);
+  }
+}
 stage.addEventListener("pointerdown", (e) => {
   const t = e.target, l = t.closest && t.closest(".locked");
-  if (l) { e.stopPropagation(); gsap.fromTo(l, { x: -6 }, { x: 0, duration: 0.45, ease: "elastic.out(1.2,.3)" }); skipLine(1.2); return; }
+  if (l) { e.stopPropagation(); gsap.fromTo(l, { x: -6 }, { x: 0, duration: 0.45, ease: "elastic.out(1.2,.3)" }); if (l._why && !busy()) l._why(); else skipLine(1.2); return; }
+  // a tap made while the control was still asleep, that a busy tablet only hands over now: it is dropped, never
+  // saved up to act later (the event's own time says when the finger came down)
+  for (let n = t; n && n !== stage; n = n.parentElement) if (n._openAt && e.timeStamp > 0 && e.timeStamp < n._openAt) { e.stopPropagation(); return; }
   // tap-to-continue mode: a tap on the scene (not on a control) moves the line on
   if (!settings.autoplay && tapLine && !t.closest("#bubble, #hud, .menu, .qapanel, .icon") && !listening(t)) tapLine();
 }, true);
 bubble.addEventListener("pointerdown", (e) => { if (e.target.closest(".rp")) return; e.stopPropagation(); tapLine && tapLine(); });
 
 /** a line from who ("nar" = narrator). wait: false shows it and goes on (a prompt that stays up); auto: n seconds;
- *  voice: false is not read aloud; into: an element the words are written on instead of the bubble (the chalkboard) */
+ *  voice: false is not read aloud; into: an element the words are written on instead of the bubble (the chalkboard);
+ *  onStart: called as the line appears (a board row that belongs to this line shows up with it, never before) */
 export function say(who, text, opts = {}) {
   const holds = opts.wait !== false || !!opts.auto;
   if (holds) lineBusy++;
@@ -763,7 +781,8 @@ export function say(who, text, opts = {}) {
   lineQ = new Promise((r) => (release = r));
   return prev.then(() => line(who, text, opts)).finally(() => { if (holds) lineBusy--; release(); });
 }
-async function line(who, text, { p, wait: needTap = true, auto = 0, voice: aloud = true, into = null } = {}) {
+async function line(who, text, { p, wait: needTap = true, auto = 0, voice: aloud = true, into = null, onStart } = {}) {
+  await titleP; // a part's title card is up: the first line waits for it, while the scene gets ready under it
   if (host.on && C[who] && host.cur !== who) await hostSwap(who);
   const c = C[who];
   // the speaker is lit, everyone else on stage steps back a little
@@ -784,8 +803,9 @@ async function line(who, text, { p, wait: needTap = true, auto = 0, voice: aloud
     box = bubble.querySelector(".txt");
     placeBubble(c);
   }
-  // a highlighted word (m, d, variable, constant) appears in one piece with its coloured box, never as an empty box
+  // a highlighted word (m, d, md, variable, constant) appears in one piece with its coloured box, never as an empty box
   box.querySelectorAll(".cm, .cd, .v, .c").forEach((s) => { s.textContent = s.textContent; s.classList.add("w"); });
+  box.querySelectorAll(".cmd").forEach((s) => { s.innerHTML = `<b class="m">m</b><b class="d">d</b>`; s.classList.add("w"); });
   // a new speaker gives a small hop (squash and stretch from the feet)
   if (c && c.visible && who !== lastWho && !calm) { const sx = c.flip ? -1 : 1; gsap.fromTo(c.box, { scaleY: 0.93, scaleX: sx * 1.05 }, { scaleY: 1, scaleX: sx, duration: 0.45, ease: "back.out(3)" }); }
   const wordEls = [...box.querySelectorAll(".w")], words = wordEls.map((w) => w.textContent), n = Math.max(1, words.length);
@@ -800,6 +820,7 @@ async function line(who, text, { p, wait: needTap = true, auto = 0, voice: aloud
     bubble.querySelector(".rp").onpointerdown = (e) => { e.stopPropagation(); sfx("tap"); speak(text, who); };
     gsap.fromTo(bubble, { opacity: 0, y: 14, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.22, ease: "back.out(2)" });
   }
+  onStart && onStart();
   // the words come in quickly in the bubble; on a board they keep pace with the voice
   const stag = into ? Math.max(0.05, (readFor * 0.8) / n) : Math.min(PACE.stagger, PACE.revealMax / n);
   const reveal = gsap.fromTo(wordEls, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.16, stagger: stag, ease: "power1.out" });
@@ -847,18 +868,22 @@ async function line(who, text, { p, wait: needTap = true, auto = 0, voice: aloud
   // the fade-out wins over a fade-in that may still be running (a line ended in its first moments)
   if (holds && !into) { gsap.killTweensOf(bubble); await gsap.to(bubble, { opacity: 0, y: 0, scale: 1, duration: 0.15 }); bubble.style.pointerEvents = "none"; }
 }
-// word-by-word reveal and colour chips for maths words
+// a sum or a plan in a line ("m + d", "3m + 2d", "2 × 6 = 12"): kept on one line, never broken after a sign
+const EXPR = /(^|[\s(])((?:\d*[md]|\d+)(?:\s[+−×=-]\s(?:\d*[md]|\d+))+)(?=[\s.,!?:)]|$)/g;
+// word-by-word reveal and colour chips for maths words: m purple, d orange, md one word in one box
 function chipify(t) {
-  return t.split(/(<[^>]+>)/).map((p, i, arr) => {
+  const parts = (s) => s.split(/(<[^>]+>)/);
+  t = parts(t).map((p) => (p.startsWith("<") ? p : p.replace(EXPR, (_, a, x) => `${a}<span class="nw">${x}</span>`))).join("");
+  return parts(t).map((p, i, arr) => {
     if (p.startsWith("<")) return p;
     const prev = arr.slice(0, i).join("");
     if (/class=(v|"lm"|"ld")[^>]*>$/.test(prev)) return p;
-    return p.replace(/(^|[\s(\d])([md])(?=[\s.,!?)]|$)/g, (_, a, l) => `${a}<span class="${l === "m" ? "cm" : "cd"}">${l}</span>`);
+    return p.replace(/(^|[\s(\d])(md|m|d)(?=[\s.,!?:)]|$)/g, (_, a, l) => `${a}<span class="${l === "md" ? "cmd" : l === "m" ? "cm" : "cd"}">${l}</span>`);
   }).join("");
 }
 /** colour a lone m / d (or 3m, 2d) purple / orange in plain card text */
 export function colorMD(t) {
-  return t.split(/(<[^>]+>)/).map((p) => (p.startsWith("<") ? p : p.replace(/(^|[\s(\d])([md])(?=[\s.,!?)]|$)/g, (_, a, l) => `${a}<span class="${l === "m" ? "mtxt" : "dtxt"}">${l}</span>`))).join("");
+  return t.split(/(<[^>]+>)/).map((p) => (p.startsWith("<") ? p : p.replace(/(^|[\s(\d])([md])(?=[\s.,!?:)]|$)/g, (_, a, l) => `${a}<span class="${l === "m" ? "mtxt" : "dtxt"}">${l}</span>`))).join("");
 }
 function wordify(h) {
   return h.split(/(<[^>]+>)/).map((p) => (p.startsWith("<") ? p : p.replace(/(\S+)/g, '<span class="w">$1</span>'))).join("");
@@ -889,8 +914,12 @@ export async function popup(html, dur = 1.6, top) {
   await gsap.to(p, { opacity: 0, y: -30, duration: 0.3 });
   p.remove();
 }
-// part title card: the ribbon unrolls, the letters drop in one by one, a gold line draws itself underneath
-export async function partTitle(k, t) {
+// part title card: the ribbon unrolls, the letters drop in one by one, a gold line draws itself underneath.
+// Not waited for: the part builds its scene under the card, and its first line waits until the card has gone
+let titleP = Promise.resolve();
+export const afterTitle = () => titleP;
+export function partTitle(k, t) { return (titleP = showTitle(k, t)); }
+async function showTitle(k, t) {
   const letters = [...t].map((ch) => `<span class="ch">${ch === " " ? "&nbsp;" : ch}</span>`).join("");
   const d = el("div", "partTitle", ui, {}, `<div class="k">${k}</div><div class="t">${letters}</div><svg class="ul" viewBox="0 0 600 40" width="600" height="40"><path d="M14 26Q150 6 300 22T586 16" pathLength="1"/></svg>`);
   sfx("magic");

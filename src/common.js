@@ -9,7 +9,7 @@ export function sideChars(spot = "game") {
 export async function mayaIn(p = "explain") { await hostSwap("maya"); pose("maya", p); }
 export async function mayaOut() {}
 // say() swaps the speaker in inside its queue, so Maya never steps on stage while someone else is still talking
-export const maya = (text, p = "explain") => say("maya", text, { p });
+export const maya = (text, p = "explain", onStart) => say("maya", text, { p, onStart });
 // the script gives each question its praise: "agni:yes" = Agni says "Yes! That is right."
 const PRAISE = { yes: "Yes! That is right.", super: "Super! You got it right.", great: "Great job! That is correct.", well: "Well done! You got it." };
 const ROTATE = ["agni:yes", "neel:super", "agni:great", "neel:well"];
@@ -73,14 +73,9 @@ export async function planScroll(at = { left: 110, top: 150 }) {
     glow(k) { sc.querySelectorAll(".pl").forEach((r) => r.classList.toggle("on", r.dataset.k === k)); },
   };
 }
-/** the word helper: which words mean add, multiply, take away (the same words Maya says in Part 2) */
-export function wordHelp(parent, style) {
-  return el("div", "words", parent, style, `<div class="wh">Word clues</div><span><b>+</b> add: and, more, extra, plus, total, in all</span><span><b>×</b> multiply: each, every, per, times</span><span><b>−</b> take away: less, fewer, minus, left, broke, gone, said no</span>`);
-}
-
-// the things on the list, grey, while the narrator introduces the part
-export function iconRow(list) {
-  const r = card(list.map((it) => `<img src="assets/${it.icon}.webp">`).join(""), { left: "50%", top: 230, translate: "-50% 0" }, "card icons");
+// the things on the list, grey, while the narrator introduces the part (top: lower it under a long narrator line)
+export function iconRow(list, top = 230) {
+  const r = card(list.map((it) => `<img src="assets/${it.icon}.webp">`).join(""), { left: "50%", top, translate: "-50% 0" }, "card icons");
   return { remove: () => gsap.to(r, { opacity: 0, duration: 0.3, onComplete: () => r.remove() }) };
 }
 
