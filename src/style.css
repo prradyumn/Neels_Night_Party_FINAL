@@ -436,7 +436,7 @@ img{-webkit-user-drag:none;user-select:none}
 .tests .chip img{height:40px}
 .tests .chip small{font-size:24px}
 .choice{white-space:nowrap;font-size:36px;text-align:center}
-.choice .nope{left:auto;right:-34px;top:50%;font-size:64px}
+.choice .nope{left:calc(100% + 34px);top:50%;font-size:64px} /* beside the button, never on its words */
 .choice.wrong{border-color:#ff4d61;box-shadow:0 0 18px rgba(255,70,90,.8)}
 .card.lesson .ttab .mrow td{color:#fff;font-weight:800;border-top:2px dashed rgba(255,197,71,.6)}
 .card.lesson p.rule{font-size:30px;color:#fff}
@@ -534,7 +534,7 @@ img{-webkit-user-drag:none;user-select:none}
 #bubble .cmd b,.said .cmd b{padding:0 3px;color:#fff;font-weight:800}
 #bubble .cmd b.m{background:#7a3fd1;padding-left:7px}#bubble .cmd b.d{background:#e8742a;padding-right:7px}
 .said .cmd b.m{background:#7a3fd1}.said .cmd b.d{background:#e8742a}
-.nw{white-space:nowrap}
+.nw{white-space:nowrap;display:inline-block} /* one unbreakable box: a spell never splits across two lines */
 /* the jar and the chest asleep until the dial has been turned: clearly grey, with a lock */
 .bin.locked > img{filter:grayscale(1) brightness(.5)!important;opacity:.7}
 .bin.locked .binLbl{filter:grayscale(1) brightness(.6);opacity:.75}

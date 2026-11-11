@@ -242,7 +242,10 @@ export async function runPart1(start = 1) {
     await say("nar", "There are 8 things on Neel's party list. Let's check whether each one is a variable or a constant.");
     row.remove();
     await chalkboard();
-    // the instruction follows the order of the activity: dial first, then the jar or the chest
+    // the instruction follows the order of the activity: dial first, then the jar or the chest. The dial is on screen
+    // (asleep) while Maya says so
+    gsap.to([dialEl, dialLbl, flow], { opacity: 1, duration: 0.4 });
+    setFriends(friends, true);
     await maya("Now help Neel check his party list. Turn the dial to change the number of friends. Did the number change? Put it in the jar for Variable or the chest for Constant.", "explain");
   }
   gsap.to([dialEl, dialLbl, flow], { opacity: 1, duration: 0.4 });
@@ -292,6 +295,7 @@ export async function runPart1(start = 1) {
       inputs();
       if (ch === it.ans) { azTip(""); await success(it, tries, q); break; }
       tries++;
+      azTip("🔒 Listen first…"); // the jar and the chest are asleep while Maya helps
       const clear = wrongMark(ch);
       if (tries === 1) await maya("Not yet. Try again. " + it.h1, "hint");
       else if (tries === 2) await liveClue(it);
@@ -307,6 +311,7 @@ export async function runPart1(start = 1) {
         break;
       }
       inputs({ dial: true, bins: true });
+      azTip("Did it change? Tap the jar or the chest");
       iw2.open();
     }
     iw2.stop();

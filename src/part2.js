@@ -175,6 +175,9 @@ function endBrew() {
 // the ingredient shelf: letters and numbers on glowing pads (top row), the + − × stones below
 const TRAY_X = 1290, ROW_V = 584, ROW_O = 700;
 function setTray(vals) {
+  const key = vals ? vals.join() : "";
+  if (key && tray.dataset.vals === key) return; // already on the shelf (shown during the lesson)
+  tray.dataset.vals = key;
   Object.values(orbs).forEach((o) => { gsap.killTweensOf(o); o.remove(); });
   tray.querySelectorAll(".pad").forEach((p) => p.remove());
   orbs = {};
@@ -235,7 +238,8 @@ async function spellWorks(q) {
   await gsap.to(ink, { left: 1290, top: 70, scale: 0.25, opacity: 0, duration: 0.5, ease: "power2.in" });
   ink.remove();
 }
-// the cauldron tests the spell with three numbers of friends, all at once (about 2 s), and the results land over it
+// the cauldron tests the spell with three numbers of friends, all at once (about 2 s); the three result lines land
+// over it together, green ticks or red crosses, for a right spell as well as a wrong one
 async function testRun(fn, q) {
   const id = ++runId;
   testBox?.remove();
@@ -258,10 +262,11 @@ async function testRun(fn, q) {
     await wait(i * 0.3);
     if (id !== runId) return;
     await bubbleTest(r.m, r.d, r.ok, i);
-    if (id !== runId) return;
-    gsap.fromTo(rows[i], { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "back.out(2)" });
-    sfx(r.ok ? "pop" : "bad");
   }));
+  if (id === runId) {
+    gsap.fromTo(rows, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "back.out(2)" });
+    sfx(res.every((r) => r.ok) ? "good" : "bad");
+  }
   runes.stop();
   const allOk = res.every((r) => r.ok);
   if (!allOk && !q.duel) { react("neel", "oops"); playFx("smoke", CX, 640, { scale: 2, palette: "plum", dur: 1.2 }); }
@@ -347,6 +352,11 @@ async function tutorial() {
   // no word box stays on screen any more (Draft 2): Maya says the clue word in her hint when it helps
   await maya("Let's write the plan!", "happy");
   gsap.to(t, { opacity: 0, duration: 0.3, onComplete: () => t.remove() });
+  // the spell bar and the first question's orbs are on screen (asleep) while Maya talks about them
+  setTray(Q[0].vals);
+  gsap.to([tray, bar], { opacity: 1, duration: 0.4 }); // not the question card yet: it has no question
+  actionZone(true);
+  shelf(false);
   // the party plan, written as spells: the cauldron tries each one with different numbers of friends
   await maya("Let's write each plan as a magic spell. The cauldron will test it with different numbers of friends.", "cast");
   await maya("Tap the orbs to brew a spell. Then tap <b>Brew!</b> and the cauldron will test it.", "explain");
@@ -436,7 +446,7 @@ export async function runPart2(start = 1) {
         const fn = compile(tokens);
         if (!fn) { sfx("bad"); await maya("That spell is not finished. Every + − or × needs something on both sides.", "hint"); shelf(true); iw.open(); continue; }
         const ok = (await testRun(fn, q)) && same(fn, q.f);
-        if (ok) { solved = true; break; }
+        if (ok) { solved = true; await wait(2); break; } // the green ticks stay up for a moment before the praise
         if (q.pre && !testedPre) { testedPre = true; await say("neel", "Oh no! My spell gives the wrong number of candles!", { p: "oops" }); tokens = []; render(); tipNow = "Tap the orbs, then Brew!"; shelf(true); iw.open(); continue; }
         tries++;
         if (tries === 1) await maya("Not yet. Try again. " + q.h1, "hint");
@@ -444,12 +454,13 @@ export async function runPart2(start = 1) {
         else {
           revealed = true;
           // as Maya starts the answer, the red results go and the right spell is in the slot
-          await maya(`Let's see the answer together. The answer is ${colorMD(q.ans)}. ` + q.exp, "explain", () => {
+          await maya(`Let's see the answer together. The answer is ${q.ans}. ` + q.exp, "explain", () => {
             edited(); clearFlies();
             tokens = [...q.sol]; render();
             gsap.fromTo(bar, { scale: 1.12, boxShadow: "0 0 40px #7dffa8" }, { scale: 1, boxShadow: "0 0 0px #7dffa8", duration: 0.8 });
           });
           await testRun(compile(tokens), q); // and the cauldron shows it works
+          await wait(2);
           solved = true;
           break;
         }

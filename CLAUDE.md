@@ -19,13 +19,17 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
   camTo/camFocus/camRest/punch/shake move it; camPt(x, y, layer) converts a scene point to screen (use it to aim
   UI at scene objects). Put UI-anchored effects in ui (playFx parent: ui), scene effects in the default #fxl.
 - src/part1.js: Friend Dial (sort items into Variable jar / Constant chest)
-- src/part2.js: Spell Cauldron (build expressions from orbs; Brew! tests 3 values at once, about 2 s, and Maya speaks
-  straight after; the 3rd wrong try puts the answer in the slot as Maya starts saying it)
+- src/part2.js: Spell Cauldron (build expressions from orbs; Brew! tests 3 values at once and the 3 result lines land
+  together; a right spell keeps its green ticks up 2 s before the praise; the 3rd wrong try puts the answer in the slot
+  as Maya starts saying it). Controls Maya talks about are on screen (locked) while she says it, in every part
 - src/part3.js: Magic Doors. Replies arrive as cards through the doors (no guests until the party), gold seals open
   independently, each right answer puts its things around the table and they stay; partyTable()/partyClear() for the party.
-  Table places (layout()): balloons at the back corners, sweets bowl, plates, laddoo bowl on top, cushions on the floor
-  at the right end, chairs in a row in front; one small count tag each. When m or d changes, FORM works every group out
-  again and restock() moves/adds/removes things (after Q6: "Now m is 4..."; after the 3 dragons in Q8). Party: no tags
+  Table places (layout()): nothing tall and no tag in front of the three doors (GAP: the wall between them).
+  Chairs at both ends and behind the table, sweets/laddoo bowls in the gaps, low plate stacks in the middle,
+  balloons high at the garland ends, cushions front right; the tabletop tags sit on the cloth. During a knock,
+  clearDoor() fades whatever still overlaps that door and "Tap the door!" sits above it. When m or d changes, FORM works every group out
+  again and restock() moves/adds/removes things, always with a Maya line (after Q6 and after Q8). Party: no tags,
+  m = 4 / d = 7 never change, guests stand in loose groups at different depths with shadows
 - src/finale.js: Party Day shopping. Not in the current script, so it is out of the flow (no room 4)
 - src/map.js: level select (3 rooms, title fixed on screen) · src/qa.js: QA mode (press Q, or a #qa-p2-7 link);
   never remembered between visits, so players never see the badge or answers

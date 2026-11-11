@@ -1,6 +1,6 @@
 import "./style.css";
 import "./qa.js";
-import { confetti, camPt, camRest, camSet, ANIM_FILES, warmChars, setFore, score, showHud, music, curtainShut, curtainOpen, setTint, punch, shake, solo, trio, setFocus, gsap, $, el, img, ui, world, wait, sfx, say, setScene, placeChar, hideAllChars, pose, dance, partTitle, button, waitClick, playFx, preload, hideChecklist, setDim, C, closeBubble, camTo, W } from "./engine.js";
+import { confetti, groundShadow, camPt, camRest, camSet, ANIM_FILES, warmChars, setFore, score, showHud, music, curtainShut, curtainOpen, setTint, punch, shake, solo, trio, setFocus, gsap, $, el, img, ui, world, wait, sfx, say, setScene, placeChar, hideAllChars, pose, dance, partTitle, button, waitClick, playFx, preload, hideChecklist, setDim, C, closeBubble, camTo, W } from "./engine.js";
 import { runPart1 } from "./part1.js";
 import { runPart2 } from "./part2.js";
 import { runPart3, partyTable, DOOR_XY } from "./part3.js";
@@ -281,31 +281,36 @@ async function party(opt = {}) {
   await trio("trioParty");
   const sb = board();
   sfx("creak");
-  // the guests come in through the doors and stand apart, so each one can be counted: 4 monsters on the left
-  // and 7 dragons on the right, each group in one row, beside the table and clear of the friends in front
+  // the guests come in through the doors and stand on the floor in loose groups, some nearer and some further back
+  // (nearer = lower and a little bigger), each with its shadow: 4 monsters on the left, 7 dragons on the right, all
+  // apart enough to count, beside the table and clear of the friends in front
   const doorImg = [...$("#Lfar").querySelectorAll("img")].filter((i) => /p3_door/.test(i.src));
   doorImg.forEach((d) => (d.src = "assets/p3_door_open.webp"));
   const gs = [];
   const guest = (art, hue, x, feet, size, from, i) => {
     const g = img(art, world, { left: x - size / 2, top: feet - size, width: size, height: size });
+    g.style.zIndex = Math.round(feet); // nearer guests stand in front
+    const sh = groundShadow(x, feet - 4, size * 0.72, size * 0.14);
+    gsap.from(sh, { opacity: 0, duration: 0.4, delay: 0.4 + i * 0.12 });
     g.dataset.k = art.includes("dragon") ? "d" : "m";
     if (hue) g.style.filter = `hue-rotate(${hue}deg)`;
     gs.push(g);
     gsap.from(g, { left: from.x - size / 2, top: from.y - size / 2, scale: 0.4, opacity: 0, duration: 0.6, delay: i * 0.12, ease: "power2.out" });
     return g;
   };
-  PARTY_MON.forEach(([a, h], i) => guest(a, h, 90 + i * 74, 575, 84, DOOR_XY[0], i));
+  const MON_AT = [[72, 702, 96], [148, 650, 82], [226, 714, 98], [298, 660, 84]];   // [x, feet, size]
+  const DRA_AT = [[1212, 700, 90], [1270, 650, 78], [1328, 716, 94], [1386, 658, 80], [1444, 704, 90], [1502, 648, 78], [1556, 714, 92]];
+  PARTY_MON.forEach(([a, h], i) => guest(a, h, ...MON_AT[i], DOOR_XY[0], i));
   sb.flip("m", 4);
   if (!quick) await say("neel", "Look! 4 of my monster friends are here!", { p: "happy" });
-  for (let i = 0; i < 7; i++) guest(PARTY_DRA[i % 2], 0, 1180 + i * 62, 572, 80, DOOR_XY[2], i);
+  DRA_AT.forEach((at, i) => guest(PARTY_DRA[i % 2], 0, ...at, DOOR_XY[2], i));
   sb.flip("d", 7); // d is filled before Agni says it
   if (!quick) {
     await say("agni", "And 7 of my dragon friends are here too!", { p: "cheer" });
     await say("neel", "My friends changed their minds, but our plan still worked!", { p: "happy" });
-    // "any number": the tiles flip through numbers while Maya says it, then settle back on 4 and 7
-    const roll = setInterval(() => { sb.flip("m", 1 + Math.floor(Math.random() * 9)); sb.flip("d", 1 + Math.floor(Math.random() * 9)); }, 600);
+    // m = 4 and d = 7 stay: these are the friends who came (Draft 3). The tiles only glow while Maya says it
+    gsap.fromTo(sb.el.children, { scale: 1 }, { scale: 1.12, yoyo: true, repeat: 5, duration: 0.4, ease: "sine.inOut" });
     await say("maya", "That is because m and d can be any number. That is why we use variables. Well done!", { p: "celebrate" });
-    clearInterval(roll); sb.flip("m", 4); sb.flip("d", 7);
     await say("neel", "Let's party!", { p: "happy" });
   }
   doorImg.forEach((d) => (d.src = "assets/p3_door_closed.webp"));

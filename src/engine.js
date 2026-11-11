@@ -869,11 +869,14 @@ async function line(who, text, { p, wait: needTap = true, auto = 0, voice: aloud
   if (holds && !into) { gsap.killTweensOf(bubble); await gsap.to(bubble, { opacity: 0, y: 0, scale: 1, duration: 0.15 }); bubble.style.pointerEvents = "none"; }
 }
 // a sum or a plan in a line ("m + d", "3m + 2d", "2 × 6 = 12"): kept on one line, never broken after a sign
-const EXPR = /(^|[\s(])((?:\d*[md]|\d+)(?:\s[+−×=-]\s(?:\d*[md]|\d+))+)(?=[\s.,!?:)]|$)/g;
+const EXPR = /(^|[\s(])((?:\d*md|\d*[md]|\d+)(?:\s[+−×=-]\s(?:\d*md|\d*[md]|\d+))+)(?=[\s.,!?:)]|$)/g;
+// a number with its letters ("3m", "5md") is one word too: the number never ends one line and the letter starts the next
+const TERM = /(^|[\s(])(\d+(?:md|m|d))(?=[\s.,!?:)]|$)/g;
 // word-by-word reveal and colour chips for maths words: m purple, d orange, md one word in one box
 function chipify(t) {
   const parts = (s) => s.split(/(<[^>]+>)/);
   t = parts(t).map((p) => (p.startsWith("<") ? p : p.replace(EXPR, (_, a, x) => `${a}<span class="nw">${x}</span>`))).join("");
+  t = parts(t).map((p, i, arr) => (p.startsWith("<") || arr[i - 1] === '<span class="nw">' ? p : p.replace(TERM, (_, a, x) => `${a}<span class="nw">${x}</span>`))).join("");
   return parts(t).map((p, i, arr) => {
     if (p.startsWith("<")) return p;
     const prev = arr.slice(0, i).join("");

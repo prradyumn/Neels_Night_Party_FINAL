@@ -53,50 +53,59 @@ const CARD_ART = { m: ["gu_monster_green", "gu_monster_pink"], d: ["gu_dragon_te
 
 // ---------- the party table: each kind of thing has its own place, with a small count tag beside it ----------
 const ICON = { chairs: "pr_chair", sweets: "pr_sweet", balloons: "pr_balloon", plates: "pr_plate", cushions: "pr_cushion", laddoos: "pr_laddoo" };
-/** where n things of a kind go: items {x: centre, y: bottom, w, h, under: behind the table, hue, bowl}, and where
- *  their count tag sits. Places, left to right: balloons (left back corner), sweets bowl, plates, laddoo bowl,
- *  balloons (right back corner); cushions on the floor at the right end; the chairs in a row in front of the table */
+// the three round doors on the back wall (stage x, from far-layer x - 200): the friends' replies come through them,
+// so nothing tall and no count tag may stand in front of them. The things on the tabletop go in the wall between doors
+const GAP = { L: 529, R: 930 };       // the wall between door 1 and 2, and between door 2 and 3
+const CLOTH = TOP_FRONT + 46;         // count tags for the tabletop sit on the tablecloth, under their things
+/** where n things of a kind go: items {x: centre, y: bottom, w, h, under: behind the table, flip, hue, bowl}, and
+ *  where their count tag sits. Chairs: one at each end of the table and the rest behind it (their backs show over the
+ *  tabletop); sweets and laddoos in bowls in the gaps between the doors, low stacks of plates in the middle; balloons
+ *  float high at the two ends of the garland, above the doors; cushions on the floor at the front right */
 function layout(kind, n) {
   const it = [];
-  let tag = { x: TX, y: TOP - 60 };
+  let tag = { x: TX, y: CLOTH };
   if (kind === "chairs") {
-    // a row on the floor in front of the table, ready for the guests, so every chair can be counted
-    const cx = TX + 90, y = TB.foot + 72, step = Math.min(66, 470 / Math.max(1, n - 1));
-    for (let i = 0; i < n; i++) it.push({ x: cx - ((n - 1) * step) / 2 + i * step, y, w: 64, h: 96 });
-    tag = { x: cx + ((n - 1) * step) / 2 + 60, y: y - 66 };
+    // the ones behind are a little smaller (further away), between the two bowls; the end ones are nearer and bigger
+    const ends = Math.min(2, n), k = n - ends, cx = TX - 30;
+    const step = k > 1 ? Math.min(66, Math.max(220, k * 24) / (k - 1)) : 0;
+    // the end chairs come first, so when the count changes (restock) they stay the end chairs
+    if (ends > 0) it.push({ x: TX - 372, y: TOP + 112, w: 86, h: 129 });               // the left end, facing the table
+    if (ends > 1) it.push({ x: TX + 372, y: TOP + 112, w: 86, h: 129, flip: true });   // the right end
+    for (let i = 0; i < k; i++) it.push({ x: cx - ((k - 1) * step) / 2 + i * step, y: TOP + 40, w: 72, h: 108, under: true });
+    tag = { x: TX - 438, y: TOP + 30 };
   }
   if (kind === "plates") {
-    // stacks of up to 5 in the middle of the table
-    const stacks = Math.ceil(n / 5), gap = 66, tall = Math.ceil(n / stacks);
-    for (let i = 0; i < n; i++) { const st = i % stacks, h = Math.floor(i / stacks); it.push({ x: TX - ((stacks - 1) * gap) / 2 + st * gap, y: TOP_FRONT - 4 - h * 6, w: 62, h: 38 }); }
-    tag = { x: TX, y: TOP_FRONT - 4 - (tall - 1) * 6 - 38 - 30 };
+    // low stacks (3 at most) in the middle of the table, so the middle door stays in view above them
+    const stacks = Math.ceil(n / 3), gap = 58, tall = Math.ceil(n / stacks);
+    for (let i = 0; i < n; i++) { const st = i % stacks, h = Math.floor(i / stacks); it.push({ x: TX - 26 - ((stacks - 1) * gap) / 2 + st * gap, y: TOP_FRONT - 4 - h * 6, w: 62, h: 38 }); }
+    tag = { x: TX - 26, y: CLOTH };
   }
   if (kind === "sweets" || kind === "laddoos") {
-    // a heap in a gold bowl: the bowl holds them all, the heap shows a handful, the tag says how many.
-    // Each tag sits on the inner side of its bowl, away from the balloons
-    const L = kind === "sweets", bx = TX + (L ? -205 : 205), by = TOP_FRONT - 4;
+    // a heap in a gold bowl, in the wall between two doors: the bowl holds them all, the heap shows a handful
+    const L = kind === "sweets", bx = L ? GAP.L : GAP.R, by = TOP_FRONT - 4;
     it.push({ x: bx, y: by, w: 130, h: 65, bowl: true });
     const rows = [5, 4, 3, 2, 1], w = L ? 34 : 32, h = L ? 28 : 32;
     let left = Math.min(n, 15);
     rows.forEach((c, r) => { const k = Math.min(c, left); left -= k; for (let j = 0; j < k; j++) it.push({ x: bx - ((k - 1) * w * 0.78) / 2 + j * w * 0.78, y: by - 46 - r * h * 0.5, w, h }); });
-    tag = { x: bx + (L ? 74 : -74), y: by - 124 };
+    tag = { x: bx, y: CLOTH };
   }
   if (kind === "cushions") {
-    // two neat piles on the floor just past the right end of the table
+    // two neat piles on the floor at the front right corner of the table
     const a = Math.ceil(n / 2);
-    for (let i = 0; i < n; i++) { const L = i < a, k = L ? i : i - a; it.push({ x: TX + (L ? 382 : 442), y: TB.foot - k * 13, w: 58, h: 39 }); }
-    tag = { x: TX + 412, y: TB.foot - a * 13 - 62 };
+    for (let i = 0; i < n; i++) { const L = i < a, k = L ? i : i - a; it.push({ x: TX + (L ? 282 : 342), y: TB.foot + 45 - k * 13, w: 58, h: 39 }); }
+    tag = { x: TX + 252, y: TB.foot + 45 - 39 - (a - 1) * 13 - 26 };
   }
   if (kind === "balloons") {
-    // two bunches tied at the back corners, outside the bowls
+    // two bunches floating high at the ends of the garland, above the doors
     const a = Math.ceil(n / 2);
-    for (let i = 0; i < n; i++) { const L = i < a, k = L ? i : i - a, g = L ? a : n - a; it.push({ x: TX + (L ? -350 : 350) + (k - (g - 1) / 2) * 18, y: TOP + 6 - (k % 2) * 24, w: 47, h: 78, hue: (i * 47) % 360 }); }
-    tag = { x: TX + 350, y: TOP - 124 }; // over the right bunch: the reply board can reach down over the left one
+    for (let i = 0; i < n; i++) { const L = i < a, k = L ? i : i - a, g = L ? a : n - a; it.push({ x: (L ? 488 : 1080) + (k - (g - 1) / 2) * 18, y: 300 - (k % 2) * 22, w: 47, h: 78, hue: (i * 47) % 360 }); }
+    tag = { x: 1166, y: 262 };
   }
   return { it, tag };
 }
 function thing(kind, o) {
   const e = img(o.bowl ? "pr_bowl" : ICON[kind], o.under ? back : front, { left: o.x - o.w / 2, top: o.y - o.h, width: o.w, height: o.h, objectFit: "contain" });
+  if (o.flip) e.style.transform = "scaleX(-1)";
   if (o.hue != null) e.style.filter = `hue-rotate(${o.hue}deg) saturate(2.4)`;
   return e;
 }
@@ -204,6 +213,17 @@ function rsvpCard(kind, from, i) {
 function drawVals() { valPills(valBox, vals, uses); gsap.set(valBox, { autoAlpha: 1 }); }
 /** a prompt beside the speaker that stays up while the child works (not read aloud) */
 const prompt = (t) => host.cur && say(host.cur, t, { wait: false, voice: false });
+/** the things standing in front of a door fade back while it is knocked on, so the child can see the door to tap.
+ *  Returns a function that brings them back */
+function clearDoor(d) {
+  const r = d.getBoundingClientRect(), pad = 6;
+  const hide = [...back.children, ...front.children].filter((e) => {
+    const q = e.getBoundingClientRect();
+    return q.width && !(q.right < r.left + pad || q.left > r.right - pad || q.bottom < r.top + pad || q.top > r.bottom - pad);
+  });
+  gsap.to(hide, { opacity: 0.12, duration: 0.3 });
+  return () => gsap.to(hide, { opacity: 1, duration: 0.4 });
+}
 // someone knocks: the child opens the door and the replies fly in
 async function knockDoor(di, kind, count) {
   const d = doors[di];
@@ -218,7 +238,9 @@ async function knockDoor(di, kind, count) {
   const dx = +d.dataset.x, dy = +d.dataset.y;
   await camRest(0.4);
   const dp = camPt(dx, dy, "far");
-  const tip = el("div", "doorTip", ui, { left: dp.x, top: dp.y - 160 }, "Tap the door!");
+  const restore = clearDoor(d);
+  // the label sits above the door, never on it
+  const tip = el("div", "doorTip", ui, { left: dp.x, top: dp.y - DOOR_D / 2 - 66 }, "Tap the door! ▼");
   const h = await pointHand(dp.x + 30, dp.y + 30, 0);
   await new Promise((r) => onTap(d, r));
   clearInterval(knock); h.remove(); tip.remove(); d.classList.remove("pulse");
@@ -240,6 +262,7 @@ async function knockDoor(di, kind, count) {
   pf.stop();
   await wait(0.4);
   gsap.to([scroll?.el].filter(Boolean), { opacity: 1, duration: 0.3 });
+  restore();
   gsap.to(d, { rotationY: 0, duration: 0.5, ease: "power2.in" });
   gsap.to([light, beam], { opacity: 0, duration: 0.5, onComplete: () => { light.remove(); beam.remove(); } });
   gsap.to(d, { filter: "brightness(.55) saturate(.8)", duration: 0.6 });
@@ -417,7 +440,6 @@ export async function runPart3(start = 1) {
       QB.show(q.arrive.d === 4 ? "Someone is knocking!" : "More knocking!");
       await say("agni", q.arrive.d === 4 ? "Listen! Someone is knocking!" : "More knocking! Who is it?", { p: "shocked" });
       await knockDoor(2, "d", q.arrive.d);
-      if (Object.keys(groups).length) await rework(); // more dragons: the plates and cushions follow the plan
     }
     if (q.change) {
       // two replies come back: "Sorry, I can't come". The six Yes cards stay until the child has answered
@@ -502,6 +524,13 @@ export async function runPart3(start = 1) {
       // the table was set for 6 monster friends: Maya works the plan again with m = 4, and the table follows
       // (2 chairs go, and the sweets, balloons and plates are counted again)
       await maya("Now m is 4. Our plan still works: chairs = 4 + 1 = 5.", "explain", () => restock("chairs", FORM.chairs(vals)));
+      // and the rest of the table follows while Maya says so (Draft 3), so no number changes without a word
+      await maya("The sweets, plates and balloons change too. The plan works for all of them!", "happy", () => rework());
+      await rework();
+    }
+    if (q.arrive?.d === 3) {
+      // d became 7 with this question: the plates and cushions follow the plan too, and Maya says so
+      await maya("The plates and cushions change too. The plan works for all of them!", "happy", () => rework());
       await rework();
     }
     checkDone(qi);
