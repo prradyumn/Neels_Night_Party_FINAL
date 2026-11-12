@@ -519,20 +519,17 @@ export async function runPart3(start = 1) {
     playFx("collect", TX, 450, { palette: "gold", scale: 3 });
     QB.sub(`<span class="win">${q.pop} ✓</span>`);
     await award(tries, TX, 300, 3);
-    if (tries < 3) { await praise(PRAISE[qi]); await maya("Correct! " + q.exp, "happy"); }
+    // when m or d has just changed, the table is worked out again while a line from the sheet talks about the plan:
+    // after Question 6, Maya's "Now m is 4. Our plan still works…"; after Question 8, her "…The plan still works,
+    // even when the numbers change!" (the plates and cushions follow d = 7). No extra lines
+    const recount = q.arrive?.d === 3 ? () => rework() : undefined;
+    if (tries < 3) { await praise(PRAISE[qi]); await maya("Correct! " + q.exp, "happy", recount); }
+    else if (recount) await recount();
     if (q.change) {
-      // the table was set for 6 monster friends: Maya works the plan again with m = 4, and the table follows
-      // (2 chairs go, and the sweets, balloons and plates are counted again)
-      await maya("Now m is 4. Our plan still works: chairs = 4 + 1 = 5.", "explain", () => restock("chairs", FORM.chairs(vals)));
-      // and the rest of the table follows while Maya says so (Draft 3), so no number changes without a word
-      await maya("The sweets, plates and balloons change too. The plan works for all of them!", "happy", () => rework());
-      await rework();
+      // the table was set for 6 monster friends: 2 chairs go first, then the sweets, plates and balloons are counted again
+      await maya("Now m is 4. Our plan still works: chairs = 4 + 1 = 5.", "explain", () => { restock("chairs", FORM.chairs(vals)); setTimeout(rework, 900); });
     }
-    if (q.arrive?.d === 3) {
-      // d became 7 with this question: the plates and cushions follow the plan too, and Maya says so
-      await maya("The plates and cushions change too. The plan works for all of them!", "happy", () => rework());
-      await rework();
-    }
+    await wait(0.6); // a recount that is still landing finishes before the next question
     checkDone(qi);
     lights.light((qi + 1) / Q.length); // the garland over the table: the party is a bit more ready
     closeBubble();

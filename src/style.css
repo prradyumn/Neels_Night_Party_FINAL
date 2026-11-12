@@ -544,3 +544,5 @@ img{-webkit-user-drag:none;user-select:none}
 .bin.answer.locked > img{opacity:1;filter:drop-shadow(0 0 22px #7dffa8) drop-shadow(0 0 8px #7dffa8)!important}
 /* a count tag that is being worked out again (m or d changed) */
 .ctag.chg{background:linear-gradient(#e9dcff,#b98cff);border-color:#6a2bc4;color:#2a0d55}
+/* the title's Play, tapped before the story's art is in (slow connection) */
+.playWait{position:absolute;transform:translateX(-50%);padding:4px 20px;border-radius:20px;background:rgba(20,14,44,.88);border:3px solid var(--gold);font-size:26px;font-weight:800;color:#fff;pointer-events:none;animation:blink 1.2s ease-in-out infinite}

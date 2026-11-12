@@ -28,7 +28,8 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
   Chairs at both ends and behind the table, sweets/laddoo bowls in the gaps, low plate stacks in the middle,
   balloons high at the garland ends, cushions front right; the tabletop tags sit on the cloth. During a knock,
   clearDoor() fades whatever still overlaps that door and "Tap the door!" sits above it. When m or d changes, FORM works every group out
-  again and restock() moves/adds/removes things, always with a Maya line (after Q6 and after Q8). Party: no tags,
+  again and restock() moves/adds/removes things while a sheet line talks about the plan (after Q6: "Now m is 4…";
+  after Q8: Maya's "…The plan still works, even when the numbers change!"). No lines that are not in the sheet. Party: no tags,
   m = 4 / d = 7 never change, guests stand in loose groups at different depths with shadows
 - src/finale.js: Party Day shopping. Not in the current script, so it is out of the flow (no room 4)
 - src/map.js: level select (3 rooms, title fixed on screen) · src/qa.js: QA mode (press Q, or a #qa-p2-7 link);
@@ -52,7 +53,7 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
 - Audio: src/sfx/*.mp3 (bundled as data URLs via esbuild's mp3 loader) and assets/audio/*.mp3 music;
   all CC0, sources in assets/audio/CREDITS.txt. sfx(type) plays a recording when loaded, else the synth;
   music("calm"|"magic") crossfades and starts on the first tap; it ducks while TTS speaks
-- assets/: 72 WebP files (plus audio). fx_coin_spin (the gold m coin, 12 frames; common.js coin()) is a Blender render too
+- assets/: 70 WebP files (plus audio). fx_coin_spin (the gold m coin, 12 frames; common.js coin()) is a Blender render too
   (tools/blender/coin.py). pr_party_table_3d (the Part 3 table) and pr_bowl are Blender renders made at the hall floor's
   angle (about 11 degrees), shadow baked in: tools/blender/table.py, bowl.py, finish.py
   (`blender -b --python tools/blender/table.py -- out.png 96 11`, then `python3 tools/blender/finish.py out.png assets/pr_party_table_3d.webp 1100`). anim_* = Ludo sprite sheets, 36 frames in a 6×6 grid,
@@ -74,4 +75,6 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
   tools/optimize_images.py (sprite sheets q74, backgrounds at their drawn 2000 x 900).
 - Smoothness: only the sprite sheet being played is displayed (a sheet decodes to about 38 MB); sheets are decoded
   ahead of use (warmChars, WARM in engine.js), backdrops decode behind the closed curtain, and a normal start loads only
-  the title and story art (FIRST in main.js) before the rest loads one file at a time.
+  the title art (TITLE in main.js, about 1.8 MB) before the title shows; the story's first scene (STORY_NOW) loads
+  while the title is up (Play waits for it only on a slow link), then the rest one file at a time, poses first.
+  vercel.json caches assets/ for a day (stale-while-revalidate a week).
