@@ -49,7 +49,11 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
   why it is asleep (el._why). A tap made while a control was locked but delivered late (busy device) is dropped.
 - setScene(name, {setup}): the old cast leaves behind the shut curtain; setup builds the new scene before it opens.
 - Hints in every part: wrong 1 = clue, wrong 2 = clue with the numbers on screen, wrong 3 = answer (highlighted).
-- src/fx.js + pixelfx/: pixel particle effects (MIT, vendored)
+- src/fx.js: painted-light effects, no pixel art: playFx(name, x, y, {palette, scale, parent, dur}) draws soft glows,
+  sparks, twinkles and smoke/dust puffs (lumps lit top-left, shaded below) at full resolution on a small canvas, one rAF
+  loop for all; turning pieces (sunburst rays, rune circle, portal swirl) are drawn once and moved with transforms.
+  Loops stop on stop() or when their layer is cleared. The hearth fire (campfire) draws its own logs: the painted hearth
+  is empty. Character contact shadows stay on the floor and shrink when a character jumps; confetti tumbles in 3D
 - Audio: src/sfx/*.mp3 (bundled as data URLs via esbuild's mp3 loader) and assets/audio/*.mp3 music;
   all CC0, sources in assets/audio/CREDITS.txt. sfx(type) plays a recording when loaded, else the synth;
   music("calm"|"magic") crossfades and starts on the first tap; it ducks while TTS speaks
@@ -64,13 +68,18 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
   Part 2 beat and m + d example, ending) both stay on screen: solo("duo") / solo("duoGame"); questions stay one speaker.
   All tappable controls in the bottom-right action zone, ★ counter top-right.
   The three friends together (story, bridges, Part 2 dragon beat, Part 3 intro, party) use trio(): SPOTS.trio*.
-  Question progress ("Question x of N") top-right under the stars. Part 2: test results over the cauldron, under the
-  card and above the spell; nothing animates over the spell. Part 3: equation bar (item = plan) top-centre, reply cards
-  top-left (7 cards fit a row; numbered once counted), plan scroll docked top-right, answer gems bottom-right, smaller
+  Question progress ("Question x of N", no dots) inside the star pill, one line. Part 2: test results over the cauldron,
+  under the card and above the spell; nothing animates over the spell. Part 3: equation bar (item = plan) top-centre,
+  reply cards top-left (7 cards fit a row; numbered once counted; only the counts, .rsvp.mini, during a question that is
+  not about the replies: knocks and the "two said no" question show every card), the plan folds to a tab under the
+  stars (.scroll.tab, a tap opens it for 6 s), only the current question's count tag on the table (a tag shows again
+  while its count changes), no "d = 4" chip during a knock (the replies count), answer gems bottom-right, smaller
   speaker bottom-left (SPOTS.table) whose side bubble grows upwards. Party: bubbles high (SPOTS.trioParty.ftop),
   monsters left and dragons right, one row each.
 - No blue guest monster anywhere it could be read as a second Neel (gu_monster_blue).
-- Keep the UI uncluttered and keep m purple / d orange everywhere.
+- Keep the UI uncluttered and keep m purple / d orange everywhere. No panels behind controls (the action zone, the
+  answer gems and the test rows have no frame; tips and jar/chest labels are text with a shadow); the question card
+  is a plain rounded glass card; a control with nothing to do is hidden (undo with an empty spell).
 - Keep assets WebP, total game under 20 MB. Re-encode from the lossless originals, never WebP from WebP:
   tools/optimize_images.py (sprite sheets q74, backgrounds at their drawn 2000 x 900).
 - Smoothness: only the sprite sheet being played is displayed (a sheet decodes to about 38 MB); sheets are decoded

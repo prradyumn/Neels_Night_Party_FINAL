@@ -210,7 +210,7 @@ img{-webkit-user-drag:none;user-select:none}
 .vpill b{color:#fff}
 .vpill.m{color:#d6a8ff;border-color:#7a3fd1}
 .vpill.d{color:#ffb070;border-color:#e8742a}
-.conf{position:absolute;border-radius:3px;pointer-events:none;z-index:45}
+.conf{position:absolute;border-radius:3px;pointer-events:none;z-index:45;background-image:linear-gradient(135deg,rgba(255,255,255,.5),rgba(255,255,255,0) 45%,rgba(0,0,0,.2))}
 .itemCount{position:absolute;display:flex;align-items:center;gap:8px;padding:4px 18px 4px 10px;border-radius:26px;background:rgba(20,14,44,.82);border:3px solid var(--gold);font-size:34px;font-weight:800;color:#fff;transform:translateX(-50%)}
 .itemCount img{height:40px}
 .room .th{width:300px;height:180px}
@@ -238,7 +238,7 @@ img{-webkit-user-drag:none;user-select:none}
 .rug.d{background:radial-gradient(ellipse at center,#ff8a3d 0%,rgba(255,138,61,.8) 50%,rgba(255,138,61,0) 74%)}
 .undo{position:absolute;width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,.08);border:3px solid var(--lav);color:var(--lav);font-size:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity .2s}
 .undo:active{transform:scale(.9)}
-.undo.off{opacity:.3;pointer-events:none}
+.undo.off{opacity:0;pointer-events:none} /* nothing to undo: not shown */
 .btn[disabled].pulse{animation:none}
 .stepper .sb.sm{width:70px;height:70px;font-size:26px}
 .stepper{gap:10px}
@@ -546,3 +546,22 @@ img{-webkit-user-drag:none;user-select:none}
 .ctag.chg{background:linear-gradient(#e9dcff,#b98cff);border-color:#6a2bc4;color:#2a0d55}
 /* the title's Play, tapped before the story's art is in (slow connection) */
 .playWait{position:absolute;transform:translateX(-50%);padding:4px 20px;border-radius:20px;background:rgba(20,14,44,.88);border:3px solid var(--gold);font-size:26px;font-weight:800;color:#fff;pointer-events:none;animation:blink 1.2s ease-in-out infinite}
+/* ---------- decluttered: one pill top right, no frames round the controls, quieter cards and labels ---------- */
+#prog{position:static;display:flex;align-items:center;margin-left:2px;padding:0 0 0 14px;border:0;border-left:2px solid rgba(255,197,71,.45);border-radius:0;background:none;z-index:auto}
+#prog b{font-size:24px;white-space:nowrap}
+#azone{background:none;border:0;box-shadow:none}
+.aztip{background:none;border:0;padding:0 10px;text-shadow:0 2px 0 rgba(0,0,0,.8),0 0 12px rgba(0,0,0,.9)}
+.binLbl{background:none;text-shadow:0 2px 0 rgba(0,0,0,.85),0 0 12px rgba(0,0,0,.9)}
+.pickbar{background:none;border:0;box-shadow:none}
+.tests{background:none;border:0;padding:0}
+.qbox{border:0;border-image:none;border-radius:24px;padding:10px 30px 12px;background:linear-gradient(rgba(30,20,68,.82),rgba(20,13,48,.74));box-shadow:0 8px 22px rgba(0,0,0,.3),inset 0 0 0 2px rgba(255,197,71,.3)}
+.qbox.eq{background:none;box-shadow:none}
+.rsvp h3{display:none}
+.rsvp.mini{width:auto!important;padding:6px 16px 8px;border-width:6px}
+.rsvp.mini .cards{display:none}
+.rsvp.mini .gl{font-size:22px;margin:2px 0}
+.scroll.docked.tab{left:auto!important;right:18px;width:auto;padding:8px 22px 10px;cursor:pointer}
+.scroll.docked.tab h2{font-size:22px;margin:0}
+.scroll.docked.tab h2::before{content:"📜 "}
+.scroll.docked.tab:not(.open) .pl{display:none}
+.scroll.docked.tab.open{width:380px}

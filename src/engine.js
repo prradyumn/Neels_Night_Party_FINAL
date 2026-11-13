@@ -428,7 +428,9 @@ const ENTER = {
   // arrives on the column of light it fires (the effect's FLASH, 1.52 s in)
   async maya(c) {
     const b = c.box, sx = c.flip ? -1 : 1;
-    playFx("cast", c.x, c.y - 10, { palette: "plum", scale: 3, parent: world }); // the circle and its light stay behind her
+    // the circle and its light stay behind her, but in front of the foreground plants and rocks that hide the floor
+    const circle = playFx("cast", c.x, c.y - 10, { palette: "plum", scale: 3, parent: charsL });
+    if (circle.el) charsL.insertBefore(circle.el, charsL.firstChild);
     gsap.set(b, { opacity: 0 });
     await wait(1.45);
     sfx("magic");
@@ -520,6 +522,10 @@ gsap.ticker.add((time, dms) => {
       }
     }
     if (moved) frame(c);
+    // the contact shadow stays on the floor when the character jumps, and shrinks with the height
+    const jy = gsap.getProperty(c.box, "y");
+    const tf = jy < -1 ? `translateY(${(-jy / Math.abs(gsap.getProperty(c.box, "scaleY") || 1)).toFixed(1)}px) scale(${Math.max(0.45, 1 + jy / 500).toFixed(3)})` : "";
+    if (c.shadow._tf !== tf) { c.shadow._tf = tf; c.shadow.style.transform = tf; }
   }
 });
 /** show pose/animation p. asBase: it becomes the resting pose after one-shots / talking. */
@@ -766,7 +772,7 @@ stage.addEventListener("pointerdown", (e) => {
   // saved up to act later (the event's own time says when the finger came down)
   for (let n = t; n && n !== stage; n = n.parentElement) if (n._openAt && e.timeStamp > 0 && e.timeStamp < n._openAt) { e.stopPropagation(); return; }
   // tap-to-continue mode: a tap on the scene (not on a control) moves the line on
-  if (!settings.autoplay && tapLine && !t.closest("#bubble, #hud, .menu, .qapanel, .icon") && !listening(t)) tapLine();
+  if (!settings.autoplay && tapLine && !t.closest("#bubble, #hud, .menu, .qapanel, .icon, .scroll.tab") && !listening(t)) tapLine();
 }, true);
 bubble.addEventListener("pointerdown", (e) => { if (e.target.closest(".rp")) return; e.stopPropagation(); tapLine && tapLine(); });
 
@@ -954,19 +960,19 @@ export async function pointHand(x, y, dur = 2.4) {
   return h;
 }
 
-// ---------- question progress: "Question 3 of 8" and a dot per question, top right under the stars ----------
+// ---------- question progress: "Question 3 of 8", in the star pill (one line, top right) ----------
 const prog = el("div", "", stage); prog.id = "prog";
-gsap.set(prog, { autoAlpha: 0 });
+gsap.set(prog, { autoAlpha: 0, display: "none" });
 let progN = 0, progCur = 0;
 const progDone = new Set();
 function drawProg() {
-  prog.innerHTML = `<b>Question ${progCur + 1} of ${progN}</b><span class="dots">${Array.from({ length: progN }, (_, i) => `<i class="${progDone.has(i) ? "done" : i === progCur ? "cur" : ""}"></i>`).join("")}</span>`;
+  prog.innerHTML = `<b>Question ${progCur + 1} of ${progN}</b>`;
 }
 /** list: one entry per question (its length is the part's question count) */
 export function checklist(list) { progN = list.length; progCur = 0; progDone.clear(); drawProg(); }
-export function checkCur(i) { progCur = i; drawProg(); gsap.to(prog, { autoAlpha: 1, duration: 0.3 }); gsap.fromTo(prog.querySelector("b"), { scale: 1.15 }, { scale: 1, duration: 0.35, ease: "back.out(3)" }); }
+export function checkCur(i) { progCur = i; drawProg(); gsap.set(prog, { display: "" }); gsap.to(prog, { autoAlpha: 1, duration: 0.3 }); gsap.fromTo(prog.querySelector("b"), { scale: 1.15 }, { scale: 1, duration: 0.35, ease: "back.out(3)" }); }
 export function checkDone(i) { progDone.add(i); drawProg(); }
-export function hideChecklist() { gsap.to(prog, { autoAlpha: 0, duration: 0.3 }); }
+export function hideChecklist() { gsap.to(prog, { autoAlpha: 0, duration: 0.3, onComplete: () => gsap.set(prog, { display: "none" }) }); }
 
 export { playFx };
 
@@ -974,6 +980,7 @@ export { playFx };
 export const score = { stars: 0, max: 75, room: {} };
 const hud = el("div", "", stage); hud.id = "hud";
 hud.innerHTML = `<div class="starpill"><span class="st">★</span><span id="scount">0</span></div><div class="meter"><div class="lbl2">Party</div><div class="bar"><i id="mfill"></i></div></div>`;
+hud.appendChild(prog); // one pill: stars, then the question number
 const scount = hud.querySelector("#scount"), mfill = hud.querySelector("#mfill");
 export function showHud(on = true, full = false) { hud.classList.toggle("full", full); gsap.to(hud, { opacity: on ? 1 : 0, duration: 0.3 }); }
 gsap.set(hud, { opacity: 0 });
@@ -1124,11 +1131,12 @@ export function valPills(box, v, uses = "md") {
   if (v.m && uses.includes("m")) el("span", "vpill m", box, {}, `m = <b>${v.m}</b>`);
   if (v.d && uses.includes("d")) el("span", "vpill d", box, {}, `d = <b>${v.d}</b>`);
 }
-// soft CSS confetti (no pixel blocks over the painted art)
+// paper confetti that tumbles in 3D as it falls (it catches the light as it turns); moved with transforms only
 export function confetti(n = 60) {
-  const cols = ["#ffc547", "#3fb8af", "#c684ff", "#ff8a3d", "#ff6b7d", "#9ff0e6"];
+  const cols = ["#ffc547", "#3fb8af", "#c684ff", "#ff8a3d", "#ff6b7d", "#9ff0e6"], r = (a, b) => a + Math.random() * (b - a);
   for (let i = 0; i < n; i++) {
-    const p = el("div", "conf", fxl, { left: Math.random() * W, top: -30, background: cols[i % cols.length], width: 10 + Math.random() * 8, height: 16 + Math.random() * 10 });
-    gsap.to(p, { top: H + 40, x: (Math.random() - 0.5) * 300, rotation: Math.random() * 720, duration: 2.6 + Math.random() * 2, delay: Math.random() * 1.2, ease: "power1.in", onComplete: () => p.remove() });
+    const p = el("div", "conf", fxl, { left: Math.random() * W, top: -30, backgroundColor: cols[i % cols.length], width: r(10, 18), height: r(16, 26) });
+    gsap.set(p, { transformPerspective: 500, rotationX: r(0, 360), rotationY: r(0, 360) });
+    gsap.to(p, { y: H + 70, x: r(-150, 150), rotation: r(0, 720), rotationX: `+=${r(720, 1800)}`, rotationY: `+=${r(360, 1080)}`, duration: r(2.6, 4.6), delay: r(0, 1.2), ease: "power1.in", onComplete: () => p.remove() });
   }
 }

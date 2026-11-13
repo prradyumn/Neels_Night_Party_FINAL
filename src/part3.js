@@ -141,7 +141,7 @@ function restock(kind, n) {
     else { g.els[i] = thing(kind, o); gsap.from(g.els[i], { opacity: 0, y: -30, duration: 0.45, delay: 0.25 + (i - was) * 0.05, ease: "bounce.out" }); }
   });
   g.els.splice(it.length).forEach((e, i) => gsap.to(e, { opacity: 0, y: -40, scale: 0.6, duration: 0.45, delay: i * 0.08, onComplete: () => e.remove() }));
-  if (g.tag) { gsap.to(g.tag, { left: tag.x, top: tag.y, duration: 0.6 }); g.tag.classList.add("chg"); countUp(g.tag, was, n, 0.8).eventCallback("onComplete", () => { g.tag.classList.remove("chg"); sfx("pop"); }); }
+  if (g.tag) { gsap.to(g.tag, { left: tag.x, top: tag.y, autoAlpha: 1, duration: 0.6 }); g.tag.classList.add("chg"); countUp(g.tag, was, n, 0.8).eventCallback("onComplete", () => { g.tag.classList.remove("chg"); sfx("pop"); gsap.to(g.tag, { autoAlpha: 0, duration: 0.5, delay: 1.6 }); }); } // shown while it counts, then it goes
   g.n = n;
 }
 /** after m or d changed: everything on the table is worked out again from its plan, one kind after another */
@@ -211,6 +211,14 @@ function rsvpCard(kind, from, i) {
   return c;
 }
 function drawVals() { valPills(valBox, vals, uses); gsap.set(valBox, { autoAlpha: 1 }); }
+/** while a question is not about the replies, the board shows only its counts ("Monster friends: 6") */
+function repliesMini(on) {
+  if (!rsvp || rsvp.classList.contains("mini") === on) return;
+  rsvp.classList.toggle("mini", on);
+  gsap.fromTo(rsvp, { opacity: 0.3 }, { opacity: 1, duration: 0.35 });
+}
+/** a count tag stays while its question is on; at the next question the older tags go (the things stay) */
+const hideTags = () => Object.values(groups).forEach((g) => g.tag && gsap.to(g.tag, { autoAlpha: 0, duration: 0.4 }));
 /** a prompt beside the speaker that stays up while the child works (not read aloud) */
 const prompt = (t) => host.cur && say(host.cur, t, { wait: false, voice: false });
 /** the things standing in front of a door fade back while it is knocked on, so the child can see the door to tap.
@@ -226,6 +234,8 @@ function clearDoor(d) {
 }
 // someone knocks: the child opens the door and the replies fly in
 async function knockDoor(di, kind, count) {
+  repliesMini(false); // the replies are the subject again: every card shows
+  gsap.set(valBox, { autoAlpha: 0 }); // and they do the counting: no second count beside the title
   const d = doors[di];
   d.classList.add("pulse");
   gsap.to(d, { filter: "brightness(1.15) saturate(1.1) drop-shadow(0 0 24px rgba(255,197,71,.8))", duration: 0.4 });
@@ -256,7 +266,7 @@ async function knockDoor(di, kind, count) {
   const from = camPt(dx, dy, "far");
   for (let i = 0; i < count; i++) {
     rsvpCard(kind, from, i);
-    if (kind !== "no") { vals[kind]++; drawVals(); }
+    if (kind !== "no") { vals[kind]++; valPills(valBox, vals, uses); }
     await wait(0.3);
   }
   pf.stop();
@@ -399,8 +409,8 @@ export async function runPart3(start = 1) {
   if (start > 1) {
     catchUp(start);
     drawVals();
-    scroll = await planScroll({ left: 1205, top: 152 });
-    scroll.el.classList.add("docked");
+    scroll = await planScroll({ left: 1205, top: 96 });
+    scroll.el.classList.add("docked", "tab");
   } else {
     // Neel tells his friends: all three are here for it (they stand ready under the title card)
     trio("trioTable");
@@ -421,7 +431,7 @@ export async function runPart3(start = 1) {
     // left, so her bubble never covers the scroll
     closeBubble();
     solo("table");
-    await scroll.dock({ left: 1205, top: 152 });
+    await scroll.dock({ left: 1205, top: 96 });
     const ex = card(`<div class="tag">Maya explains</div><p>Glasses: ${show(["2", "m"])}</p><p>Put 6 in place of <span class="mtxt">m</span>: 2 × 6 = <b>12</b></p>`, { left: 470, top: 30, width: 680 }, "card lesson");
     await maya("For example, glasses: 2 for each friend is 2m. Put 6 in place of m: 2 × 6 = 12 glasses.", "explain");
     await maya("Now you try! Find the exact number of each thing on the plan.", "happy");
@@ -433,6 +443,8 @@ export async function runPart3(start = 1) {
   for (let qi = start - 1; qi < Q.length; qi++) {
     const q = Q[qi];
     checkCur(qi);
+    hideTags();
+    if (!q.arrive && !q.change) repliesMini(true);
     setAnswer(q.ans);
     camRest(0.6); // no zoom: the cards, the table and the speaker all stay in frame
     if (q.arrive?.d) {

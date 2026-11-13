@@ -61,12 +61,17 @@ export async function planScroll(at = { left: 110, top: 150 }) {
     sfx("pop");
     await wait(0.18);
   }
+  // docked, the scroll folds to a small tab under the stars (the line being worked on is in the equation bar);
+  // a tap opens the whole plan for a look, and it folds again by itself
+  let shut;
+  const fold = (open) => { sc.classList.toggle("open", open); clearTimeout(shut); if (open) shut = setTimeout(() => fold(false), 6000); };
+  sc.addEventListener("pointerdown", (e) => { if (!sc.classList.contains("tab")) return; e.stopPropagation(); sfx("tap"); fold(!sc.classList.contains("open")); });
   return {
     el: sc,
     async roll() { await gsap.to(sc, { scaleY: 0.05, opacity: 0, duration: 0.45, ease: "power2.in" }); sc.remove(); },
     async dock(to) {
       await gsap.to(sc, { opacity: 0, scale: 0.9, duration: 0.25 });
-      sc.classList.add("docked");
+      sc.classList.add("docked", "tab");
       Object.assign(sc.style, { left: to.left + "px", top: to.top + "px" });
       await gsap.to(sc, { opacity: 1, scale: 1, duration: 0.3 });
     },
