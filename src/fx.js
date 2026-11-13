@@ -194,7 +194,7 @@ class Fx {
   sprite(src, r, x = 0, y = 0, sy = 1) {
     const c = document.createElement("canvas");
     c.width = src.width; c.height = src.height; c.getContext("2d").drawImage(src, 0, 0);
-    Object.assign(c.style, { position: "absolute", left: x - r + "px", top: y - r + "px", width: 2 * r + "px", height: 2 * r + "px", mixBlendMode: "screen" });
+    Object.assign(c.style, { position: "absolute", left: x - r + "px", top: y - r + "px", width: 2 * r + "px", height: 2 * r + "px" });
     let el = c;
     if (sy !== 1) { el = document.createElement("div"); Object.assign(el.style, { position: "absolute", left: 0, top: 0, transform: `scaleY(${sy})`, transformOrigin: `${x}px ${y}px` }); el.appendChild(c); }
     this.root.insertBefore(el, this.cv || null);
@@ -438,6 +438,8 @@ const FX = {
 };
 // effects that keep going until stop() is called (or their layer is cleared)
 const TAILS = { sunburst: 0.6, runes: 0.5, portal: 0.4, campfire: 0.8 };
+// the hearth fire burns for a whole part, far back: 30 frames a second and 1x resolution are plenty for soft flames
+const SLOW = { campfire: { fps: 30, res: 1 } };
 
 // ---------- the loop ----------
 const live = new Set();
@@ -445,7 +447,12 @@ let last = 0, running = false;
 function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000) * (window.__speed || 1);
   last = now;
-  for (const fx of live) if (!fx.root.isConnected || !fx.tick(dt)) finish(fx);
+  for (const fx of live) {
+    if (!fx.root.isConnected) { finish(fx); continue; }
+    let step = dt;
+    if (fx.every) { fx.acc += dt; if (fx.acc < fx.every) continue; step = fx.acc; fx.acc = 0; }
+    if (!fx.tick(step)) finish(fx);
+  }
   if (live.size) requestAnimationFrame(loop); else running = false;
 }
 function finish(fx) {
@@ -469,12 +476,13 @@ export function playFx(name, x, y, o = {}) {
   fx.done = new Promise((r) => (fx.resolve = r));
   fx.dur = o.dur;
   fx.tail = TAILS[name] || 0.5;
+  if (SLOW[name]) { fx.every = 1 / SLOW[name].fps - 0.002; fx.acc = 0; }
   const box = BOX[name];
   if (box) {
     const [l, t, r, b] = box.map((v) => v * k);
     // sharp on the screen it is shown on, a little less for big effects (they are soft light anyway)
     const stageS = document.getElementById("stage")?._s || 1;
-    const res = clamp(stageS * (window.devicePixelRatio || 1) * 1.1, 0.6, (r - l) * (b - t) > 300000 ? 1.25 : 2);
+    const res = clamp(stageS * (window.devicePixelRatio || 1) * 1.1, 0.6, SLOW[name]?.res || ((r - l) * (b - t) > 300000 ? 1.25 : 2));
     const cv = document.createElement("canvas");
     cv.width = Math.ceil((r - l) * res); cv.height = Math.ceil((b - t) * res);
     Object.assign(cv.style, { position: "absolute", left: l + "px", top: t + "px", width: r - l + "px", height: b - t + "px" });

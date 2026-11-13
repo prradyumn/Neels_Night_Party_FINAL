@@ -15,7 +15,7 @@ const ITEMS = [
     exp: "One plate for each friend. If the number of friends changes, the plates change too. So the number of plates is a <span class=v>variable</span>.", pop: "The number of plates is a <b>variable</b>.", inact: "One plate for each friend." },
   { name: "Number of lamps in the hall", sub: "6 lamps in the hall", icon: "pr_lamp", f: () => 6, there: (n, s) => `there are ${s ? "still " : ""}6 lamps in the hall`, ans: "c", who: "agni", line: "Number of lamps in the hall. The hall has 6 lamps.",
     h1: "Does the hall get more lamps when more friends come?",
-    exp: "The hall always has 6 lamps. It does not depend on the friends. So the number of lamps is a <span class=c>constant</span>.", pop: "The number of lamps is a <b>constant</b>.", inact: "Does the hall get more lamps?" },
+    exp: "The hall always has 6 lamps. It does not depend on the number of friends. So the number of lamps is a <span class=c>constant</span>.", pop: "The number of lamps is a <b>constant</b>.", inact: "Does the hall get more lamps?" },
   { name: "Number of sweets in one box", sub: "every box has 10 sweets", icon: "pr_sweet", f: () => 10, there: (n, s) => `there are ${s ? "still " : ""}10 sweets in a box`, ans: "c", who: "neel", line: "Number of sweets in one box. Every box has 10 sweets.",
     h1: "Listen again: every box has 10 sweets.",
     exp: "Every box has 10 sweets. It never changes. So the number of sweets in a box is a <span class=c>constant</span>.", pop: "The number of sweets in a box is a <b>constant</b>.", inact: "Every box has 10 sweets." },
@@ -23,8 +23,8 @@ const ITEMS = [
     h1: "More friends need more sweets. Do they need more boxes?",
     exp: "If more friends come, Neel needs more boxes. So the number of boxes is a <span class=v>variable</span>.", pop: "The number of boxes of sweets is a <b>variable</b>.", inact: "More friends, more boxes?" },
   { name: "Number of balloons on the door", sub: "10 balloons on the door", icon: "pr_balloon", f: () => 10, there: (n, s) => `there are ${s ? "still " : ""}10 balloons on the door`, ans: "c", who: "agni", line: "Number of balloons on the door. Neel puts 10 balloons on the door to decorate it.",
-    h1: "These balloons are only for the door. Do they depend on the friends?",
-    exp: "The door always gets 10 balloons. They do not depend on the friends. So this number is a <span class=c>constant</span>.", pop: "The number of balloons on the door is a <b>constant</b>.", inact: "These balloons are only for the door." },
+    h1: "These balloons are only for the door. Do they depend on the number of friends?",
+    exp: "The door always gets 10 balloons. They do not depend on the number of friends. So this number is a <span class=c>constant</span>.", pop: "The number of balloons on the door is a <b>constant</b>.", inact: "These balloons are only for the door." },
   { name: "Number of balloons to give away", sub: "one balloon for each friend", icon: "pr_balloon", hue: 140, f: (n) => n, there: (n) => `Neel gives away ${n} balloons`, ans: "v", who: "maya", line: "Number of balloons to give away. Neel gives one balloon to each friend.",
     h1: "Now the balloons are for the friends. One for each friend.",
     exp: "One balloon for each friend. If the friends change, these balloons change. So this number is a <span class=v>variable</span>. Same balloons, but a different use!", pop: "The number of balloons to give away is a <b>variable</b>.", inact: "One balloon for each friend." },
@@ -262,27 +262,12 @@ export async function runPart1(start = 1) {
     setFriends(friends, true);
     drawItem(false);
     await say(it.who, it.line);
-    // phase A: explore the dial. The jar and the chest are visibly asleep, and say why when tapped
+    // the dial is there to check with, never a gate (Draft 4): a child who already knows taps the jar or the chest
+    // at once; anyone can still turn the dial first and watch what changes
     dialTurns = 0;
-    const need = q === 0 ? 2 : 1, left = () => need - dialTurns;
-    const turnTip = () => (left() > 1 ? `Turn the dial ${left()} times` : "Turn the dial");
-    inputs({ dial: true });
-    azTip("🔒 Turn the dial first");
-    jar._why = chest._why = () => maya(left() > 1 ? "Turn the dial two times." : need > 1 ? "Turn the dial one more time." : "Turn the dial first.", "hint");
-    dialTip.textContent = turnTip();
+    dialTip.textContent = "Turn the dial to check";
     gsap.to(dialTip, { opacity: 1, duration: 0.3 }); flow.classList.add("go");
-    dialEl.classList.add("pulse");
-    let hand = null;
-    if (q === 0) hand = await pointHand(DIAL.x + 5, DIAL.y + 15, 0);
-    const iw = idleWatch(14, () => maya(it.inact + " Turn the dial.", "hint"));
-    iw.open();
-    while (dialTurns < need) { if (dialTip.textContent !== turnTip()) dialTip.textContent = turnTip(); await wait(0.15); }
-    jar._why = chest._why = null;
-    iw.stop();
-    hand && hand.remove();
-    await wait(0.5);
-    dialEl.classList.remove("pulse");
-    gsap.to(dialTip, { opacity: 0, duration: 0.3 }); flow.classList.remove("go");
+    if (q === 0) dialEl.classList.add("pulse"); // the first time only, so the dial is noticed
     azTip("Did it change? Tap the jar or the chest"); // both words alike: neither colour may point at the answer
     // phase B: choose. Wrong once: a clue. Twice: a clue with the numbers on the dial. Three times: the answer
     let tries = 0;
@@ -315,6 +300,8 @@ export async function runPart1(start = 1) {
       iw2.open();
     }
     iw2.stop();
+    dialEl.classList.remove("pulse");
+    gsap.to(dialTip, { opacity: 0, duration: 0.3 }); flow.classList.remove("go");
     checkDone(q);
     setDim(Math.max(0, 0.25 - (q + 1) * 0.03));
     closeBubble();

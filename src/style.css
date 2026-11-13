@@ -60,7 +60,8 @@ img{-webkit-user-drag:none;user-select:none}
 .btn:active{transform:scale(.94)}
 .btn[disabled]{filter:grayscale(1) brightness(.7);pointer-events:none}
 .pulse{animation:pulse 1.2s ease-in-out infinite}
-@keyframes pulse{50%{transform:scale(1.08);filter:brightness(1.15) drop-shadow(0 0 14px #ffd76a)}}
+@keyframes pulse{50%{transform:scale(1.08)}} /* transform only: runs on the GPU */
+.pulse:not(.locked){filter:drop-shadow(0 0 9px rgba(255,215,106,.8))}
 
 /* top bar */
 #topbar{position:absolute;left:16px;top:14px;display:flex;gap:10px;z-index:70}
@@ -268,7 +269,7 @@ img{-webkit-user-drag:none;user-select:none}
 .sealGlow{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(155,92,240,.75),rgba(155,92,240,0) 68%)}
 .speed{position:absolute;pointer-events:none;overflow:visible}
 .speed line{stroke:#fff;stroke-width:6;stroke-linecap:round;opacity:.85}
-.bulbGlow{position:absolute;border-radius:50%;pointer-events:none;mix-blend-mode:screen;animation:blink 2.2s ease-in-out infinite}
+.bulbGlow{position:absolute;border-radius:50%;pointer-events:none;animation:blink 2.2s ease-in-out infinite}
 .rays{position:absolute;pointer-events:none;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,226,140,.16) 0 7deg,rgba(255,226,140,0) 7deg 22deg);-webkit-mask:radial-gradient(circle,#000 0,#000 30%,transparent 70%);mask:radial-gradient(circle,#000 0,#000 30%,transparent 70%);animation:spin 40s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .board{position:absolute;left:50%;top:28px;display:flex;gap:18px;transform:translateX(-50%);z-index:55;pointer-events:none}
@@ -297,7 +298,7 @@ img{-webkit-user-drag:none;user-select:none}
 #azone{pointer-events:none}
 .char .cshadow{position:absolute;bottom:-2.5%;height:8%;border-radius:50%;background:radial-gradient(ellipse at center,rgba(5,2,18,.55) 0%,rgba(5,2,18,.28) 45%,rgba(5,2,18,0) 72%)}
 .gshadow{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(ellipse at center,rgba(5,2,18,.6) 0%,rgba(5,2,18,.3) 45%,rgba(5,2,18,0) 72%)}
-.pool{position:absolute;border-radius:50%;pointer-events:none;mix-blend-mode:screen;background:radial-gradient(ellipse at center,rgba(255,196,120,.32) 0%,rgba(255,170,90,.14) 45%,rgba(255,160,80,0) 72%)}
+.pool{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(ellipse at center,rgba(255,196,120,.32) 0%,rgba(255,170,90,.14) 45%,rgba(255,160,80,0) 72%)}
 #world img[data-k]{filter:drop-shadow(0 8px 5px rgba(5,2,18,.5))}
 #world img[data-k].back{filter:brightness(.8) saturate(.9) drop-shadow(0 6px 4px rgba(5,2,18,.45))}
 .rug{z-index:1}
@@ -313,14 +314,14 @@ img{-webkit-user-drag:none;user-select:none}
 .tray .orb{filter:drop-shadow(0 10px 7px rgba(5,2,18,.55));transition:scale .15s;animation:bob 2.6s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.37s)}
 .tray .orb:hover{scale:1.1}
 .tray .orb:active{scale:.88}
-.tray.wave .orb{animation:bob 2.6s ease-in-out infinite,shine 2.8s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.37s),calc(var(--i,0) * .16s)}
+.tray.wave .orb::after{content:"";position:absolute;inset:-18%;border-radius:50%;z-index:-1;pointer-events:none;opacity:0;background:radial-gradient(circle,rgba(255,229,138,.5),rgba(255,229,138,0) 64%);animation:shine 2.8s ease-in-out infinite;animation-delay:calc(var(--i,0) * .16s)}
 .tray .orb.glow{animation:bob 2.6s ease-in-out infinite;filter:drop-shadow(0 0 18px #ffd76a) brightness(1.2)}
 .tray .orb.op{font-size:54px}
 @keyframes bob{50%{translate:0 -7px}}
-@keyframes shine{0%,62%,100%{filter:drop-shadow(0 10px 7px rgba(5,2,18,.55))}76%{filter:drop-shadow(0 0 16px rgba(255,229,138,.95)) drop-shadow(0 10px 7px rgba(5,2,18,.55)) brightness(1.22)}}
+@keyframes shine{0%,62%,100%{opacity:0}76%{opacity:1}}
 .pad{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(ellipse at center,rgba(255,214,107,.55) 0%,rgba(255,180,80,.22) 45%,rgba(255,180,80,0) 72%)}
 .spellbar .slot{display:inline-block;width:62px;height:62px;border-radius:50%;border:4px dashed rgba(255,197,71,.75);margin-right:14px;animation:slotp 1.4s ease-in-out infinite}
-@keyframes slotp{50%{scale:1.1;border-color:#ffe58a}}
+@keyframes slotp{50%{scale:1.1}}
 @media (prefers-reduced-motion: reduce){.tray .orb,.spellbar .slot{animation:none}}
 
 /* ---- Part 3 table layout ---- */
@@ -390,6 +391,7 @@ img{-webkit-user-drag:none;user-select:none}
 /* a control that is not available right now: visibly asleep (a tap gives a little wiggle) */
 .locked{filter:grayscale(.65) brightness(.62)!important;cursor:default!important}
 .locked .pulse,.locked.pulse{animation:none}
+.locked .pulse{filter:none}
 .tray.locked .orb,.tray.locked .btn,.tray.locked .undo{filter:grayscale(.65) brightness(.62);animation:none}
 /* question progress, top right under the stars */
 #prog{position:absolute;right:18px;top:80px;z-index:55;display:flex;flex-direction:column;align-items:flex-end;gap:4px;padding:6px 16px;border-radius:20px;background:rgba(20,14,44,.85);border:3px solid rgba(255,197,71,.8);pointer-events:none}
@@ -492,7 +494,7 @@ img{-webkit-user-drag:none;user-select:none}
 .ctag{position:absolute;transform:translate(-50%,-50%);min-width:38px;height:38px;padding:0 8px;border-radius:19px;background:linear-gradient(#fff3c4,#ffd76a);border:3px solid #b8741a;color:#4a2a08;font-size:23px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35);font-variant-numeric:tabular-nums}
 .ctag.bad{background:linear-gradient(#ffd6da,#ff8a96);border-color:#b02035;color:#5a0010}
 /* lanterns breathe */
-.flicker{position:absolute;border-radius:50%;pointer-events:none;mix-blend-mode:screen;background:radial-gradient(circle,rgba(255,200,110,.55) 0%,rgba(255,150,60,.18) 40%,rgba(255,150,60,0) 70%);animation:flick 2.3s ease-in-out infinite}
+.flicker{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(255,200,110,.55) 0%,rgba(255,150,60,.18) 40%,rgba(255,150,60,0) 70%);animation:flick 2.3s ease-in-out infinite}
 .flicker:nth-child(2n){animation-duration:1.7s;animation-delay:-.6s}
 @keyframes flick{0%,100%{opacity:.75;transform:scale(1)}30%{opacity:1;transform:scale(1.08)}55%{opacity:.6;transform:scale(.96)}75%{opacity:.95;transform:scale(1.04)}}
 @media (prefers-reduced-motion: reduce){.flicker{animation:none}}
@@ -520,9 +522,7 @@ img{-webkit-user-drag:none;user-select:none}
 .jarFill .lvl{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(#fff3b0,#ffc547 30%,#e8891a);box-shadow:0 0 24px 6px rgba(255,200,80,.8),inset 0 6px 8px rgba(255,255,255,.6);opacity:.85}
 .lockpop{position:absolute;left:50%;top:60px;margin-left:-22px;font-size:44px;pointer-events:none;filter:drop-shadow(0 0 10px #ffd76a)}
 .map .walked{filter:drop-shadow(0 0 8px rgba(255,215,106,.9))}
-.room.done .th{box-shadow:0 10px 0 rgba(0,0,0,.35),0 0 26px 6px rgba(255,200,90,.55);animation:roomglow 2.4s ease-in-out infinite}
-@keyframes roomglow{50%{box-shadow:0 10px 0 rgba(0,0,0,.35),0 0 40px 12px rgba(255,214,120,.8)}}
-@media (prefers-reduced-motion: reduce){.room.done .th{animation:none}}
+.room.done .th{box-shadow:0 10px 0 rgba(0,0,0,.35),0 0 32px 9px rgba(255,205,100,.65)}
 /* a sleeping bin greys its jar or chest and label, but the gold already in the jar keeps glowing */
 .bin.locked{filter:none!important}
 .bin.locked > img,.bin.locked .binLbl{filter:grayscale(.65) brightness(.62)}
@@ -565,3 +565,15 @@ img{-webkit-user-drag:none;user-select:none}
 .scroll.docked.tab h2::before{content:"📜 "}
 .scroll.docked.tab:not(.open) .pl{display:none}
 .scroll.docked.tab.open{width:380px}
+/* loops that run on the GPU instead of a script every frame */
+.bobbing{animation:bob 2s ease-in-out infinite}
+.winGlow.breathe{animation:breathe 3.5s ease-in-out infinite alternate}
+@keyframes breathe{from{opacity:.55}to{opacity:.35}}
+/* Part 3: the working-out board over the hall (a chalkboard like Part 1's, framed in wood) */
+.wboard{position:absolute;border-radius:24px;pointer-events:none;background:radial-gradient(ellipse at 38% 28%,#2c4d3c 0%,#20392c 55%,#182c22 100%);border:16px solid #8a5a2b;box-shadow:inset 0 0 60px rgba(0,0,0,.5),inset 0 0 0 3px rgba(255,255,255,.06),0 14px 0 rgba(0,0,0,.3),0 26px 50px rgba(0,0,0,.45)}
+.qbox.eq.onboard{top:200px;left:1095px} /* the board centre */
+.qbox.eq .qplan > *{flex-shrink:0;white-space:nowrap} /* "=" never wraps onto a second line */
+.qbox.eq.onboard .qplan{height:120px;font-size:62px;padding:0 34px;background:rgba(0,0,0,.28);border-color:rgba(255,215,106,.75)}
+.qbox.eq.onboard .qs{font-size:32px;color:#f2f2ea;margin-top:6px}
+.qbox.eq.onboard .qvals .vpill{font-size:30px}
+.lantern.big.p3{width:150px;height:150px;font-size:66px}

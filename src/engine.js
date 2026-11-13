@@ -51,6 +51,7 @@ export function el(tag, cls, parent, style = {}, html) {
 }
 export function img(name, parent, style = {}, cls = "abs") {
   const i = el("img", cls, parent, style);
+  i.decoding = "async"; // decoded off the main thread
   i.src = A(name);
   i.draggable = false;
   return i;
@@ -451,7 +452,6 @@ const ANIM = {
 };
 const LOOP = new Set(["idle", "talk", "dance", "oops", "hint", "celebrate"]);
 export const NAMES = { neel: "Neel", agni: "Agni", maya: "Maya", nar: "Narrator" };
-const TAG = { neel: "#4a8fe0", agni: "#e8742a", maya: "#2f9b62", nar: "#7a3fd1" };
 export const C = {};
 // where the feet are in each character's frames (measured on the idle sheets), for the contact shadow
 const FEET = { neel: [0.26, 0.76], agni: [0.29, 0.55], maya: [0.36, 0.66] };
@@ -805,7 +805,7 @@ async function line(who, text, { p, wait: needTap = true, auto = 0, voice: aloud
     gsap.killTweensOf(bubble);
     bubble.className = "";
     bubble.style.pointerEvents = "auto";
-    bubble.innerHTML = (NAMES[who] ? `<div class="who" style="background:${TAG[who]}">${NAMES[who]}</div>` : "") + `<div class="txt">${html}</div>` + `<div class="tail"></div>` + (holds ? `<div class="nx">tap ▶</div>` : "") + (needTap && settings.autoplay ? `<div class="prog"><i></i></div>` : "") + `<div class="rp" title="Hear again">🔊</div>`;
+    bubble.innerHTML = `<div class="txt">${html}</div>` /* no speaker name on the box (Draft 4): the tail shows who speaks */ + `<div class="tail"></div>` + (holds ? `<div class="nx">tap ▶</div>` : "") + (needTap && settings.autoplay ? `<div class="prog"><i></i></div>` : "") + `<div class="rp" title="Hear again">🔊</div>`;
     box = bubble.querySelector(".txt");
     placeBubble(c);
   }
@@ -916,8 +916,8 @@ export function onTap(node, fn) { node.dataset.tap = 1; node.addEventListener("p
 
 // ---------- misc UI ----------
 /** top: optional centre line in px (default 44% of the stage) */
-export async function popup(html, dur = 1.6, top) {
-  const p = el("div", "popup", ui, top ? { top } : {}, html);
+export async function popup(html, dur = 1.6, top, left) {
+  const p = el("div", "popup", ui, Object.assign(top ? { top } : {}, left ? { left } : {}), html);
   gsap.from(p, { scale: 0.5, opacity: 0, duration: 0.35, ease: "back.out(2)" });
   await wait(dur);
   await gsap.to(p, { opacity: 0, y: -30, duration: 0.3 });

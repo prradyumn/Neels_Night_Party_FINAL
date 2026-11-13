@@ -9,7 +9,7 @@ Never hand-edit game.js / game.css; they are build outputs.
 Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.html, game.js, game.css and assets/ into public/.
 
 ## Structure
-- src/main.js: flow (title → story at Neel's house → house map → rooms 1–3; room 3 ends with the party, then Play again).
+- src/main.js: flow (title → story at Neel's house → house map → rooms 1–3; room 3 ends with the party; no Play again button: the party stays the picture).
   Script source of truth: the Game sheet (Neel's Night Party - Game.csv) plus the review notes
   (Neels_Night_Party_Review_Notes.pdf); the Story sheet is the older draft
 - src/engine.js: 1600×900 scaled stage, 3-layer parallax, sprite-sheet characters,
@@ -18,15 +18,20 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
 - Camera (engine.js): #cam holds backgrounds, world, characters and effects; #ui, HUD and curtain stay fixed.
   camTo/camFocus/camRest/punch/shake move it; camPt(x, y, layer) converts a scene point to screen (use it to aim
   UI at scene objects). Put UI-anchored effects in ui (playFx parent: ui), scene effects in the default #fxl.
-- src/part1.js: Friend Dial (sort items into Variable jar / Constant chest)
+- src/part1.js: Friend Dial (sort items into Variable jar / Constant chest). The jar and chest open with the question:
+  the dial is optional ("Turn the dial to check"), never a gate; hint 2 still turns it to show the numbers
 - src/part2.js: Spell Cauldron (build expressions from orbs; Brew! tests 3 values at once and the 3 result lines land
   together; a right spell keeps its green ticks up 2 s before the praise; the 3rd wrong try puts the answer in the slot
   as Maya starts saying it). Controls Maya talks about are on screen (locked) while she says it, in every part
 - src/part3.js: Magic Doors. Replies arrive as cards through the doors (no guests until the party), gold seals open
-  independently, each right answer puts its things around the table and they stay; partyTable()/partyClear() for the party.
+  independently. Each question is solved on a chalkboard over the hall (BOARD: seals, answer gems, "x is not enough"
+  for a wrong gem; the table never shows a wrong number); when solved the board lifts, the worked plan goes to the top
+  and the things drop onto the table and stay; partyTable()/partyClear() for the party.
   Table places (layout()): nothing tall and no tag in front of the three doors (GAP: the wall between them).
-  Chairs at both ends and behind the table, sweets/laddoo bowls in the gaps, low plate stacks in the middle,
-  balloons high at the garland ends, cushions front right; the tabletop tags sit on the cloth. During a knock,
+  Chairs stand on the floor at the table's scale: the two end chairs on the floor halfway back (TB.foot - 24, 190 px
+  tall), the rest behind the table so only their backrests show over the tabletop. Sweets/laddoo bowls in the gaps, low
+  plate stacks in the middle, balloons high at the garland ends, cushions front right. No count tags on the table: the
+  board and the worked plan show the numbers. During a knock,
   clearDoor() fades whatever still overlaps that door and "Tap the door!" sits above it. When m or d changes, FORM works every group out
   again and restock() moves/adds/removes things while a sheet line talks about the plan (after Q6: "Now m is 4…";
   after Q8: Maya's "…The plan still works, even when the numbers change!"). No lines that are not in the sheet. Party: no tags,
@@ -39,7 +44,8 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
   gold-ink plan (part2 bubbleTest/spellWorks), the jar that fills and the chest that locks (part1), the living map, and
   the arrival: friends walk up the path, the camera flies in through the round window to the party (main.js arrival()).
 - src/common.js: praise cues, idleWatch (open()/pause(): nudges only while answers are open and nobody speaks),
-  Party Plan scroll (dock/glow). No word box on screen in Parts 2-3: Maya says the clue word in her hint
+  Party Plan scroll (dock/glow). No word clues card or word box (Draft 4): Maya says the clue word in her hint.
+  No speaker names on the dialogue box (Draft 4): the bubble's tail shows who speaks
 - Dialogue (engine.js say()): lines are queued, never overlap; busy()/skipLine(); a bubble tap shows the whole line, the
   next tap moves on; into: el writes the words on a board (Part 1 chalkboard); onStart shows a board row with the line
   that says it, never before. partTitle() is not awaited: the part sets up under the card and its first line waits
@@ -73,7 +79,7 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
   reply cards top-left (7 cards fit a row; numbered once counted; only the counts, .rsvp.mini, during a question that is
   not about the replies: knocks and the "two said no" question show every card), the plan folds to a tab under the
   stars (.scroll.tab, a tap opens it for 6 s), only the current question's count tag on the table (a tag shows again
-  while its count changes), no "d = 4" chip during a knock (the replies count), answer gems bottom-right, smaller
+  while its count changes), no "d = 4" chip during a knock (the replies count), answer gems on the board under the plan, smaller
   speaker bottom-left (SPOTS.table) whose side bubble grows upwards. Party: bubbles high (SPOTS.trioParty.ftop),
   monsters left and dragons right, one row each.
 - No blue guest monster anywhere it could be read as a second Neel (gu_monster_blue).
@@ -87,3 +93,9 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
   the title art (TITLE in main.js, about 1.8 MB) before the title shows; the story's first scene (STORY_NOW) loads
   while the title is up (Play waits for it only on a slow link), then the rest one file at a time, poses first.
   vercel.json caches assets/ for a day (stale-while-revalidate a week).
+- Animation cost: loops that never stop animate only transform/opacity/translate/scale (CSS keyframes, so the GPU
+  runs them): no animated filter, box-shadow or border-color (.pulse holds its glow still and only scales; the orb shine
+  is an ::after that fades). No GSAP repeat:-1 for simple bobs or glows (use .bobbing / .breathe). No mix-blend-mode
+  on things that stay on screen (.pool, .bulbGlow, .flicker, fx sprites): the camera always drifts, so a blend is redone
+  every frame. The hearth fire draws at 30 fps and 1x resolution (SLOW in fx.js). img() decodes async.
+  Fonts load without blocking the first paint (preload + onload in index.html).

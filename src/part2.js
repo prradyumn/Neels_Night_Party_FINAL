@@ -344,12 +344,7 @@ async function tutorial() {
     const rule = el("p", "rule", t, {}, colorMD("2m means 2 × m: <b>a number next to a letter means multiply</b>"));
     gsap.from(rule, { y: 10, opacity: 0, duration: 0.35, delay: 1.6 });
   } });
-  t.innerHTML = `<div class="tag">Maya explains</div><h2>Word clues</h2>`;
-  const row = (h) => () => { const r = el("p", "clue", t, {}, h); gsap.from(r, { y: 10, opacity: 0, duration: 0.35 }); sfx("chalk"); };
-  await say("maya", "Some words tell us to add: and, more, extra, plus, total, in all.", { p: "explain", onStart: row(`<b>+ add:</b> and, more, extra, plus, total, in all`) });
-  await say("maya", "Some words tell us to multiply: each, every, per, times.", { p: "explain", onStart: row(`<b>× multiply:</b> each, every, per, times`) });
-  await say("maya", "Some words tell us to take away: less, fewer, minus, left, broke, gone, said no.", { p: "explain", onStart: row(`<b>− take away:</b> less, fewer, minus, left, broke, gone, said no`) });
-  // no word box stays on screen any more (Draft 2): Maya says the clue word in her hint when it helps
+  // no word clues card or list (Draft 4): Maya says the clue word in her hint when it helps
   await maya("Let's write the plan!", "happy");
   gsap.to(t, { opacity: 0, duration: 0.3, onComplete: () => t.remove() });
   // the spell bar and the first question's orbs are on screen (asleep) while Maya talks about them

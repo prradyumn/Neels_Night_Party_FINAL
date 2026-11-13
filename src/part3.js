@@ -46,9 +46,10 @@ const groups = {}; // what is on the table now: kind -> { n, els, tag }
 const TB = { cx: 760, foot: 725, w: 700 }, TK = TB.w / 822, TX = TB.cx;
 const TOP = TB.foot - 281 * TK;         // back edge of the tabletop
 const TOP_FRONT = TOP + 34;             // front edge (the gold piping)
-// the answers: bottom right, in the action zone like the controls of the other parts (clear of the table, the
-// speaker's bubble and the plan scroll)
-const PICK = { cx: 1390, top: 748, w: 400 };
+// each question is worked out on a big board over the hall (Draft 4): the plan with its seals at the top, the answer
+// gems under it. It clears the speaker's bubble (left), the replies (top left) and the plan tab (top right)
+const BOARD = { x: 610, y: 150, w: 970, h: 690 };
+const PICK = { cx: BOARD.x + BOARD.w / 2, top: BOARD.y + BOARD.h - 230, gap: 200 };
 const CARD_ART = { m: ["gu_monster_green", "gu_monster_pink"], d: ["gu_dragon_teal", "gu_dragon_red"] }; // no blue monster: it looks like Neel
 
 // ---------- the party table: each kind of thing has its own place, with a small count tag beside it ----------
@@ -65,14 +66,15 @@ function layout(kind, n) {
   const it = [];
   let tag = { x: TX, y: CLOTH };
   if (kind === "chairs") {
-    // the ones behind are a little smaller (further away), between the two bowls; the end ones are nearer and bigger
+    // chairs stand on the floor at the table's own scale (the table is about 200 px tall from floor to top): the end
+    // ones on the floor halfway back, beside the table ends; the ones behind stand behind it, so the tabletop hides their
+    // seats and only the backrests show above it, smaller because they are further away
     const ends = Math.min(2, n), k = n - ends, cx = TX - 30;
-    const step = k > 1 ? Math.min(66, Math.max(220, k * 24) / (k - 1)) : 0;
+    const step = k > 1 ? Math.min(100, 560 / (k - 1)) : 0;
     // the end chairs come first, so when the count changes (restock) they stay the end chairs
-    if (ends > 0) it.push({ x: TX - 372, y: TOP + 112, w: 86, h: 129 });               // the left end, facing the table
-    if (ends > 1) it.push({ x: TX + 372, y: TOP + 112, w: 86, h: 129, flip: true });   // the right end
-    for (let i = 0; i < k; i++) it.push({ x: cx - ((k - 1) * step) / 2 + i * step, y: TOP + 40, w: 72, h: 108, under: true });
-    tag = { x: TX - 438, y: TOP + 30 };
+    if (ends > 0) it.push({ x: TX - 392, y: TB.foot - 24, w: 127, h: 190 });               // the left end, facing the table
+    if (ends > 1) it.push({ x: TX + 392, y: TB.foot - 24, w: 127, h: 190, flip: true });   // the right end
+    for (let i = 0; i < k; i++) it.push({ x: cx - ((k - 1) * step) / 2 + i * step, y: TOP + 95, w: 100, h: 150, under: true });
   }
   if (kind === "plates") {
     // low stacks (3 at most) in the middle of the table, so the middle door stays in view above them
@@ -115,7 +117,7 @@ function countUp(t, a, b, dur) {
 }
 /** put n things of a kind at the table. from: they fly in from the answer panel and land with a bounce, and the
  *  count tag counts up. tag: false for the party (no numbers on the party table) */
-function place(kind, n, from, tag = true) {
+function place(kind, n, from, tag = false) {
   const { it, tag: at } = layout(kind, n), els = [];
   it.forEach((o, i) => {
     const e = thing(kind, o);
@@ -129,7 +131,6 @@ function place(kind, n, from, tag = true) {
   }
   return { n, els, tag: t };
 }
-const removeGroup = (g) => [...g.els, g.tag].filter(Boolean).forEach((e) => e.remove());
 /** the plan is worked out again (m or d changed): the things on the table move, go or come, the tag counts */
 function restock(kind, n) {
   const g = groups[kind];
@@ -350,11 +351,11 @@ async function openSeal(s) {
 }
 // the answers: three gems in a pill panel, bottom right, shown and switched on together
 async function chooseNum(opts) {
-  const panel = el("div", "pickbar", ui, { left: PICK.cx - PICK.w / 2, top: PICK.top, width: PICK.w, height: 132 });
-  const ls = opts.map((v, i) => el("div", "lantern big p3", ui, { left: PICK.cx - 56 + (i - 1) * 128, top: PICK.top + 10 }, String(v)));
+  const panel = el("div", "pickbar", ui, { left: PICK.cx - 300, top: PICK.top, width: 600, height: 170 });
+  const ls = opts.map((v, i) => el("div", "lantern big p3", ui, { left: PICK.cx - 75 + (i - 1) * PICK.gap, top: PICK.top + 10 }, String(v)));
   lock(ls);
   await gsap.from([panel, ...ls], { y: 40, opacity: 0, duration: 0.35, ease: "back.out(1.6)" });
-  ls.forEach((l, i) => gsap.fromTo(l, { y: 0 }, { y: -8, yoyo: true, repeat: -1, duration: 1 + i * 0.2, ease: "sine.inOut" }));
+  ls.forEach((l, i) => { l.style.animationDuration = 2 + i * 0.4 + "s"; l.classList.add("bobbing"); }); // a CSS bob: no script every frame
   return {
     ls, panel,
     pick: () => new Promise((res) => {
@@ -363,20 +364,34 @@ async function chooseNum(opts) {
     }),
   };
 }
-/** the things for an answer go to the table; a wrong number shows what it would look like, then goes back */
-async function deliver(q, n) {
-  if (q.prep === "friends") { if (n === q.ans) await countAll(); return n === q.ans; }
-  const from = camPt(PICK.cx, PICK.top + 50);
-  const g = place(q.prep, n, from);
-  await wait(0.5 + Math.min(n * 0.03, 0.7));
-  if (n === q.ans) { groups[q.prep] = g; return true; }
-  sfx("bad");
-  g.tag.classList.add("bad"); // the count tag turns red
-  popup(n < q.ans ? `${n} is not enough!` : `${n} is too many!`, 1.6, 300);
-  await wait(1.7);
-  await gsap.to([...g.els, g.tag], { opacity: 0, duration: 0.3 });
-  removeGroup(g);
-  return false;
+/** a wrong number: the board says what it would mean (the table only ever gets the right number) */
+function tooFew(q, n) { if (q.prep !== "friends" && !q.change) popup(n < q.ans ? `${n} is not enough!` : `${n} is too many!`, 1.6, 540, PICK.cx); }
+/** the board has gone: the things for the answer drop onto the table, or the friends are counted */
+async function deliver(q) {
+  if (q.prep === "friends") { await countAll(); return; }
+  groups[q.prep] = place(q.prep, q.ans, { x: TX, y: 140 });
+  await wait(0.6 + Math.min(q.ans * 0.03, 0.7));
+}
+// the working-out board comes down over the hall for a question and goes when it is solved
+let board = null;
+async function boardIn() {
+  if (board) return;
+  board = el("div", "wboard", null, { left: BOARD.x, top: BOARD.y, width: BOARD.w, height: BOARD.h });
+  ui.insertBefore(board, ui.firstChild); // under every other piece of the UI
+  gsap.set(QB.box, { opacity: 0 });
+  QB.box.classList.add("onboard");
+  sfx("whoosh");
+  await gsap.from(board, { y: -50, opacity: 0, duration: 0.45, ease: "power3.out" });
+}
+async function boardOut() {
+  if (!board) return;
+  const b = board;
+  board = null;
+  await gsap.to(QB.box, { opacity: 0, duration: 0.2 });
+  await gsap.to(b, { y: -40, opacity: 0, duration: 0.4, ease: "power2.in" });
+  b.remove();
+  QB.box.classList.remove("onboard"); // the worked plan stays at the top of the hall
+  gsap.to(QB.box, { opacity: 1, duration: 0.3 });
 }
 
 function buildScene() {
@@ -459,6 +474,7 @@ export async function runPart3(start = 1) {
       QB.show("A knock at the door!");
       await knockDoor(1, "no", 2); // the middle door: the board of replies has grown over the left one
     }
+    await boardIn();
     uses = q.change ? "m" : q.plan.filter((t) => t === "m" || t === "d").join("");
     drawVals();
     scroll.glow(q.change ? "" : ITEM[q.prep]);
@@ -484,8 +500,9 @@ export async function runPart3(start = 1) {
       const [v, l] = await pick();
       iw.pause();
       closeBubble(); // the question prompt goes as soon as the child answers
-      const ok = q.change ? v === q.ans : await deliver(q, v);
+      const ok = v === q.ans;
       if (ok) break;
+      tooFew(q, v);
       tries++;
       // a wrong gem gets a cross while Maya helps; then it is a normal gem again, so the answer is never
       // left alone on the panel before the third try
@@ -503,11 +520,25 @@ export async function runPart3(start = 1) {
         good.classList.add("answer");
         pointHand(parseFloat(good.style.left) + 50, parseFloat(good.style.top) + 60, 2);
         await maya(`Let's see the answer together. The answer is ${q.ans}. ` + q.exp, "explain");
-        if (!q.change) await deliver(q, q.ans);
         break;
       }
     }
     iw.stop();
+    ls.forEach((l) => gsap.to(l, { scale: 0, duration: 0.25, onComplete: () => l.remove() }));
+    gsap.to(panel, { opacity: 0, duration: 0.25, onComplete: () => panel.remove() });
+    closeBubble();
+    // the whole working, with the item's name, on the board
+    const head = q.change ? `<span class="lm">m</span>` : `<span class="item">${q.name}</span>`;
+    bar.innerHTML = `${head}<span class="lo">&thinsp;=&thinsp;</span><span class="ln work">${q.work.replace(/= (\d+)$/, '= <span style="color:#ffe066">$1</span>')}</span>`;
+    gsap.fromTo(bar, { scale: 1.08 }, { scale: 1, duration: 0.5, ease: "back.out(2)" });
+    sfx("good");
+    playFx("collect", PICK.cx, 330, { palette: "gold", scale: 3, parent: ui });
+    QB.sub(`<span class="win">${q.pop} ✓</span>`);
+    await award(tries, PICK.cx, 420, 3);
+    await wait(0.5);
+    // solved: the board goes, and the party hall shows what the answer means
+    await boardOut();
+    if (!q.change) await deliver(q);
     if (q.change) {
       await twoSaidNo();
       // "m can change": the m coin flips from 6 to 4, then drops into the m pill
@@ -520,17 +551,6 @@ export async function runPart3(start = 1) {
       if (pr) { const a = toStage({ clientX: pr.left + pr.width / 2, clientY: pr.top + pr.height / 2 }); await gsap.to(mc.el, { left: a.x - 75, top: a.y - 75, scale: 0.25, opacity: 0, duration: 0.5, ease: "power2.in" }); }
       mc.el.remove();
     }
-    ls.forEach((l) => gsap.to(l, { scale: 0, duration: 0.25, onComplete: () => l.remove() }));
-    gsap.to(panel, { opacity: 0, duration: 0.25, onComplete: () => panel.remove() });
-    closeBubble();
-    // the whole working, with the item's name
-    const head = q.change ? `<span class="lm">m</span>` : `<span class="item">${q.name}</span>`;
-    bar.innerHTML = `${head}<span class="lo">&thinsp;=&thinsp;</span><span class="ln work">${q.work.replace(/= (\d+)$/, '= <span style="color:#ffe066">$1</span>')}</span>`;
-    gsap.fromTo(bar, { scale: 1.08 }, { scale: 1, duration: 0.5, ease: "back.out(2)" });
-    sfx("good");
-    playFx("collect", TX, 450, { palette: "gold", scale: 3 });
-    QB.sub(`<span class="win">${q.pop} ✓</span>`);
-    await award(tries, TX, 300, 3);
     // when m or d has just changed, the table is worked out again while a line from the sheet talks about the plan:
     // after Question 6, Maya's "Now m is 4. Our plan still works…"; after Question 8, her "…The plan still works,
     // even when the numbers change!" (the plates and cushions follow d = 7). No extra lines

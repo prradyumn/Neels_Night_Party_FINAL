@@ -1,6 +1,6 @@
 import "./style.css";
 import "./qa.js";
-import { confetti, groundShadow, camPt, camRest, camSet, ANIM_FILES, warmChars, setFore, score, showHud, music, curtainShut, curtainOpen, setTint, punch, shake, solo, trio, setFocus, gsap, $, el, img, ui, world, wait, sfx, say, setScene, placeChar, hideAllChars, pose, dance, partTitle, button, waitClick, playFx, preload, hideChecklist, setDim, C, closeBubble, camTo, W } from "./engine.js";
+import { confetti, groundShadow, camPt, camRest, camSet, ANIM_FILES, warmChars, setFore, score, showHud, music, curtainShut, curtainOpen, setTint, punch, shake, solo, trio, setFocus, gsap, $, el, img, ui, world, wait, sfx, say, setScene, placeChar, hideAllChars, pose, dance, partTitle, playFx, preload, hideChecklist, setDim, C, closeBubble, camTo, W } from "./engine.js";
 import { runPart1 } from "./part1.js";
 import { runPart2 } from "./part2.js";
 import { runPart3, partyTable, DOOR_XY } from "./part3.js";
@@ -346,15 +346,9 @@ async function party(opt = {}) {
   boom();
   const fireworks = setInterval(boom, 1700);
   await say("nar", "The party begins! Neel, Agni, Maya and all their friends dance all night.", { wait: false });
-  // a small Play again in the corner: the party stays the picture
-  await wait(1.2);
-  const again = button("↻ Play again", 1390, 818);
-  again.classList.add("small");
-  again.style.translate = "none"; // placed by its corner: the pop-in scale below must not move it off the screen
-  gsap.from(again, { scale: 0, duration: 0.4, ease: "back.out(2)" });
-  await waitClick(again);
-  clearInterval(fireworks);
-  location.reload();
+  // no Play again button (Draft 4): the party stays the picture; the fireworks stop after a while, the dancing goes on
+  setTimeout(() => clearInterval(fireworks), 20000);
+  await new Promise(() => {}); // the end of the game: nothing comes after the party
 }
 
 const RUN = { 1: part1, 2: part2, 3: part3 };

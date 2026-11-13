@@ -87,7 +87,7 @@ export function iconRow(list, top = 230) {
 // string lights switch on one bulb at a time (bulb centres measured on de_string_lights, 839 px wide)
 const BULBS = [[40, 82], [108, 117], [181, 142], [263, 162], [344, 175], [428, 180], [506, 175], [584, 163], [660, 147], [733, 120], [800, 85]];
 const BULB_COLS = ["#ffd66b", "#ff8ad8", "#7ff0e0", "#ffb070", "#c9a2ff"];
-const bulb = (parent, left, top, k, i) => el("div", "bulbGlow", parent, { left: left + BULBS[i][0] * k - 50, top: top + BULBS[i][1] * k - 50, width: 100, height: 100, background: `radial-gradient(circle,#fffbe8 0 14%,${BULB_COLS[i % BULB_COLS.length]} 32%,transparent 68%)`, animationDelay: `${-i * 0.37}s` });
+const bulb = (parent, left, top, k, i) => el("div", "bulbGlow", parent, { left: left + BULBS[i][0] * k - 50, top: top + BULBS[i][1] * k - 50, width: 100, height: 100, background: `radial-gradient(circle,#fffbe8d9 0 12%,${BULB_COLS[i % BULB_COLS.length]}8c 30%,transparent 66%)` /* see-through: reads as light, not paint */, animationDelay: `${-i * 0.37}s` });
 export function lightsUp(parent, left, top, width, rays = true) {
   const k = width / 839;
   if (rays) el("div", "rays", parent, { left: left + width / 2 - 520, top: -560, width: 1040, height: 1040 });
@@ -148,7 +148,7 @@ export function houseWindows(layer) {
       for (; n < Math.min(to, ws.length); n++) {
         const w = ws[n], d = animate ? 0.5 : 0;
         gsap.to(w.off, { opacity: 0, duration: d });
-        gsap.fromTo(w.glow, { opacity: animate ? 1 : 0.55, scale: animate ? 0.6 : 1 }, { opacity: 0.55, scale: 1, duration: animate ? 0.9 : 0, ease: "power2.out", onComplete: () => gsap.to(w.glow, { opacity: 0.35, duration: 1.4 + Math.random(), yoyo: true, repeat: -1, ease: "sine.inOut" }) });
+        gsap.fromTo(w.glow, { opacity: animate ? 1 : 0.55, scale: animate ? 0.6 : 1 }, { opacity: 0.55, scale: 1, duration: animate ? 0.9 : 0, ease: "power2.out", onComplete: () => { w.glow.style.animationDuration = 2.8 + Math.random() * 2 + "s"; w.glow.classList.add("breathe"); } });
         if (animate) sfx("pop");
       }
     },
