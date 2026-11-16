@@ -1,48 +1,49 @@
 // PART 2 – Write the Party Plan: the Spell Cauldron. Brew a spell (expression) from orbs; the cauldron test-runs it.
-import { qbox, colorMD, award, actionZone, azTip, afterTitle, host, SPOTS, solo, trio, pose, setFore, gsap, el, img, ui, world, wait, sfx, say, card, playFx, checklist, checkCur, checkDone, pointHand, onTap, react, C, closeBubble, button, camFocus, camTo, camPt, groundShadow, lightPool, lock, busy } from "./engine.js";
+import { qbox, colorMD, award, actionZone, azTip, afterTitle, host, SPOTS, solo, trio, pose, setFore, gsap, el, img, ui, world, wait, sfx, say, card, playFx, checklist, checkCur, checkDone, pointHand, onTap, react, C, closeBubble, button, camFocus, camTo, camPt, groundShadow, lightPool, lock, busy, markRight, markWrong } from "./engine.js";
 import { setAnswer } from "./qa.js";
 import { sideChars, maya, praise, idleWatch, iconRow } from "./common.js";
 
 // a small two-row table for the first questions: friends 1, 2, 3, m and what each needs
 const tbl = (label, cells) => `<table class="qtab"><tr><th>Friends</th><td>1</td><td>2</td><td>3</td><td>m</td></tr><tr><th>${label}</th>${cells.map((c) => `<td>${c}</td>`).join("")}<td>?</td></tr></table>`;
+// sub: the word problem, on the card for the whole question (the spoken line goes when its bubble closes).
 // vals: the letters and numbers on the shelf. Every question also gets all three signs + − ×, so the signs on offer
 // never give the answer away
 const Q = [
-  { name: "Chairs", vals: ["m", "1", "2"], sub: tbl("Chairs", ["1 + 1", "2 + 1", "3 + 1"]), who: "neel", line: "Chairs: one chair for each friend, and 1 extra chair for me. How many chairs?",
+  { name: "Chairs", vals: ["m", "1", "2"], sub: "One chair for each friend, and 1 extra chair for Neel. How many chairs?" + tbl("Chairs", ["1 + 1", "2 + 1", "3 + 1"]), who: "neel", line: "Chairs: one chair for each friend, and 1 extra chair for me. How many chairs?",
     icon: "pr_chair", f: (m) => m + 1, sol: ["m", "+", "1"], tests: [[1], [2], [3]], ans: "m + 1",
     h1: "Look at the table. What do we add to the number of friends each time?", h2: "\"Extra\" means add. For m friends, it is m and 1 more.", inact: "Look at the table. What do we always add?",
     exp: "One chair for each friend is m chairs. 1 extra chair for Neel means add 1. So the chairs are <b>m + 1</b>.", pop: "The chairs are m + 1." },
-  { name: "Sweets", vals: ["m", "3", "5"], sub: tbl("Sweets", ["1 × 3 + 5 = 8", "2 × 3 + 5 = 11", "3 × 3 + 5 = 14"]), who: "agni", line: "Sweets: each friend gets 3 sweets, and I get 5 extra sweets. How many sweets do we need for m friends?",
+  { name: "Sweets", vals: ["m", "3", "5"], sub: "Each friend gets 3 sweets, and Agni gets 5 extra sweets. How many sweets for m friends?" + tbl("Sweets", ["1 × 3 + 5 = 8", "2 × 3 + 5 = 11", "3 × 3 + 5 = 14"]), who: "agni", line: "Sweets: each friend gets 3 sweets, and I get 5 extra sweets. How many sweets do we need for m friends?",
     icon: "pr_sweet", f: (m) => 3 * m + 5, sol: ["3", "m", "+", "5"], tests: [[1], [2], [3]], ans: "3m + 5",
     h1: "Look at the table. Each time, we multiply the number of friends by 3, and then we add Agni's 5 sweets.", h2: "\"Each\" means multiply, so m friends get 3m sweets. \"Extra\" means add, so we add Agni's 5 sweets.", inact: "First multiply by 3, then add Agni's 5 sweets.",
     exp: "Each friend gets 3 sweets, so that is m × 3, which we write as 3m. Agni gets 5 extra sweets, and \"extra\" means add. So the sweets are <b>3m + 5</b>.", pop: "The sweets are 3m + 5." },
-  { name: "Cups", vals: ["m", "2", "1"], sub: "m cups, 2 broke", who: "agni", line: "Cups: one cup for each friend. Oops! Neel broke 2 cups. How many cups are left?",
+  { name: "Cups", vals: ["m", "2", "1"], sub: "One cup for each friend. Neel broke 2 cups. How many cups are left?", who: "agni", line: "Cups: one cup for each friend. Oops! Neel broke 2 cups. How many cups are left?",
     icon: "pr_cup_broken", f: (m) => m - 2, sol: ["m", "−", "2"], tests: [[3], [4], [5]], ans: "m − 2",
     h1: "Neel had one cup for each friend, so m cups. Then 2 cups broke.", h2: "\"Broke\" means take away: broken cups are gone. If there were 10 cups and 2 broke, 10 − 2 = 8 cups are left.", inact: "2 cups broke. Do we add or take away?",
     exp: "There was one cup for each friend, so m cups. 2 cups broke, so we take away 2. Now there are <b>m − 2</b> cups.", pop: "The cups are m − 2." },
-  { name: "Candles", vals: ["m", "4", "1"], sub: "Neel wrote: 4 + m", who: "neel", line: "Candles: 4 candles for each friend. I wrote 4 + m. Am I right?",
+  { name: "Candles", vals: ["m", "4", "1"], sub: "4 candles for each friend. Neel wrote 4 + m. Is he right?", who: "neel", line: "Candles: 4 candles for each friend. I wrote 4 + m. Am I right?",
     icon: "pr_candle", f: (m) => 4 * m, sol: ["4", "m"], pre: ["4", "+", "m"], tests: [[1], [2], [3]], ans: "No, it is 4m",
     h1: "4 candles for each friend. Does \"each\" mean add or multiply?", h2: "\"Each\" means multiply. Try 5 friends. 4 + 5 = 9 candles. But 4 candles for each of 5 friends is 4 × 5 = 20 candles. Which one is right?", inact: "4 for each friend. Add or multiply?",
     exp: "4 candles for each friend means we multiply 4 by the number of friends. That is 4 × m, which we write as <b>4m</b>. So Neel is not right.", pop: "The candles are 4m." },
-  { name: "Balloons", vals: ["m", "2", "3"], sub: "2 balloons for each friend, 3 balloons burst", who: "agni", line: "Balloons: 2 balloons for each friend. Oops! 3 balloons burst. How many balloons are left?",
+  { name: "Balloons", vals: ["m", "2", "3"], sub: "2 balloons for each friend. 3 balloons burst. How many balloons are left?", who: "agni", line: "Balloons: 2 balloons for each friend. Oops! 3 balloons burst. How many balloons are left?",
     icon: "pr_balloon", f: (m) => 2 * m - 3, sol: ["2", "m", "−", "3"], tests: [[2], [3], [4]], ans: "2m − 3",
     h1: "Do it in two steps. First, balloons for the friends: 2 for each friend.", h2: "2 for each friend is 2m. Then 3 balloons burst. \"Burst\" means take away, so we take away 3.", inact: "First the friends' balloons, then take away the burst balloons.",
     exp: "First, 2 balloons for each friend is 2 × m, which we write as 2m. Then 3 balloons burst. Burst balloons are gone, so we take away 3. So we have <b>2m − 3</b> balloons.", pop: "The balloons are 2m − 3." },
   { beat: true },
   { example: true },
-  { name: "Plates", vals: ["m", "d", "1"], sub: "one for each friend + 1 extra for Maya", who: "neel", line: "Plates: one plate for each friend, and 1 extra plate for Maya. How many plates?",
+  { name: "Plates", vals: ["m", "d", "1"], sub: "One plate for each friend, and 1 extra plate for Maya. How many plates?", who: "neel", line: "Plates: one plate for each friend, and 1 extra plate for Maya. How many plates?",
     icon: "pr_plate", f: (m, d) => m + d + 1, sol: ["m", "+", "d", "+", "1"], tests: [[1, 1], [2, 1], [2, 3]], ans: "m + d + 1",
     h1: "First, one plate for each friend. All the friends are m + d.", h2: "\"Extra\" means add. Add 1 plate for me.", inact: "One plate for each friend, and 1 extra for me.",
     exp: "One plate for each friend is m + d plates. 1 extra plate for me means add 1. So the plates are <b>m + d + 1</b>.", pop: "The plates are m + d + 1." },
-  { name: "Cushions", vals: ["m", "d", "2", "1"], sub: "monsters: 1 cushion each · dragons: 2 cushions each", who: "agni", line: "Cushions: each monster needs 1 cushion. Dragons are big, so each dragon needs 2 cushions. How many cushions in all?",
+  { name: "Cushions", vals: ["m", "d", "2", "1"], sub: "Each monster needs 1 cushion. Each dragon needs 2 cushions. How many cushions in all?", who: "agni", line: "Cushions: each monster needs 1 cushion. Dragons are big, so each dragon needs 2 cushions. How many cushions in all?",
     icon: "pr_cushion", f: (m, d) => m + 2 * d, sol: ["m", "+", "2", "d"], tests: [[1, 1], [2, 1], [2, 3]], ans: "m + 2d",
     h1: "Monster cushions: 1 for each monster is m. Dragon cushions: 2 for each dragon.", h2: "2 for each dragon is 2d. \"In all\" means add m and 2d.", inact: "1 cushion for each monster, 2 for each dragon.",
     exp: "Monsters need m cushions. Dragons need 2 × d = 2d cushions. \"In all\" means add. So the cushions are <b>m + 2d</b>.", pop: "The cushions are m + 2d." },
-  { name: "Laddoos", vals: ["m", "d", "3", "2"], sub: "monsters: 3 laddoos each · dragons: 2 laddoos each", who: "neel", line: "Laddoos: each monster gets 3 laddoos and each dragon gets 2 laddoos. How many laddoos in total?",
+  { name: "Laddoos", vals: ["m", "d", "3", "2"], sub: "Each monster gets 3 laddoos and each dragon gets 2 laddoos. How many laddoos in total?", who: "neel", line: "Laddoos: each monster gets 3 laddoos and each dragon gets 2 laddoos. How many laddoos in total?",
     icon: "pr_laddoo", f: (m, d) => 3 * m + 2 * d, sol: ["3", "m", "+", "2", "d"], tests: [[1, 1], [2, 1], [2, 3]], ans: "3m + 2d",
     h1: "Monster laddoos: 3 for each monster is 3m.", h2: "Dragon laddoos: 2 for each dragon is 2d. \"Total\" means add.", inact: "3 for each monster, 2 for each dragon. \"Total\" means add.",
     exp: "Monsters get 3m laddoos. Dragons get 2d laddoos. \"Total\" means add. So the laddoos are <b>3m + 2d</b>.", pop: "The laddoos are 3m + 2d." },
-  { duel: true, name: "Neel's shortcut", sub: "3m + 2d – or – 5md", who: "neel", line: "I think 3m + 2d is the same as 5md. Am I right?",
+  { duel: true, name: "Neel's shortcut", sub: "Neel thinks 3m + 2d is the same as 5md. Is he right?", who: "neel", line: "I think 3m + 2d is the same as 5md. Am I right?",
     icon: "pr_laddoo", f: (m, d) => 3 * m + 2 * d, pre: ["5", "m", "d"], tests: [[1, 1], [2, 1], [2, 3]], ans: "No, not the same",
     h1: "m is the number of monsters. d is the number of dragons. Are they the same thing?", h2: "Look at the cauldron. With 2 monsters and 1 dragon, 3m + 2d gives 8, but 5md gives 10. Are they the same?", inact: "Are m and d the same number?",
     exp: "m and d are different numbers, so we cannot join 3m and 2d together. <b>3m + 2d</b> is already as short as it can be. So Neel is not right.", pop: "You caught Neel's mistake. 3m + 2d is not 5md." },
@@ -93,6 +94,7 @@ function same(fn, f) {
 }
 
 // ---------- scene ----------
+let barMark = null; // the orange mark on the spell after a wrong brew
 let QB, bar, tray, brewBtn, undoBtn, tokens = [], cauldron, liquid, orbs = {}, testBox, runId = 0, brewing = false;
 const CX = 735;
 const flies = new Set();
@@ -106,6 +108,7 @@ function render() {
 /** the old test results belong to the old spell: they go as soon as the spell changes */
 function edited() {
   runId++;
+  if (barMark) { barMark(); barMark = null; }
   if (testBox) { const t = testBox; testBox = null; gsap.to(t, { opacity: 0, duration: 0.2, onComplete: () => t.remove() }); }
 }
 function clearFlies() { for (const f of flies) { gsap.killTweensOf(f); f.remove(); } flies.clear(); }
@@ -119,7 +122,7 @@ function orbAt(t, cls, x, y) {
 function refuse(o, why) {
   sfx("bad");
   gsap.fromTo(o, { x: -8 }, { x: 0, duration: 0.45, ease: "elastic.out(1.2,.3)" });
-  gsap.fromTo(bar, { borderColor: "#ff5c6c" }, { borderColor: "#ffc547", duration: 0.9 });
+  gsap.fromTo(bar, { borderColor: "#ff8a3d" }, { borderColor: "#ffc547", duration: 0.9 }); // orange: the try-again colour
   if (!busy()) maya(why, "hint");
 }
 function addToken(t, o) {
@@ -244,7 +247,8 @@ async function testRun(fn, q) {
   const id = ++runId;
   testBox?.remove();
   const two = q.tests[0].length === 2;
-  testBox = el("div", "tests", ui, { left: CX, top: 206 });
+  // under the question card, which is taller on the first questions (the word problem and its table)
+  testBox = el("div", "tests", ui, { left: CX, top: Math.max(206, QB.box.offsetTop + QB.box.offsetHeight + 12) });
   playFx("mana", CX, 640, { palette: "plum", scale: 3 });
   // a rune circle glows on the floor under the cauldron while the spell is tested
   const runes = playFx("runes", CX, 830, { palette: "plum", scale: 3, parent: world });
@@ -412,15 +416,13 @@ export async function runPart2(start = 1) {
         lock([yes, no], false); iw.open();
         const pick = await new Promise((r) => (pickNow = r));
         pickNow = null; iw.pause(); lock([yes, no]);
-        if (pick === "n") { solved = true; break; }
-        tries++; sfx("bad"); react("neel", "oops");
-        // the wrong button stays where it is, with a cross on it while Maya helps
-        yes.classList.add("wrong");
-        const x = el("div", "nope", yes, {}, "✕");
-        gsap.fromTo(yes, { x: -8 }, { x: 0, duration: 0.5, ease: "elastic.out(1.2,.3)" });
+        if (pick === "n") { markRight(no); solved = true; break; }
+        tries++; react("neel", "oops");
+        // the wrong button stays where it is, with the orange mark on it while Maya helps
+        const unmark = markWrong(yes);
         if (tries < 3) await maya("Not yet. Try again. " + (tries === 1 ? q.h1 : q.h2), "hint");
         else { no.classList.add("answer"); pointHand(1290 + 60, 760 + 30, 2); await maya(`Let's see the answer together. The answer is ${q.ans}. ` + q.exp, "explain"); revealed = solved = true; }
-        x.remove(); yes.classList.remove("wrong");
+        unmark();
       }
       yes.remove(); no.remove();
       // m and d orbs try to join… and bounce apart
@@ -441,7 +443,8 @@ export async function runPart2(start = 1) {
         const fn = compile(tokens);
         if (!fn) { sfx("bad"); await maya("That spell is not finished. Every + − or × needs something on both sides.", "hint"); shelf(true); iw.open(); continue; }
         const ok = (await testRun(fn, q)) && same(fn, q.f);
-        if (ok) { solved = true; await wait(2); break; } // the green ticks stay up for a moment before the praise
+        if (ok) { markRight(bar, 2); solved = true; await wait(2); break; } // the green ticks stay up for a moment before the praise
+        barMark = markWrong(bar, false); // the cauldron has already buzzed; goes as soon as the spell is changed (edited)
         if (q.pre && !testedPre) { testedPre = true; await say("neel", "Oh no! My spell gives the wrong number of candles!", { p: "oops" }); tokens = []; render(); tipNow = "Tap the orbs, then Brew!"; shelf(true); iw.open(); continue; }
         tries++;
         if (tries === 1) await maya("Not yet. Try again. " + q.h1, "hint");

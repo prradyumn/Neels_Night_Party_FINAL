@@ -1,6 +1,6 @@
 import "./style.css";
 import "./qa.js";
-import { confetti, groundShadow, camPt, camRest, camSet, ANIM_FILES, warmChars, setFore, score, showHud, music, curtainShut, curtainOpen, setTint, punch, shake, solo, trio, setFocus, gsap, $, el, img, ui, world, wait, sfx, say, setScene, placeChar, hideAllChars, pose, dance, partTitle, playFx, preload, hideChecklist, setDim, C, closeBubble, camTo, W } from "./engine.js";
+import { confetti, groundShadow, camPt, camRest, camSet, ANIM_FILES, warmChars, setFore, score, showHud, music, curtainShut, curtainOpen, setTint, punch, shake, solo, trio, entrance, setFocus, setQuiet, gsap, $, el, img, ui, world, wait, sfx, say, setScene, placeChar, hideAllChars, pose, dance, partTitle, playFx, preload, hideChecklist, setDim, C, closeBubble, camTo, W } from "./engine.js";
 import { runPart1 } from "./part1.js";
 import { runPart2 } from "./part2.js";
 import { runPart3, partyTable, DOOR_XY } from "./part3.js";
@@ -18,7 +18,7 @@ const ALL = ["bg_forest_far", "bg_forest_mid", "bg_forest_fore", "bg_hall_far", 
 // what the title needs (the loader waits only for this), then what the story needs (it loads while the title is up),
 // then everything else, one file at a time while the story plays
 const TITLE = ["bg_forest", "ui_", "cover_neel"];
-const STORY_NOW = ["bg_hall", "fx_coin_spin", "gu_monster", "anim_neel_idle", "anim_neel_talk", "anim_agni_idle", "anim_agni_talk", "anim_agni_crash_in", "anim_maya_idle", "anim_maya_talk"];
+const STORY_NOW = ["bg_hall", "fx_coin_spin", "gu_monster", "pr_party_table_3d", "pr_cake", "pr_plate", "pr_bowl", "pr_sweet", "pr_balloon", "anim_neel_idle", "anim_neel_talk", "anim_agni_idle", "anim_agni_talk", "anim_agni_crash_in", "anim_maya_idle", "anim_maya_talk"];
 const FIRST = ["bg_forest", "bg_hall", "ui_", "cover_neel", "fx_coin_spin", "gu_monster", "anim_neel_idle", "anim_neel_talk", "anim_neel_happy", "anim_agni_idle", "anim_agni_talk", "anim_agni_crash_in", "anim_agni_shocked", "anim_agni_cheer", "anim_maya_idle", "anim_maya_talk", "anim_maya_cast", "anim_maya_happy"];
 function clearUI() { [...ui.children].forEach((c) => { if (c.id !== "bubble") c.remove(); }); world.innerHTML = ""; }
 
@@ -123,37 +123,100 @@ async function title(ready, storyArt = Promise.resolve()) {
   return go;
 }
 
+// the opening (Neel's front door): the doorway fills with warm light and Neel steps out, small in the door, then down
+// the steps and along the stone path to his place (he grows as he comes nearer). The party ends on this path and door
+async function neelFromDoor(mid) {
+  const c = C.neel, b = c.box, sx = c.flip ? -1 : 1;
+  const door = el("div", "doorway", mid, { left: 562, top: 528, width: 136, height: 172 });
+  const beam = el("div", "doorBeam", mid, { left: 540, top: 690, width: 180, height: 190 });
+  sfx("creak");
+  await gsap.fromTo([door, beam], { opacity: 0 }, { opacity: 1, duration: 0.6, ease: "power2.out" });
+  // scene points of the walk: the threshold, the foot of the steps, the bend in the path, his seat
+  const P = [[430, 700, 0.28], [545, 772, 0.42], [770, 862, 0.7], [c.x, c.y, 1]];
+  const at = ([x, y, z]) => ({ x: x - c.x, y: y - c.y, scaleX: sx * z, scaleY: z });
+  gsap.set(c.shadow, { opacity: 0 });
+  gsap.set(b, { transformOrigin: "50% 100%", ...at(P[0]), opacity: 0 });
+  const waddle = gsap.to(b, { rotation: 3, duration: 0.2, ease: "sine.inOut", yoyo: true, repeat: -1 });
+  await gsap.timeline()
+    .to(b, { opacity: 1, duration: 0.35 })
+    .to(b, { ...at(P[1]), duration: 0.7, ease: "none" })
+    .to(b, { ...at(P[2]), duration: 0.9, ease: "none" })
+    .to(b, { ...at(P[3]), duration: 0.9, ease: "power1.out" });
+  waddle.kill();
+  gsap.to(b, { rotation: 0, duration: 0.15 });
+  gsap.to(c.shadow, { opacity: 1, duration: 0.3 });
+  pose("neel", "happy");
+  gsap.to([door, beam], { opacity: 0, duration: 1, delay: 0.6, onComplete: () => { door.remove(); beam.remove(); } }); // the door shuts behind him
+}
+// the hall: the party things Neel needs stand on a table at the left, each with a "?" (how many?), the question Agni
+// asks; they go when Maya starts to answer it
+function planTable() {
+  const g = el("div", "abs", world, { left: 0, top: 0, width: 1, height: 1 });
+  const k = 0.72, f = k / 0.66, cx = 380, foot = 868, top = foot - 281 * k;
+  const it = (name, x, bottom, w, h, st = {}) => img(name, g, { left: x - (w * f) / 2, top: bottom - h * f, width: w * f, height: h * f, ...st });
+  img("pr_party_table_3d", g, { left: cx - 462 * k, top: top - k, width: 961 * k });
+  const sur = top + 24; // where things stand on the tabletop
+  const X = (dx) => cx + dx * f;
+  const things = [
+    [it("pr_balloon", X(-235), sur - 120, 56, 94), it("pr_balloon", X(-203), sur - 132, 56, 94, { filter: "hue-rotate(150deg) saturate(1.6)" })],
+    [it("pr_cake", X(-125), sur, 112, 125)],
+    [0, 1, 2].map((i) => it("pr_plate", X(5), sur - i * 7, 86, 53)),
+    [it("pr_bowl", X(140), sur, 112, 56), ...[[-26, 0], [0, 0], [26, 0], [-13, -14], [13, -14]].map(([dx, dy]) => it("pr_sweet", X(140 + dx), sur - 30 * f + dy * f, 36, 30))],
+  ];
+  const marks = [[X(-219), sur - 120 - 120 * f], [X(-125), sur - 160 * f], [X(5), sur - 95 * f], [X(140), sur - 88 * f]].map(([x, y]) => el("div", "qmark", g, { left: x, top: y }, "?"));
+  gsap.set([...things.flat(), ...marks], { opacity: 0 });
+  setFore(0, 0.01); // the rug and pumpkins in front would hide the table
+  return {
+    // one after another: the thing, then its "?"
+    async show() {
+      for (const [i, t] of things.entries()) {
+        sfx("pop");
+        gsap.fromTo(t, { opacity: 0, y: 24, scale: 0.6 }, { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "back.out(2)" });
+        await wait(0.2);
+        gsap.fromTo(marks[i], { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(3)" });
+        await wait(0.25);
+      }
+    },
+    ask() { gsap.fromTo(marks, { scale: 1 }, { scale: 1.3, duration: 0.25, yoyo: true, repeat: 3, stagger: 0.12, ease: "sine.inOut" }); },
+    clear() { gsap.to(g, { opacity: 0, y: 20, duration: 0.5, onComplete: () => g.remove() }); },
+  };
+}
 async function story() {
   music("calm");
-  // outside Neel's house: the whole forest scene (the house is on the left), the three friends together on the path
+  // outside Neel's house, at its painted size (no zoom: the art stays sharp). The windows' glow comes up, the owl
+  // blinks, Neel comes out of his door and Agni and Maya arrive, each in their own way, on their own seat
   await setScene("forest", { fast: true });
   setFocus("story");
-  // opening shot: the camera cranes down from the stars to Neel's house, its windows light up one by one,
-  // the owl blinks. The last shot of the game comes back to this house
   const mid = $("#Lmid");
-  const house = houseWindows(mid);
+  const house = houseWindows(mid, false);
   owlBlink(mid);
-  camSet({ x: W / 2, y: 0, s: 1.32 });
-  gsap.from(mid.querySelector(".plate"), { y: 120, duration: 2.6, ease: "power2.out" });
-  camTo({ s: 1, dur: 2.6, ease: "power2.inOut" });
-  [0.7, 1.2, 1.7].forEach((t, i) => setTimeout(() => house.lit(i + 1), t * 1000));
-  await wait(1.1);
-  const arrive = trio("trio", { enter: true }); // their entrances play while the narrator starts
+  camSet({ x: 430, y: 620, s: 1.05 });
+  [0.2, 0.45, 0.7].forEach((t, i) => setTimeout(() => house.lit(i + 1), t * 1000));
+  trio("trio", { hold: ["neel", "agni", "maya"] });
+  await wait(0.8);
+  const out = neelFromDoor(mid);
+  camTo({ s: 1, dur: 3.6, ease: "power2.inOut" });
   await say("nar", "Welcome to Neel's Night Party!");
   sfx("owl");
-  await arrive;
+  await out;
+  const friends = Promise.all([entrance("agni"), wait(0.6).then(() => entrance("maya"))]);
   await say("nar", "Neel wants to have a party next week, but he has not decided how many friends to invite. Maya and Agni are helping him plan the party.");
+  await friends;
   sfx("whoosh");
-  await setScene("hall");
-  setDim(0.35, 0.01);
+  let plan;
+  await setScene("hall", { setup: () => (plan = planTable()) });
+  setDim(0.2, 0.01);
   await trio("trio"); // Agni is talking to Neel, so Neel is there too
+  await plan.show();
   pose("agni", "shocked");
   // Agni's panic: a quick camera punch toward Agni with speed lines
   const hd = camPt(...headOf("agni"));
   punch(hd.x, hd.y); speedLines(hd.x, hd.y); sfx("boing");
-  await say("agni", "Neel, have you still not decided how many guests are coming? Then how will we plan? How many plates? How many sweets?", { p: "shocked" });
+  await say("agni", "Neel, have you still not decided how many guests are coming? Then how will we plan? How many plates? How many sweets?", { p: "shocked", onStart: () => plan.ask() });
   // the unknown number: friend silhouettes keep changing (top left), then become the letter m
-  const SX = 350, SY = 250, mystery = mysteryFriends(SX, SY);
+  const SX = 350, SY = 250;
+  plan.clear();
+  const mystery = mysteryFriends(SX, SY);
   await say("maya", "Don't worry. When we don't know a number, we can write it as a letter.", { p: "explain" });
   await mystery.collapse();
   const seal = stampSeal(SX, SY);
@@ -178,6 +241,7 @@ async function bridge(lines, danceAll = true) {
   hideChecklist();
   [...ui.children].forEach((c) => { if (c.id !== "bubble") gsap.to(c, { opacity: 0, duration: 0.3 }); });
   setFocus(false);
+  setQuiet(false); // the level is done: the full painting comes back
   await trio("trio");
   if (danceAll) dance(lines[0][0]);
   for (const [w, t, p] of lines) await say(w, t, { p });
@@ -188,7 +252,7 @@ async function bridge(lines, danceAll = true) {
 async function part1(start = 1) {
   music("calm");
   clearUI();
-  await setScene("hall");
+  await setScene("hall", { quiet: true }); // the room steps back while the level is played
   setTint("rgba(255,150,70,.10)"); // early evening
   partTitle("PART 1 OF 3", "Neel's Party List"); // the part sets up under the title card
   await runPart1(start);
@@ -203,7 +267,7 @@ async function part1(start = 1) {
 async function part2(start = 1) {
   music("calm");
   clearUI();
-  await setScene("cauldron");
+  await setScene("cauldron", { quiet: true });
   setDim(0, 0.01);
   setTint("rgba(120,60,200,.10)"); // night falls
   playFx("campfire", 720, 505, { scale: 3, parent: $("#Lfar") });
@@ -224,7 +288,7 @@ async function part2(start = 1) {
 async function part3(start = 1) {
   music("calm");
   clearUI();
-  await setScene("doors");
+  await setScene("doors", { quiet: true });
   setDim(0, 0.01);
   setTint("rgba(20,30,120,.18)"); // deep night
   partTitle("PART 3 OF 3", "Neel Decides");

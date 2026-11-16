@@ -61,7 +61,7 @@ export async function planScroll(at = { left: 110, top: 150 }) {
     sfx("pop");
     await wait(0.18);
   }
-  // docked, the scroll folds to a small tab under the stars (the line being worked on is in the equation bar);
+  // docked, the scroll folds to a small tab in the top-right corner (the line being worked on is in the equation bar);
   // a tap opens the whole plan for a look, and it folds again by itself
   let shut;
   const fold = (open) => { sc.classList.toggle("open", open); clearTimeout(shut); if (open) shut = setTimeout(() => fold(false), 6000); };
@@ -136,9 +136,10 @@ export function coin(parent, style, label = "m") {
 // ---------- Neel's house (forest mid layer, its own 2000 x 900 coordinates) ----------
 const WINDOWS = [{ x: 392, y: 268, w: 50, h: 66 }, { x: 348, y: 575, w: 60, h: 80 }, { x: 650, y: 368, w: 128, h: 128 }];
 /** the windows go dark; lit(n) lights the first n with a warm glow (the opening shot, and the map as rooms are done) */
-export function houseWindows(layer) {
+export function houseWindows(layer, dark = true) {
+  // dark: false keeps the painted (lit) windows as they are, and only their glow comes up (the opening shot)
   const ws = WINDOWS.map((w) => ({
-    off: el("div", "winOff", layer, { left: w.x - w.w / 2, top: w.y - w.h / 2, width: w.w, height: w.h }),
+    off: dark ? el("div", "winOff", layer, { left: w.x - w.w / 2, top: w.y - w.h / 2, width: w.w, height: w.h }) : null,
     glow: el("div", "winGlow", layer, { left: w.x - w.w * 1.4, top: w.y - w.h * 1.4, width: w.w * 2.8, height: w.h * 2.8 }),
   }));
   gsap.set(ws.map((w) => w.glow), { opacity: 0 });
@@ -147,7 +148,7 @@ export function houseWindows(layer) {
     lit(to, animate = true) {
       for (; n < Math.min(to, ws.length); n++) {
         const w = ws[n], d = animate ? 0.5 : 0;
-        gsap.to(w.off, { opacity: 0, duration: d });
+        if (w.off) gsap.to(w.off, { opacity: 0, duration: d });
         gsap.fromTo(w.glow, { opacity: animate ? 1 : 0.55, scale: animate ? 0.6 : 1 }, { opacity: 0.55, scale: 1, duration: animate ? 0.9 : 0, ease: "power2.out", onComplete: () => { w.glow.style.animationDuration = 2.8 + Math.random() * 2 + "s"; w.glow.classList.add("breathe"); } });
         if (animate) sfx("pop");
       }

@@ -4,11 +4,12 @@ import { houseWindows, owlBlink } from "./common.js";
 
 // three rooms: the party is the end of room 3, not a room of its own
 export const ROOMS = [
-  { id: 1, name: "Neel's Party List", icon: "p1_variable_jar", bg: "bg_hall_far", x: 420, y: 560, max: 24 },
-  { id: 2, name: "Write the Party Plan", icon: "p2_cauldron", bg: "bg_cauldron_far", x: 820, y: 330, max: 27 },
-  { id: 3, name: "Neel Decides", icon: "p3_door_closed", bg: "bg_doors_far", x: 1220, y: 560, max: 24 },
+  { id: 1, name: "Neel's Party List", icon: "p1_variable_jar", bg: "bg_hall_far", x: 820, y: 620, max: 24 },
+  { id: 2, name: "Write the Party Plan", icon: "p2_cauldron", bg: "bg_cauldron_far", x: 1090, y: 330, max: 27 },
+  { id: 3, name: "Neel Decides", icon: "p3_door_closed", bg: "bg_doors_far", x: 1400, y: 640, max: 24 },
 ];
 
+const LOCK = `<svg viewBox="0 0 24 24" width="64" height="64"><path d="M7 11V8a5 5 0 0 1 10 0v3" fill="none" stroke="#ffc547" stroke-width="2.4"/><rect x="4.5" y="11" width="15" height="10" rx="2.5" fill="#ffc547" stroke="#7a4a12" stroke-width="1.2"/><circle cx="12" cy="15.4" r="1.6" fill="#7a4a12"/></svg>`;
 let neelAt = 0; // index of the room Neel stands at
 let litWas = 0; // how many of the house windows were lit last time
 // a locked room says which room opens it, just under the card
@@ -49,11 +50,13 @@ export async function houseMap(state) {
     if (wp) gsap.fromTo(wp, { strokeDashoffset: neelAt === cur ? 0 : 1 - neelAt / Math.max(1, cur) }, { strokeDashoffset: 0, duration: 1.2, delay: 0.8, ease: "power2.inOut" });
     cards = ROOMS.map((r, i) => {
       const locked = i > cur && !state.unlockAll, done = !!state.done[r.id];
-      const c = el("div", "room" + (locked ? " locked" : "") + (done ? " done" : ""), m, { left: r.x - 150, top: r.y - 110 });
+      // each room is a round window of Neel's house (like the big round one in the painting): lit and warm when it can
+      // be played, dark glass with a gold lock when it can't yet
+      const c = el("div", "room win" + (locked ? " locked" : "") + (done ? " done" : ""), m, { left: r.x - 130, top: r.y - 125 });
       el("div", "num", c, {}, String(r.id));
       const th = el("div", "th", c, { backgroundImage: `url(assets/${r.bg}.webp)` });
       img(r.icon, th, {}, "ic");
-      if (locked) el("div", "lk", th, {}, "🔒");
+      if (locked) el("div", "lk", th, {}, LOCK);
       el("div", "nm", c, {}, r.name);
       // a finished room shows 1-3 stars instead of a raw score
       const got = score.room[r.id] || 0, rate = got >= r.max * 0.9 ? 3 : got >= r.max * 0.6 ? 2 : 1;

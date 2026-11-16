@@ -1,5 +1,5 @@
 // PART 1 – Neel's Party List: the Friend Dial. Turn the dial, watch what changes, sort into Variable jar / Constant chest.
-import { qbox, award, actionZone, azTip, afterTitle, setFore, gsap, el, img, ui, world, wait, sfx, say, playFx, checklist, checkCur, checkDone, pointHand, setDim, toStage, closeBubble, camFocus, lightPool, lock, speakAgain } from "./engine.js";
+import { qbox, award, actionZone, azTip, afterTitle, setFore, gsap, el, img, ui, world, wait, sfx, say, playFx, checklist, checkCur, checkDone, pointHand, setDim, toStage, closeBubble, camFocus, lightPool, lock, speakAgain, markRight, markWrong, SPEAKER } from "./engine.js";
 import { setAnswer } from "./qa.js";
 import { sideChars, maya, praise, idleWatch, iconRow } from "./common.js";
 
@@ -35,7 +35,11 @@ const ANS = { v: "Variable (it can change)", c: "Constant (it stays the same)" }
 
 // read left to right: the dial (cause) beside the speaker, the display (effect) in the middle, jar + chest (decision) on the right
 const ZONE = { x: 780, y: 190, w: 460, h: 280 };
-const DIAL = { x: 610, y: 470, r: 105 }; // dial centre
+// the things stand on a small party table under the display (the Part 3 table, drawn smaller): two rows on the tabletop,
+// the back row a little higher. TB: the table's centre and the floor line under its feet
+const TB = { cx: 965, foot: 588, k: 0.6 };
+const ROW = { back: TB.foot - 281 * TB.k + 4, front: TB.foot - 281 * TB.k + 30 }; // where the things in each row stand
+const DIAL = { x: 572, y: 470, r: 105 }; // dial centre
 const BIN = { v: [1175, 690], c: [1395, 710] }; // where things drop into the jar and the chest
 let QB;
 let friends = 4, dialTurns = 0, dialEl, knob, dialLbl, dialTip, flow, showBox, showCount, jar, chest, item, jarLvl, vars = 0;
@@ -57,9 +61,9 @@ function drawItem(flash) {
   // things on their way out are not counted, so the picture always shows exactly n
   const kids = [...showBox.children].filter((k) => !k._gone);
   const sz = n > 8 ? 70 : n > 4 ? 88 : n > 1 ? 110 : 190;
-  const cols = n > 8 ? 5 : n > 4 ? 4 : Math.min(n, 3);
+  const cols = n > 8 ? 5 : n > 4 ? 4 : n; // up to 4 stand in one row
   while (kids.length < n) {
-    const i = img(item.icon, showBox, { width: sz, height: sz, objectFit: "contain", left: ZONE.x + ZONE.w / 2, top: ZONE.y + ZONE.h / 2 });
+    const i = img(item.icon, showBox, { width: sz, height: sz, objectFit: "contain", objectPosition: "50% 100%", left: TB.cx, top: ROW.front - sz });
     i.style.filter = tint(item);
     kids.push(i);
     gsap.from(i, { scale: 0, duration: 0.3, ease: "back.out(2)" });
@@ -68,7 +72,9 @@ function drawItem(flash) {
   const rows = Math.ceil(n / cols);
   kids.forEach((k, i) => {
     const r = Math.floor(i / cols), c = i % cols, inRow = Math.min(cols, n - r * cols);
-    gsap.to(k, { width: sz, height: sz, left: ZONE.x + ZONE.w / 2 - (inRow * sz * 1.05) / 2 + c * sz * 1.05, top: ZONE.y + ZONE.h / 2 - (rows * sz) / 2 + r * sz, duration: 0.3 });
+    // one row stands at the front. Two rows: the back row is shifted half a place, so every thing peeks out and can be counted
+    const back = rows > 1 && r === 0, foot = back ? ROW.back : ROW.front, w = sz * 1.05;
+    gsap.to(k, { width: sz, height: sz, left: TB.cx - (inRow * w) / 2 + c * w + (back ? -w / 4 : rows > 1 ? w / 4 : 0), top: foot - sz, duration: 0.3 });
   });
   showCount.innerHTML = `<img src="assets/${item.icon}.webp" style="filter:${tint(item)}"> × ${n}`;
   if (flash) {
@@ -111,9 +117,10 @@ function buildScene() {
     if (drag && !drag.moved && !dialEl.classList.contains("locked")) setFriends(friends >= 8 ? 2 : friends + 1);
     drag = null;
   });
+  lightPool(TB.cx, TB.foot - 10, 820); // a warm pool of light on the floor under the table
+  img("pr_party_table_3d", world, { left: TB.cx - 462 * TB.k, top: TB.foot - 282 * TB.k, width: 961 * TB.k });
   showBox = el("div", "abs", world, { left: 0, top: 0, width: 1, height: 1 });
-  lightPool(ZONE.x + ZONE.w / 2, ZONE.y + ZONE.h + 90, 760); // a warm pool of light on the floor under the display
-  showCount = el("div", "itemCount", ui, { left: ZONE.x + ZONE.w / 2, top: ZONE.y + ZONE.h + 8 }, "");
+  showCount = el("div", "itemCount", ui, { left: TB.cx, top: ROW.front + 36 }, ""); // on the tablecloth, under the things
   QB = qbox();
   // bins: the jar or chest and its label are one tap target
   jar = el("div", "abs bin", ui, { left: BIN.v[0] - 90, top: 596, width: 180, height: 290, cursor: "pointer" });
@@ -149,6 +156,7 @@ async function success(it, tries = 0, q = 0) {
   const [bx, by] = BIN[it.ans];
   if (it.ans === "c") chest.im.src = "assets/p1_constant_chest_open.webp";
   sfx("good");
+  markRight(bin);
   const kids = [...showBox.children].filter((k) => !k._gone);
   kids.forEach((k, i) => {
     k.style.filter = it.ans === "v" ? "sepia(1) saturate(4) hue-rotate(-12deg) brightness(1.15)" : "grayscale(1) brightness(.9) contrast(1.1)";
@@ -180,15 +188,7 @@ async function success(it, tries = 0, q = 0) {
   await maya("Correct! " + it.exp, "happy");
 }
 // a wrong pick: a small shake, a red glow and a cross on that bin. No bang: it is a "try again", not a prize
-function wrongMark(choice) {
-  const bin = choice === "v" ? jar : chest;
-  sfx("bad");
-  bin.classList.add("wrong");
-  const x = el("div", "nope", bin, {}, "✕");
-  gsap.from(x, { scale: 0, duration: 0.25, ease: "back.out(3)" });
-  gsap.fromTo(bin, { x: -10 }, { x: 0, duration: 0.5, ease: "elastic.out(1.2,.25)" });
-  return () => { bin.classList.remove("wrong"); gsap.to(x, { opacity: 0, duration: 0.25, onComplete: () => x.remove() }); };
-}
+function wrongMark(choice) { return markWrong(choice === "v" ? jar : chest); }
 // the second clue uses numbers the child can see: Maya turns the dial herself and reads both values
 async function liveClue(it) {
   const a = friends;
@@ -208,7 +208,7 @@ async function liveClue(it) {
 // Maya explains on the chalkboard with no speech bubble: the board writes her words as she says them,
 // and each new idea wipes the board first, so only one idea is up at a time
 async function chalkboard() {
-  const b = el("div", "chalk", ui, { left: 470, top: 104, width: 950 }, `<div class="tag">Maya explains</div><div class="page"></div><div class="nx">tap ▶</div><div class="rp" title="Hear again">🔊</div>`);
+  const b = el("div", "chalk", ui, { left: 470, top: 104, width: 950 }, `<div class="tag">Maya explains</div><div class="page"></div><div class="nx">tap ▶</div><div class="rp" title="Hear again">${SPEAKER}</div>`);
   const page = b.querySelector(".page");
   let last = "";
   b.querySelector(".rp").onpointerdown = (e) => { e.stopPropagation(); sfx("tap"); speakAgain(last, "maya"); };
@@ -268,7 +268,7 @@ export async function runPart1(start = 1) {
     dialTip.textContent = "Turn the dial to check";
     gsap.to(dialTip, { opacity: 1, duration: 0.3 }); flow.classList.add("go");
     if (q === 0) dialEl.classList.add("pulse"); // the first time only, so the dial is noticed
-    azTip("Did it change? Tap the jar or the chest"); // both words alike: neither colour may point at the answer
+    azTip("Tap the jar or the chest"); // both words alike: neither colour may point at the answer
     // phase B: choose. Wrong once: a clue. Twice: a clue with the numbers on the dial. Three times: the answer
     let tries = 0;
     const iw2 = idleWatch(16, () => maya("Take your time. " + it.inact + " Tap Variable or Constant.", "hint"));
@@ -296,7 +296,7 @@ export async function runPart1(start = 1) {
         break;
       }
       inputs({ dial: true, bins: true });
-      azTip("Did it change? Tap the jar or the chest");
+      azTip("Tap the jar or the chest");
       iw2.open();
     }
     iw2.stop();

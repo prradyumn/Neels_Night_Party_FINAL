@@ -4,7 +4,7 @@ import { gsap, el, stage } from "./engine.js";
 const KEY = "nnp_qa";
 let saved = {};
 try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) {}
-// QA mode is never remembered between visits: a player never sees the badge or the answers. It is on only for a
+// QA mode is never remembered between visits: a player never sees the QA panel or the answers. It is on only for a
 // #qa-… address (the jump links) or after pressing Q; the options inside it are remembered.
 export const qa = { on: /^#qa-/.test(location.hash), auto: !!saved.auto, fast: !!saved.fast, showAns: saved.showAns !== false, answer: "" };
 function save() { try { localStorage.setItem(KEY, JSON.stringify({ auto: qa.auto, fast: qa.fast, showAns: qa.showAns })); } catch (e) {} }
@@ -16,14 +16,11 @@ function apply() {
     gsap.globalTimeline.timeScale(window.__speed);
     drove = qa.on;
   }
-  badge.style.display = qa.on ? "flex" : "none";
-  ansChip.style.display = qa.on && qa.showAns && qa.answer ? "block" : "none";
 }
 
 /** Parts call this with the correct answer of the current question. */
 export function setAnswer(a) {
   qa.answer = a == null ? "" : String(a);
-  ansChip.innerHTML = `QA answer: <b>${qa.answer}</b>`;
   if (panel) panel.querySelector(".qaans").innerHTML = qa.answer ? `Current answer: <b>${qa.answer}</b>` : "No question on screen";
   apply();
 }
@@ -38,9 +35,6 @@ function go(at, n) {
   location.reload();
 }
 
-const badge = el("div", "qabadge", stage, {}, "QA");
-const ansChip = el("div", "qaans-chip", stage, {}, "");
-badge.onpointerdown = (e) => { e.stopPropagation(); toggle(); };
 let panel = null;
 
 function row(parent, label, at, count) {
@@ -62,7 +56,6 @@ function open() {
   const t = el("div", "qasec", panel);
   toggleRow(t, "Auto-skip dialogue", "auto");
   toggleRow(t, "Speed ×2", "fast");
-  toggleRow(t, "Show answer chip", "showAns");
   const j = el("div", "qasec", panel);
   el("div", "qasub", j, {}, "Jump to");
   row(j, "Title", "title"); row(j, "Story intro", "story"); row(j, "House map", "map");

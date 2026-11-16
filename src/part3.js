@@ -1,7 +1,7 @@
 // PART 3 – Neel Decides: the Magic Doors. Replies come through the doors as cards (no guests yet: they come to the
 // party), gold seals crack open to show the numbers, and every right answer puts its things around the party table,
 // where they stay until the party. When m or d changes, the plan is worked out again and the table follows.
-import { qbox, valPills, host, trio, solo, award, afterTitle, setFocus, setFore, gsap, el, img, ui, world, wait, sfx, say, card, popup, playFx, checklist, checkCur, checkDone, pointHand, onTap, closeBubble, farLayer, camRest, camPt, toStage, lightPool, lock } from "./engine.js";
+import { qbox, valPills, host, trio, solo, award, afterTitle, setFocus, setFore, gsap, el, img, ui, world, wait, sfx, say, card, popup, playFx, checklist, checkCur, checkDone, pointHand, onTap, closeBubble, farLayer, camRest, camTo, camPt, spotOn, spotOff, toStage, lightPool, lock, W, markRight, markWrong, uiIn } from "./engine.js";
 import { setAnswer } from "./qa.js";
 import { maya, praise, idleWatch, iconRow, planScroll, garland, coin } from "./common.js";
 import { show } from "./part2.js";
@@ -39,13 +39,15 @@ const ITEM = { chairs: "Chairs", sweets: "Sweets", balloons: "Balloons", friends
 // the plan for each thing on the table: when m or d changes, the table is worked out again from it
 const FORM = { chairs: (v) => v.m + 1, sweets: (v) => 3 * v.m + 5, balloons: (v) => 2 * v.m - 3, plates: (v) => v.m + v.d + 1, cushions: (v) => v.m + 2 * v.d, laddoos: (v) => 3 * v.m + 2 * v.d };
 
-let doors = [], vals = { m: 0, d: 0 }, uses = "m", valBox, bar, table, back, front, QB, scroll, rsvp, lights, numbered = false;
+let doors = [], vals = { m: 0, d: 0 }, uses = "m", valBox, bar, table, tg, back, front, QB, scroll, rsvp, numbered = false;
 const groups = {}; // what is on the table now: kind -> { n, els, tag }
 // the party table (tools/blender/table.py): rendered at the hall floor's own angle and standing on the floor's magic
 // circle. The art is 961 px wide; the table itself is 822 px of it, from x 51, and 281 px tall from the top
 const TB = { cx: 760, foot: 725, w: 700 }, TK = TB.w / 822, TX = TB.cx;
 const TOP = TB.foot - 281 * TK;         // back edge of the tabletop
 const TOP_FRONT = TOP + 34;             // front edge (the gold piping)
+const BIG = { s: 1.3, dx: 60 };         // the table group while the level is played (buildTable)
+let big = false;
 // each question is worked out on a big board over the hall (Draft 4): the plan with its seals at the top, the answer
 // gems under it. It clears the speaker's bubble (left), the replies (top left) and the plan tab (top right)
 const BOARD = { x: 610, y: 150, w: 970, h: 690 };
@@ -100,7 +102,10 @@ function layout(kind, n) {
   if (kind === "balloons") {
     // two bunches floating high at the ends of the garland, above the doors
     const a = Math.ceil(n / 2);
-    for (let i = 0; i < n; i++) { const L = i < a, k = L ? i : i - a, g = L ? a : n - a; it.push({ x: (L ? 488 : 1080) + (k - (g - 1) / 2) * 18, y: 300 - (k % 2) * 22, w: 47, h: 78, hue: (i * 47) % 360 }); }
+    // (the bigger table of the questions lifts them with it: there they hang lower, over the back chairs, clear of the
+    // cards, the bar and the bowls)
+    const [bl, br, by] = big ? [650, 990, 428] : [488, 1080, 300];
+    for (let i = 0; i < n; i++) { const L = i < a, k = L ? i : i - a, g = L ? a : n - a; it.push({ x: (L ? bl : br) + (k - (g - 1) / 2) * 18, y: by - (k % 2) * 22, w: 47, h: 78, hue: (i * 47) % 360 }); }
     tag = { x: 1166, y: 262 };
   }
   return { it, tag };
@@ -131,19 +136,25 @@ function place(kind, n, from, tag = false) {
   }
   return { n, els, tag: t };
 }
-/** the plan is worked out again (m or d changed): the things on the table move, go or come, the tag counts */
+/** the plan is worked out again (m or d changed): the things on the table come back into view, then move, go or come */
 function restock(kind, n) {
   const g = groups[kind];
   if (!g || g.n === n) return;
-  const { it, tag } = layout(kind, n), was = g.n;
+  const { it, tag } = layout(kind, n), was = g.n, d0 = g.hidden ? 0.45 : 0; // a hidden kind shows its old count first
+  if (g.hidden) { g.hidden = false; gsap.fromTo(g.els, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4 }); }
   it.forEach((o, i) => {
     const e = g.els[i];
-    if (e) gsap.to(e, { left: o.x - o.w / 2, top: o.y - o.h, width: o.w, height: o.h, duration: 0.6, ease: "power2.inOut" });
-    else { g.els[i] = thing(kind, o); gsap.from(g.els[i], { opacity: 0, y: -30, duration: 0.45, delay: 0.25 + (i - was) * 0.05, ease: "bounce.out" }); }
+    if (e) gsap.to(e, { left: o.x - o.w / 2, top: o.y - o.h, width: o.w, height: o.h, duration: 0.6, delay: d0, ease: "power2.inOut" });
+    else { g.els[i] = thing(kind, o); gsap.from(g.els[i], { opacity: 0, y: -30, duration: 0.45, delay: d0 + 0.25 + (i - was) * 0.05, ease: "bounce.out" }); }
   });
-  g.els.splice(it.length).forEach((e, i) => gsap.to(e, { opacity: 0, y: -40, scale: 0.6, duration: 0.45, delay: i * 0.08, onComplete: () => e.remove() }));
+  g.els.splice(it.length).forEach((e, i) => gsap.to(e, { opacity: 0, y: -40, scale: 0.6, duration: 0.45, delay: d0 + i * 0.08, onComplete: () => e.remove() }));
   if (g.tag) { gsap.to(g.tag, { left: tag.x, top: tag.y, autoAlpha: 1, duration: 0.6 }); g.tag.classList.add("chg"); countUp(g.tag, was, n, 0.8).eventCallback("onComplete", () => { g.tag.classList.remove("chg"); sfx("pop"); gsap.to(g.tag, { autoAlpha: 0, duration: 0.5, delay: 1.6 }); }); } // shown while it counts, then it goes
   g.n = n;
+}
+/** the things on the table show only while they are talked about: their own question, and a recount when m or d
+ *  changes them; the party shows them all. Between questions the table is bare, so the hall stays uncluttered */
+function hideGroups(now = false) {
+  for (const k in groups) { const g = groups[k]; if (g.hidden) continue; g.hidden = true; now ? gsap.set(g.els, { autoAlpha: 0 }) : gsap.to(g.els, { autoAlpha: 0, duration: 0.5 }); }
 }
 /** after m or d changed: everything on the table is worked out again from its plan, one kind after another */
 async function rework() {
@@ -153,7 +164,7 @@ async function rework() {
   for (const k of todo) { restock(k, FORM[k](vals)); await wait(0.3); }
   await wait(0.6);
 }
-function buildTable() {
+function buildTable(party = false) {
   const L = farLayer();
   doors = DOORS.map(([x, y]) => {
     const d = img("p3_door_closed", L, { left: x - DOOR_D / 2, top: y - DOOR_D / 2, width: DOOR_D, height: DOOR_D });
@@ -163,18 +174,23 @@ function buildTable() {
   });
   // the hall's lanterns flicker (glows over the painted lanterns, on the same layer so they move with it)
   for (const [x, y] of [[300, 360], [720, 378], [1155, 380], [1745, 372]]) el("div", "flicker", L, { left: x - 80, top: y - 80, width: 160, height: 160 });
-  // a garland over the table: one more stretch lights up with every answer, until the party is ready
-  lights = garland(world, TX - 340, 196, 680);
-  back = el("div", "abs", world, { left: 0, top: 0, width: 1, height: 1 });
-  table = img("pr_party_table_3d", world, { left: TX - (51 + 411) * TK, top: TOP - TK, width: 961 * TK });
-  lightPool(TX, TB.foot - 40, 1400, 360);
-  front = el("div", "abs", world, { left: 0, top: 0, width: 1, height: 1 });
+  // the garland over the table is a party thing: it is hung (all lit) for the party only, never during the questions
+  if (party) garland(world, TX - 340, 196, 680).light(1);
+  // the table and everything on it are one group, laid out at the table's own scale (layout()). While the level is
+  // played the group is 30% bigger, grown from the table's feet and nudged right, clear of the speaker; the party
+  // keeps it at 1 (its guests stand around it). A knock slides the whole group away (knockDoor)
+  tg = el("div", "abs", world, { left: 0, top: 0, width: 1, height: 1 });
+  big = !party;
+  if (!party) gsap.set(tg, { x: BIG.dx, scale: BIG.s, transformOrigin: `${TX}px ${TB.foot}px` });
+  back = el("div", "abs", tg, { left: 0, top: 0, width: 1, height: 1 });
+  table = img("pr_party_table_3d", tg, { left: TX - (51 + 411) * TK, top: TOP - TK, width: 961 * TK });
+  lightPool(TX, TB.foot - 40, 1400, 360, tg);
+  front = el("div", "abs", tg, { left: 0, top: 0, width: 1, height: 1 });
   for (const k in groups) delete groups[k];
 }
 /** the finished table for the party: what the plan gives for the friends who came (m = 4, d = 7), no count tags */
 export function partyTable() {
-  buildTable();
-  lights.light(1);
+  buildTable(true);
   for (const k in FORM) groups[k] = place(k, FORM[k]({ m: 4, d: 7 }), null, false);
 }
 /** Part 3's cards and helpers step away for the party; the table and what is on it stay */
@@ -182,7 +198,7 @@ export function partyClear() { [...ui.children].forEach((c) => { if (c.id !== "b
 
 // ---------- reply cards: the friends answer through the doors ----------
 function buildRsvp() {
-  rsvp = el("div", "rsvp", ui, { left: 16, top: 84, width: 404 }, `<h3>Replies</h3><div class="grp m"><div class="gl">Monster friends: <b>0</b></div><div class="cards yes"></div><div class="cards no"></div></div><div class="grp d"><div class="gl">Dragon friends: <b>0</b></div><div class="cards yes"></div></div>`);
+  rsvp = el("div", "rsvp", ui, { left: 16, top: 14, width: 404 }, `<h3>Replies</h3><div class="grp m"><div class="gl">Monster friends: <b>0</b></div><div class="cards yes"></div><div class="cards no"></div></div><div class="grp d"><div class="gl">Dragon friends: <b>0</b></div><div class="cards yes"></div></div>`);
   gsap.set(rsvp, { autoAlpha: 0 });
 }
 function countCards() {
@@ -224,15 +240,7 @@ const hideTags = () => Object.values(groups).forEach((g) => g.tag && gsap.to(g.t
 const prompt = (t) => host.cur && say(host.cur, t, { wait: false, voice: false });
 /** the things standing in front of a door fade back while it is knocked on, so the child can see the door to tap.
  *  Returns a function that brings them back */
-function clearDoor(d) {
-  const r = d.getBoundingClientRect(), pad = 6;
-  const hide = [...back.children, ...front.children].filter((e) => {
-    const q = e.getBoundingClientRect();
-    return q.width && !(q.right < r.left + pad || q.left > r.right - pad || q.bottom < r.top + pad || q.top > r.bottom - pad);
-  });
-  gsap.to(hide, { opacity: 0.12, duration: 0.3 });
-  return () => gsap.to(hide, { opacity: 1, duration: 0.4 });
-}
+const DOORZ = 1.22; // how close the camera comes to a knocking door
 // someone knocks: the child opens the door and the replies fly in
 async function knockDoor(di, kind, count) {
   repliesMini(false); // the replies are the subject again: every card shows
@@ -243,15 +251,17 @@ async function knockDoor(di, kind, count) {
   sfx("knock");
   const knock = setInterval(() => { sfx("knock"); gsap.fromTo(d, { x: -4 }, { x: 4, duration: 0.05, repeat: 5, yoyo: true }); }, 2600);
   closeBubble();
-  // the door must be in clear view: the scroll steps back, and the camera stays wide so the speaker is never
-  // pushed off the edge
+  // the door takes the stage: the table slides away, the camera moves in on the door and the rest of the hall dims
   gsap.to([scroll?.el].filter(Boolean), { opacity: 0.12, duration: 0.3 });
   const dx = +d.dataset.x, dy = +d.dataset.y;
-  await camRest(0.4);
-  const dp = camPt(dx, dy, "far");
-  const restore = clearDoor(d);
+  sfx("whoosh");
+  gsap.to(tg, { y: 160, autoAlpha: 0, duration: 0.6, ease: "power2.in" });
+  await camTo({ x: dx, y: dy, s: DOORZ, tx: (W / 2 - dx) * 0.6, dur: 0.9, ease: "power2.inOut" });
+  const dp = camPt(dx, dy, "far"), r = (DOOR_D / 2) * DOORZ;
+  spotOn(dp.x, dp.y, r + 30);
   // the label sits above the door, never on it
-  const tip = el("div", "doorTip", ui, { left: dp.x, top: dp.y - DOOR_D / 2 - 66 }, "Tap the door! ▼");
+  const tip = el("div", "doorTip", ui, { left: dp.x, top: dp.y - r - 66 }, "Tap the door! ▼");
+  uiIn(tip);
   const h = await pointHand(dp.x + 30, dp.y + 30, 0);
   await new Promise((r) => onTap(d, r));
   clearInterval(knock); h.remove(); tip.remove(); d.classList.remove("pulse");
@@ -273,10 +283,13 @@ async function knockDoor(di, kind, count) {
   pf.stop();
   await wait(0.4);
   gsap.to([scroll?.el].filter(Boolean), { opacity: 1, duration: 0.3 });
-  restore();
   gsap.to(d, { rotationY: 0, duration: 0.5, ease: "power2.in" });
   gsap.to([light, beam], { opacity: 0, duration: 0.5, onComplete: () => { light.remove(); beam.remove(); } });
   gsap.to(d, { filter: "brightness(.55) saturate(.8)", duration: 0.6 });
+  // the door shuts, the hall comes back and the table glides in again
+  spotOff(0.5);
+  camRest(0.9);
+  await gsap.to(tg, { y: 0, autoAlpha: 1, duration: 0.8, delay: 0.25, ease: "power3.out" });
 }
 // the two monsters who said no: their Yes cards are crossed out only once the child has answered
 async function twoSaidNo() {
@@ -365,7 +378,7 @@ async function chooseNum(opts) {
   };
 }
 /** a wrong number: the board says what it would mean (the table only ever gets the right number) */
-function tooFew(q, n) { if (q.prep !== "friends" && !q.change) popup(n < q.ans ? `${n} is not enough!` : `${n} is too many!`, 1.6, 540, PICK.cx); }
+function tooFew(q, n) { if (q.prep !== "friends" && !q.change) popup(n < q.ans ? `${n} is not enough!` : `${n} is too many!`, 1.6, 540, PICK.cx, "popup hint"); }
 /** the board has gone: the things for the answer drop onto the table, or the friends are counted */
 async function deliver(q) {
   if (q.prep === "friends") { await countAll(); return; }
@@ -412,7 +425,7 @@ function catchUp(start) {
   if (start > 4) { for (let i = 0; i < 4; i++) rsvpCard("d", from, i); vals.d = 4; renumber(); numbered = true; }
   if (start > 6) { [...rsvp.querySelectorAll(".grp.m .cards.yes .rc")].slice(-2).forEach((c) => c.remove()); vals.m = 4; countCards(); renumber(); }
   for (const q of Q.slice(0, start - 1)) if (FORM[q.prep]) groups[q.prep] = place(q.prep, FORM[q.prep](vals));
-  lights.light((start - 1) / Q.length);
+  hideGroups(true);
 }
 
 export async function runPart3(start = 1) {
@@ -424,7 +437,7 @@ export async function runPart3(start = 1) {
   if (start > 1) {
     catchUp(start);
     drawVals();
-    scroll = await planScroll({ left: 1205, top: 96 });
+    scroll = await planScroll({ left: 1205, top: 14 });
     scroll.el.classList.add("docked", "tab");
   } else {
     // Neel tells his friends: all three are here for it (they stand ready under the title card)
@@ -446,7 +459,7 @@ export async function runPart3(start = 1) {
     // left, so her bubble never covers the scroll
     closeBubble();
     solo("table");
-    await scroll.dock({ left: 1205, top: 96 });
+    await scroll.dock({ left: 1205, top: 14 }); // the top-right corner (no star counter there)
     const ex = card(`<div class="tag">Maya explains</div><p>Glasses: ${show(["2", "m"])}</p><p>Put 6 in place of <span class="mtxt">m</span>: 2 × 6 = <b>12</b></p>`, { left: 470, top: 30, width: 680 }, "card lesson");
     await maya("For example, glasses: 2 for each friend is 2m. Put 6 in place of m: 2 × 6 = 12 glasses.", "explain");
     await maya("Now you try! Find the exact number of each thing on the plan.", "happy");
@@ -459,6 +472,7 @@ export async function runPart3(start = 1) {
     const q = Q[qi];
     checkCur(qi);
     hideTags();
+    hideGroups();
     if (!q.arrive && !q.change) repliesMini(true);
     setAnswer(q.ans);
     camRest(0.6); // no zoom: the cards, the table and the speaker all stay in frame
@@ -501,21 +515,18 @@ export async function runPart3(start = 1) {
       iw.pause();
       closeBubble(); // the question prompt goes as soon as the child answers
       const ok = v === q.ans;
-      if (ok) break;
+      if (ok) { markRight(l); break; }
       tooFew(q, v);
       tries++;
       // a wrong gem gets a cross while Maya helps; then it is a normal gem again, so the answer is never
       // left alone on the panel before the third try
-      sfx("bad");
-      const x = el("div", "nope", l, {}, "✕");
-      l.classList.add("wrong");
-      gsap.fromTo(l, { x: -8 }, { x: 0, duration: 0.45, ease: "elastic.out(1.2,.3)" });
+      const unmark = markWrong(l);
       if (tries < 3) {
         await maya("Not yet. Try again. " + (tries === 1 ? q.h1 : q.h2)(vals), "hint");
-        x.remove(); l.classList.remove("wrong");
+        unmark();
         prompt(q.ask);
       } else {
-        x.remove(); l.classList.remove("wrong");
+        unmark();
         const good = ls[q.opts.indexOf(q.ans)];
         good.classList.add("answer");
         pointHand(parseFloat(good.style.left) + 50, parseFloat(good.style.top) + 60, 2);
@@ -554,16 +565,19 @@ export async function runPart3(start = 1) {
     // when m or d has just changed, the table is worked out again while a line from the sheet talks about the plan:
     // after Question 6, Maya's "Now m is 4. Our plan still works…"; after Question 8, her "…The plan still works,
     // even when the numbers change!" (the plates and cushions follow d = 7). No extra lines
-    const recount = q.arrive?.d === 3 ? () => rework() : undefined;
+    let re = null; // the recount finishes before the next question tidies the table
+    const recount = q.arrive?.d === 3 ? () => (re = rework()) : undefined;
     if (tries < 3) { await praise(PRAISE[qi]); await maya("Correct! " + q.exp, "happy", recount); }
-    else if (recount) await recount();
+    else if (recount) recount();
+    await re;
     if (q.change) {
       // the table was set for 6 monster friends: 2 chairs go first, then the sweets, plates and balloons are counted again
-      await maya("Now m is 4. Our plan still works: chairs = 4 + 1 = 5.", "explain", () => { restock("chairs", FORM.chairs(vals)); setTimeout(rework, 900); });
+      let re = null;
+      await maya("Now m is 4. Our plan still works: chairs = 4 + 1 = 5.", "explain", () => { restock("chairs", FORM.chairs(vals)); re = wait(1.4).then(rework); });
+      await re;
     }
     await wait(0.6); // a recount that is still landing finishes before the next question
     checkDone(qi);
-    lights.light((qi + 1) / Q.length); // the garland over the table: the party is a bit more ready
     closeBubble();
     await wait(0.3);
   }

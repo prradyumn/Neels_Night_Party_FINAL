@@ -103,15 +103,14 @@ const CAMDEPTH = { far: 0.55, mid: 0.8, fore: 1.15 }; // how far each layer trav
 const LT = { far: { x: 0, y: 0 }, mid: { x: 0, y: 0 }, fore: { x: 0, y: 0 } }; // each layer's current offset, scene units
 for (const k of ["far", "mid", "fore"]) layers[k] = $("#L" + k);
 export const farLayer = () => layers.far;
-let px = 0, py = 0, tx = 0, ty = 0, drift = 0;
-stage.addEventListener("pointermove", (e) => { const p = toStage(e); tx = (p.x / W - 0.5) * 2; ty = (p.y / H - 0.5) * 2; });
+// the layers never follow the cursor (that made the whole picture move while a child aimed): only a slow sway, the
+// middle layer's breathing and the depth when the camera moves
 gsap.ticker.add((t) => {
-  px += (tx - px) * 0.05; py += (ty - py) * 0.05;
-  const sway = Math.sin(t * 0.25) * 0.5 + drift, bob = Math.sin(t * 0.4) * 4; // slow breathing of the middle layer
+  const sway = Math.sin(t * 0.25) * 0.5, bob = Math.sin(t * 0.4) * 4; // slow breathing of the middle layer
   for (const k in SPEED) {
     const lt = LT[k];
-    lt.x = (-px * 70 + sway * 40) * SPEED[k] + (camOff.x * (CAMDEPTH[k] - 1)) / camOff.s;
-    lt.y = -py * 10 * SPEED[k] + (k === "mid" ? bob : 0);
+    lt.x = sway * 40 * SPEED[k] + (camOff.x * (CAMDEPTH[k] - 1)) / camOff.s;
+    lt.y = k === "mid" ? bob : 0;
     const tf = `translate(${lt.x.toFixed(1)}px,${lt.y.toFixed(1)}px)`;
     if (layers[k]._tf !== tf) { layers[k]._tf = tf; layers[k].style.transform = tf; } // no style write when nothing moved
   }
@@ -279,17 +278,26 @@ export function groundShadow(x, y, w, h = w * 0.12, parent = world) {
 }
 
 export let sceneName = "";
-/** plain: back layer only (no mid/fore props), for a calm, uncluttered backdrop.
+// while a level is played the room keeps only its back wall (sharp, unchanged): the prop layers in front of it
+// (shelves, herbs, pillars, lanterns, curtains, steps) are taken away. setQuiet(false) brings them back at the level's end
+let quietPlates = []; // the full prop plates hidden while a level is played
+/** plain: back layer only (no mid/fore props), for a calm, uncluttered backdrop. quiet: the same, until setQuiet(false).
  *  setup: builds the new scene's things while the curtain is still shut, so it opens on a scene that is ready */
-export async function setScene(name, { fast = false, plain = false, setup } = {}) {
+export async function setScene(name, { fast = false, plain = false, quiet = false, setup } = {}) {
   let shut = false;
   if (!fast && sceneName) { await curtainClose(); shut = true; hideAllChars(); } // the cast leaves with the old scene
   // fast into the same place (title -> story): the props fade in over the sky instead of a curtain
   const grow = fast && !plain && sceneName === name;
   const plates = [];
+  quietPlates = [];
   for (const k of ["far", "mid", "fore"]) {
     layers[k].innerHTML = "";
-    if (!plain || k === "far") { const p = img(`bg_${name}_${k}`, layers[k], {}, "plate"); plates.push(p); if (grow && k !== "far") gsap.from(p, { opacity: 0, duration: 0.6 }); }
+    if (!plain || k === "far") {
+      const p = img(`bg_${name}_${k}`, layers[k], {}, "plate");
+      if (quiet && k !== "far") { gsap.set(p, { autoAlpha: 0 }); quietPlates.push(p); } // waits hidden (not decoded) until the level ends
+      else plates.push(p);
+      if (grow && k !== "far") gsap.from(p, { opacity: 0, duration: 0.6 });
+    }
   }
   // the new backdrop is decoded while the curtain is still shut, so the curtain never stutters as it opens
   // (and a backdrop that grows in over the title is decoded before it starts to show)
@@ -313,6 +321,11 @@ export async function setScene(name, { fast = false, plain = false, setup } = {}
     if (shut) await curtainOpen();
   }
 }
+/** the prop layers away (a level is being played) or back (the level's end) */
+export async function setQuiet(on, dur = 1) {
+  if (!on) await Promise.race([Promise.all(quietPlates.map((i) => i.decode().catch(() => {}))), wait(0.6)]);
+  gsap.to(quietPlates, { autoAlpha: on ? 0 : 1, duration: dur });
+}
 // every focus filter lists the same functions in the same order, so tweens between them never pass through black.
 // No blur: a blurred full-screen layer that moves every frame is the most expensive thing a cheap tablet can draw
 const FILTER_OFF = "brightness(1) saturate(1)";
@@ -326,7 +339,7 @@ export const SPOTS = {
   game: { x: 190, y: 890, from: -160, bw: 420, size: { neel: 470, agni: 430, maya: 480 }, flip: { agni: true } }, // Agni's art looks left
   story: { x: 1150, y: 895, from: 160, bw: 600, size: { neel: 600, agni: 520, maya: 600 }, flip: { maya: true } },
   // the table scene: a smaller speaker bottom-left, the bubble beside them (not above), so the table stays the hero
-  table: { x: 165, y: 895, from: -160, bw: 320, side: true, btop: 648, size: { neel: 360, agni: 335, maya: 370 }, flip: { agni: true } },
+  table: { x: 165, y: 895, from: -160, bw: 320, side: true, btop: 648, size: { neel: 414, agni: 385, maya: 425 }, flip: { agni: true } }, // 15% bigger with the bigger table
   // conversations: the two characters who are talking stand side by side, facing each other (a third speaker
   // takes the place of whoever spoke longer ago). duo: story scenes and bridges; duoGame: inside a level.
   // slots are spaced from the measured art so both stay whole in frame, even in wide poses (Neel's happy, Maya's celebrate)
@@ -337,7 +350,7 @@ export const SPOTS = {
   // trio: story scenes and bridges (Agni left, Neel, Maya right). trioGame: the cauldron. trioTable: the hall of doors.
   trio: { seats: { agni: 770, neel: 1085, maya: 1390 }, y: 895, bw: 480, size: { neel: 500, agni: 440, maya: 510 }, face: { agni: true, maya: true } },
   trioGame: { seats: { neel: 205, agni: 1160, maya: 1420 }, y: 890, bw: 430, size: { neel: 420, agni: 380, maya: 430 }, face: { maya: true } },
-  trioTable: { seats: { neel: 165, agni: 1170, maya: 1395 }, y: 895, bw: 400, size: { neel: 380, agni: 340, maya: 390 }, face: { maya: true } },
+  trioTable: { seats: { neel: 165, agni: 1170, maya: 1395 }, y: 895, bw: 400, size: { neel: 437, agni: 391, maya: 449 }, face: { maya: true } },
   // the party, in front of the table: Agni and Maya either side of Neel, the guests beyond them. The bubbles sit high
   // (ftop), over the garland, so they never cover the things on the table
   trioParty: { seats: { agni: 500, neel: 740, maya: 980 }, y: 895, bw: 440, ftop: 132, size: { neel: 380, agni: 330, maya: 390 }, face: { agni: true, maya: true } },
@@ -351,12 +364,13 @@ export function solo(spot = "story") {
   if (host.spot.pair || host.spot.seats) camRest(0.6); // a conversation is framed wide, so nobody is pushed off the edge
 }
 /** put the three friends on their seats of a trio spot at once. enter: the first-time entrances play together */
-export function trio(spot = "trio", { enter = false } = {}) {
+export function trio(spot = "trio", { enter = false, hold = [] } = {}) {
   solo(spot);
   const s = host.spot, all = [];
   for (const k of Object.keys(s.seats)) {
     placeChar(k, s.seats[k], s.y, s.size[k], { flip: !!s.face[k] });
     host.slot[k] = 1;
+    if (hold.includes(k)) { gsap.set([C[k].box, C[k].shadow], { opacity: 0 }); continue; } // waits on its seat for entrance(k)
     if (enter && !entered[k] && !calm) { entered[k] = true; all.push(ENTER[k](C[k])); }
     else all.push(gsap.from(C[k].box, { y: 30, opacity: 0, duration: 0.35, ease: "back.out(1.4)" }));
   }
@@ -439,6 +453,12 @@ const ENTER = {
     playFx("collect", c.x, c.y - c.h * 0.8, { palette: "plum", scale: 2.4, parent: world });
   },
 };
+/** a character held by trio({hold}) arrives on their seat in their own way */
+export function entrance(k) {
+  entered[k] = true;
+  if (calm) return gsap.to([C[k].box, C[k].shadow], { opacity: 1, duration: 0.3 });
+  return ENTER[k](C[k]);
+}
 export function setFore(v, dur = 0.5) { gsap.to(layers.fore, { opacity: v, duration: dur }); }
 export function setDim(v, dur = 0.8) { gsap.to("#dim", { opacity: v, duration: dur }); }
 
@@ -451,6 +471,8 @@ const ANIM = {
   maya: { idle: "idle", talk: "talk", explain: "talk", cast: "cast", happy: "happy", hint: "hint", oops: "hint", shocked: "hint", celebrate: "celebrate", cheer: "happy", dance: "celebrate" },
 };
 const LOOP = new Set(["idle", "talk", "dance", "oops", "hint", "celebrate"]);
+// the "hear again" button: a gold speaker drawn in the game's style (not an emoji)
+export const SPEAKER = `<svg viewBox="0 0 24 24" width="30" height="30"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#ffc547" stroke="#7a4a12" stroke-width="1.2" stroke-linejoin="round"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="#ffc547" stroke-width="2" stroke-linecap="round"/></svg>`;
 export const NAMES = { neel: "Neel", agni: "Agni", maya: "Maya", nar: "Narrator" };
 export const C = {};
 // where the feet are in each character's frames (measured on the idle sheets), for the contact shadow
@@ -805,7 +827,7 @@ async function line(who, text, { p, wait: needTap = true, auto = 0, voice: aloud
     gsap.killTweensOf(bubble);
     bubble.className = "";
     bubble.style.pointerEvents = "auto";
-    bubble.innerHTML = `<div class="txt">${html}</div>` /* no speaker name on the box (Draft 4): the tail shows who speaks */ + `<div class="tail"></div>` + (holds ? `<div class="nx">tap ▶</div>` : "") + (needTap && settings.autoplay ? `<div class="prog"><i></i></div>` : "") + `<div class="rp" title="Hear again">🔊</div>`;
+    bubble.innerHTML = `<div class="txt">${html}</div>` /* no speaker name on the box (Draft 4): the tail shows who speaks */ + `<div class="tail"></div>` + (holds ? `<div class="nx">tap ▶</div>` : "") + (needTap && settings.autoplay ? `<div class="prog"><i></i></div>` : "") + `<div class="rp" title="Hear again">${SPEAKER}</div>`;
     box = bubble.querySelector(".txt");
     placeBubble(c);
   }
@@ -916,12 +938,12 @@ export function onTap(node, fn) { node.dataset.tap = 1; node.addEventListener("p
 
 // ---------- misc UI ----------
 /** top: optional centre line in px (default 44% of the stage) */
-export async function popup(html, dur = 1.6, top, left) {
-  const p = el("div", "popup", ui, Object.assign(top ? { top } : {}, left ? { left } : {}), html);
-  gsap.from(p, { scale: 0.5, opacity: 0, duration: 0.35, ease: "back.out(2)" });
+/** cls "popup hint": the orange look of a wrong answer ("7 is not enough!") */
+export async function popup(html, dur = 1.6, top, left, cls = "popup") {
+  const p = el("div", cls, ui, Object.assign(top ? { top } : {}, left ? { left } : {}), html);
+  uiIn(p);
   await wait(dur);
-  await gsap.to(p, { opacity: 0, y: -30, duration: 0.3 });
-  p.remove();
+  await uiOut(p);
 }
 // part title card: the ribbon unrolls, the letters drop in one by one, a gold line draws itself underneath.
 // Not waited for: the part builds its scene under the card, and its first line waits until the card has gone
@@ -941,9 +963,32 @@ async function showTitle(k, t) {
   await gsap.to(d, { opacity: 0, scale: 1.15, duration: 0.3 });
   d.remove();
 }
+// ---------- one motion for the UI: things rise in softly and fade out, all with the same timing and easing ----------
+export const MOTION = { in: { y: 16, opacity: 0, duration: 0.35, ease: "power2.out" }, out: { y: -10, opacity: 0, duration: 0.3, ease: "power1.in" } };
+export const uiIn = (e, delay = 0) => gsap.from(e, { ...MOTION.in, delay });
+export const uiOut = (e, remove = true) => gsap.to(e, { ...MOTION.out, onComplete: () => remove && e.remove() });
+
+// ---------- answer feedback: one look in every part ----------
+// right: a green glow and a tick badge that pops in. Wrong: a gentle orange shake, an orange glow and a cross badge
+// (a "try again", not a prize: the hint is in Maya's line). markWrong returns the function that clears the mark
+export function markRight(target, keep = 1.8) {
+  target.classList.add("right");
+  const t = el("div", "fb ok", target, {}, "✓");
+  gsap.from(t, { scale: 0, duration: 0.35, ease: "back.out(2.5)" });
+  gsap.fromTo(target, { scale: 1.08 }, { scale: 1, duration: 0.45, ease: "back.out(2)" });
+  setTimeout(() => { target.classList.remove("right"); gsap.to(t, { opacity: 0, duration: 0.3, onComplete: () => t.remove() }); }, keep * 1000);
+}
+export function markWrong(target, sound = true) {
+  if (sound) sfx("bad");
+  target.classList.add("wrong");
+  const x = el("div", "fb no", target, {}, "✕");
+  gsap.from(x, { scale: 0, duration: 0.3, ease: "back.out(2.5)" });
+  gsap.fromTo(target, { x: -7 }, { x: 0, duration: 0.5, ease: "elastic.out(1,.35)" });
+  return () => { target.classList.remove("wrong"); gsap.to(x, { opacity: 0, duration: 0.25, onComplete: () => x.remove() }); };
+}
 export function card(html, style, cls = "card pill") {
   const c = el("div", cls, ui, style, html);
-  gsap.from(c, { y: -40, opacity: 0, duration: 0.45, ease: "back.out(1.6)" });
+  uiIn(c);
   return c;
 }
 export function button(label, x, y, parent = ui) {
@@ -960,41 +1005,23 @@ export async function pointHand(x, y, dur = 2.4) {
   return h;
 }
 
-// ---------- question progress: "Question 3 of 8", in the star pill (one line, top right) ----------
-const prog = el("div", "", stage); prog.id = "prog";
-gsap.set(prog, { autoAlpha: 0, display: "none" });
-let progN = 0, progCur = 0;
-const progDone = new Set();
-function drawProg() {
-  prog.innerHTML = `<b>Question ${progCur + 1} of ${progN}</b>`;
-}
-/** list: one entry per question (its length is the part's question count) */
-export function checklist(list) { progN = list.length; progCur = 0; progDone.clear(); drawProg(); }
-export function checkCur(i) { progCur = i; drawProg(); gsap.set(prog, { display: "" }); gsap.to(prog, { autoAlpha: 1, duration: 0.3 }); gsap.fromTo(prog.querySelector("b"), { scale: 1.15 }, { scale: 1, duration: 0.35, ease: "back.out(3)" }); }
-export function checkDone(i) { progDone.add(i); drawProg(); }
-export function hideChecklist() { gsap.to(prog, { autoAlpha: 0, duration: 0.3, onComplete: () => gsap.set(prog, { display: "none" }) }); }
+// ---------- question progress ----------
+// no question number on screen and no star counter (review feedback): the parts still report their progress here
+export function checklist() {}
+export function checkCur() {}
+export function checkDone() {}
+export function hideChecklist() {}
 
 export { playFx };
 
-// ---------- stars, Party Meter, action zone, menu ----------
+// ---------- stars, action zone ----------
+// the stars are still counted (the map rates each room with them), but there is no counter on screen
 export const score = { stars: 0, max: 75, room: {} };
-const hud = el("div", "", stage); hud.id = "hud";
-hud.innerHTML = `<div class="starpill"><span class="st">★</span><span id="scount">0</span></div><div class="meter"><div class="lbl2">Party</div><div class="bar"><i id="mfill"></i></div></div>`;
-hud.appendChild(prog); // one pill: stars, then the question number
-const scount = hud.querySelector("#scount"), mfill = hud.querySelector("#mfill");
-export function showHud(on = true, full = false) { hud.classList.toggle("full", full); gsap.to(hud, { opacity: on ? 1 : 0, duration: 0.3 }); }
-gsap.set(hud, { opacity: 0 });
-function refreshHud() {
-  const o = { v: +scount.textContent };
-  gsap.to(o, { v: score.stars, duration: 0.6, onUpdate: () => (scount.textContent = Math.round(o.v)) });
-  gsap.to(mfill, { width: Math.min(100, (score.stars / score.max) * 100) + "%", duration: 0.8, ease: "power2.out" });
-  gsap.fromTo(hud, { scale: 1.08 }, { scale: 1, duration: 0.5, ease: "back.out(3)" });
-}
+export function showHud() {}
 /** tries = wrong attempts before success. 0 -> 3 stars, 1 -> 2, else 1. */
 export async function award(tries, x = W / 2, y = 420, room = "x") {
   const n = tries === 0 ? 3 : tries === 1 ? 2 : 1;
   score.room[room] = (score.room[room] || 0) + n;
-  const tgt = { x: 1600 - 18 - hud.offsetWidth + 34, y: 44 };
   // a perfect answer gets a gold sunburst behind the stars
   if (n === 3) { const rays = playFx("sunburst", x, y - 5, { palette: "gold", scale: 2, parent: ui }); if (rays.el) ui.insertBefore(rays.el, ui.firstChild); setTimeout(() => rays.stop(), 1300); }
   punch(x, y, n === 3 ? 1.06 : 1.03);
@@ -1004,16 +1031,11 @@ export async function award(tries, x = W / 2, y = 420, room = "x") {
   gsap.from(row.children, { scale: 0, rotation: -90, duration: 0.4, stagger: 0.12, ease: "back.out(3)" });
   sfx("magic");
   await wait(0.5);
-  [...row.children].slice(0, n).forEach((s, i) => {
-    const r = s.getBoundingClientRect(), p = toStage({ clientX: r.left, clientY: r.top });
-    const f = el("div", "starfly", ui, { left: p.x, top: p.y }, "★");
-    s.style.visibility = "hidden";
-    gsap.to(f, { left: tgt.x, top: tgt.y - 20, scale: 0.6, duration: 0.5, delay: i * 0.08, ease: "power2.in", onComplete: () => {
-      f.remove(); score.stars++; refreshHud(); sfx("star");
-      if (i === n - 1) playFx("collect", tgt.x + 4, tgt.y + 6, { palette: "gold", scale: 1.6, parent: ui }); // glitter as the last star lands
-    } });
-  });
-  gsap.to(row, { opacity: 0, duration: 0.3, delay: 0.9, onComplete: () => row.remove() });
+  // the stars earned glitter where the answer was given, then fade (no counter for them to fly to)
+  score.stars += n;
+  sfx("star");
+  playFx("collect", x, y, { palette: "gold", scale: 1.6, parent: ui });
+  gsap.to(row, { opacity: 0, y: -20, duration: 0.4, delay: 0.9, onComplete: () => row.remove() });
   return n;
 }
 /** tip: short instruction shown on a tab at the top of the zone (undefined keeps the current one); low: the shorter zone of the table scenes */
@@ -1030,7 +1052,7 @@ export function azTip(t) {
   const e = document.querySelector("#azone .aztip");
   if (!e || e.innerHTML === t) return;
   e.innerHTML = t || "";
-  if (t) gsap.fromTo(e, { y: 8, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3 });
+  if (t) uiIn(e);
 }
 // guests stand in two groups (monsters | dragons) with a coloured rug under each group, so they are easy to count
 export function crowd(list, { cx = 650, top = 720, size = 120, maxW = 520 } = {}) {
@@ -1095,23 +1117,6 @@ export function flank(list, { cx = 800, gap = 362, feet = 622, size = 126, sideW
   }
 }
 export function clearCrowd() { world.querySelectorAll(".rug").forEach((r) => r.remove()); }
-// menu (voice / sound)
-const mb = el("div", "icon", stage, { left: 16, top: 14, position: "absolute", zIndex: 70 }, "☰");
-let menu = null;
-mb.onpointerdown = (e) => {
-  e.stopPropagation(); sfx("tap");
-  if (menu) { menu.remove(); menu = null; return; }
-  menu = el("div", "menu", stage, {}, "");
-  const row = (label, key) => {
-    const b = el("div", "mrow", menu, {}, `${label}<span>${settings[key] ? "On" : "Off"}</span>`);
-    b.onpointerdown = (ev) => { ev.stopPropagation(); settings[key] = !settings[key]; b.lastChild.textContent = settings[key] ? "On" : "Off"; if (!settings.voice) hush(); musicRefresh(); };
-  };
-  row("Voice", "voice"); row("Music", "music"); row("Sounds", "sound"); row("Auto-play", "autoplay");
-  const c = el("div", "mrow close", menu, {}, "Close");
-  c.onpointerdown = (ev) => { ev.stopPropagation(); menu.remove(); menu = null; };
-};
-export function showMenu(on) { gsap.to(mb, { opacity: on ? 1 : 0, duration: 0.3 }); mb.style.pointerEvents = on ? "auto" : "none"; }
-
 // ---------- one question card: title + question line + plan + values ----------
 export function qbox() {
   // three rows at most: title + values, the plan, one short line (instruction or question)
@@ -1122,8 +1127,8 @@ export function qbox() {
   const plan = el("div", "spellbar qplan", box);
   const sub = el("div", "qs", box);
   gsap.set(box, { opacity: 0 });
-  const setSub = (s = "") => { sub.innerHTML = colorMD(s); if (s) gsap.fromTo(sub, { opacity: 0 }, { opacity: 1, duration: 0.3 }); };
-  return { box, title, plan, vals, sub: setSub, show(t, s) { title.innerHTML = t; setSub(s); gsap.to(box, { opacity: 1, duration: 0.3 }); gsap.fromTo(title, { y: -8, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3 }); } };
+  const setSub = (s = "") => { sub.innerHTML = colorMD(s); if (s) uiIn(sub); };
+  return { box, title, plan, vals, sub: setSub, show(t, s) { title.innerHTML = t; setSub(s); gsap.to(box, { opacity: 1, duration: MOTION.in.duration }); uiIn(title); } };
 }
 /** uses: the letters the current plan needs ("m", "d", "md"); a value the question does not use is left out */
 export function valPills(box, v, uses = "md") {

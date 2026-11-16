@@ -15,10 +15,12 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
 - src/engine.js: 1600×900 scaled stage, 3-layer parallax, sprite-sheet characters,
   speech bubbles, stars/HUD, synth SFX, browser TTS, curtain scene transition
   (src/curtain.svg, imported as text; left/right/valance groups moved as 3 layers)
+- Parallax never follows the cursor (it made the picture shake while a child aimed): the layers only sway slowly and
+  move with the camera.
 - Camera (engine.js): #cam holds backgrounds, world, characters and effects; #ui, HUD and curtain stay fixed.
   camTo/camFocus/camRest/punch/shake move it; camPt(x, y, layer) converts a scene point to screen (use it to aim
   UI at scene objects). Put UI-anchored effects in ui (playFx parent: ui), scene effects in the default #fxl.
-- src/part1.js: Friend Dial (sort items into Variable jar / Constant chest). The jar and chest open with the question:
+- src/part1.js: Friend Dial (sort items into Variable jar / Constant chest). The things on display stand on a small table (TB, two staggered rows when there are more than 4). The jar and chest open with the question:
   the dial is optional ("Turn the dial to check"), never a gate; hint 2 still turns it to show the numbers
 - src/part2.js: Spell Cauldron (build expressions from orbs; Brew! tests 3 values at once and the 3 result lines land
   together; a right spell keeps its green ticks up 2 s before the praise; the 3rd wrong try puts the answer in the slot
@@ -26,20 +28,30 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
 - src/part3.js: Magic Doors. Replies arrive as cards through the doors (no guests until the party), gold seals open
   independently. Each question is solved on a chalkboard over the hall (BOARD: seals, answer gems, "x is not enough"
   for a wrong gem; the table never shows a wrong number); when solved the board lifts, the worked plan goes to the top
-  and the things drop onto the table and stay; partyTable()/partyClear() for the party.
+  and the things drop onto the table. They show only while they are talked about (hideGroups() at each question start):
+  their own question, a recount (restock() brings a hidden kind back before it changes: chairs, sweets, balloons after
+  Q6; plates, cushions after Q8) and the party. The string-light garland over the table is hung for the party only;
+  partyTable()/partyClear() for the party.
+  Size: the table and its things are one group (tg), 1.3x from the table's feet and 60 px right while the level is played,
+  1x at the party (BIG); the Part 3 speakers are 15% bigger (SPOTS.table, trioTable). A knock (knockDoor) slides the table
+  group away, the camera moves in on the door (DOORZ) and spotOn() dims the rest; it all comes back after the replies.
   Table places (layout()): nothing tall and no tag in front of the three doors (GAP: the wall between them).
   Chairs stand on the floor at the table's scale: the two end chairs on the floor halfway back (TB.foot - 24, 190 px
   tall), the rest behind the table so only their backrests show over the tabletop. Sweets/laddoo bowls in the gaps, low
-  plate stacks in the middle, balloons high at the garland ends, cushions front right. No count tags on the table: the
+  plate stacks in the middle, balloons high over the table ends, cushions front right. No count tags on the table: the
   board and the worked plan show the numbers. During a knock,
-  clearDoor() fades whatever still overlaps that door and "Tap the door!" sits above it. When m or d changes, FORM works every group out
+  "Tap the door!" sits above the door. When m or d changes, FORM works every group out
   again and restock() moves/adds/removes things while a sheet line talks about the plan (after Q6: "Now m is 4…";
   after Q8: Maya's "…The plan still works, even when the numbers change!"). No lines that are not in the sheet. Party: no tags,
   m = 4 / d = 7 never change, guests stand in loose groups at different depths with shadows
 - src/finale.js: Party Day shopping. Not in the current script, so it is out of the flow (no room 4)
 - src/map.js: level select (3 rooms, title fixed on screen) · src/qa.js: QA mode (press Q, or a #qa-p2-7 link);
-  never remembered between visits, so players never see the badge or answers
-- Set pieces: opening crane shot onto Neel's house (houseWindows/owlBlink in common.js), the m coin that spins through
+  no badge or answer chip on screen (the Q panel shows the current answer); never remembered between visits
+- Set pieces: the opening at Neel's house, at its painted size (no camera zoom: the art stays sharp): the windows'
+  glow comes up (houseWindows(layer, false): no dark patches), Neel steps out of his lit doorway and walks down the path
+  to his seat (main.js neelFromDoor), Agni and Maya arrive on theirs (trio({hold}) + entrance(k)); then the hall's
+  "how many?" table (planTable: cake, plates, sweets, balloons, each with a ?, gone when Maya answers; the hall's fore
+  layer is hidden for it), the m coin that spins through
   numbers (story, Part 3 seals, m 6 → 4), doors that swing open with light (part3 knockDoor), the cauldron test show and
   gold-ink plan (part2 bubbleTest/spellWorks), the jar that fills and the chest that locks (part1), the living map, and
   the arrival: friends walk up the path, the camera flies in through the round window to the party (main.js arrival()).
@@ -54,7 +66,17 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
 - Inputs: lock(el) makes a control visibly asleep while someone talks; a tap on it wiggles and ends the line, or says
   why it is asleep (el._why). A tap made while a control was locked but delivered late (busy device) is dropped.
 - setScene(name, {setup}): the old cast leaves behind the shut curtain; setup builds the new scene before it opens.
+- Quiet rooms: the three level rooms (hall, cauldron, doors) open with setScene(name, {quiet: true}): only the back wall
+  (far plate, sharp, never blurred) shows while the level is played; the mid and fore prop plates wait hidden. bridge()
+  calls setQuiet(false): the props come back when the level ends. Story, map, arrival and party show every layer.
 - Hints in every part: wrong 1 = clue, wrong 2 = clue with the numbers on screen, wrong 3 = answer (highlighted).
+- Feedback looks the same in every part (engine.js markRight / markWrong): right = green glow + a tick badge that pops;
+  wrong = a gentle orange shake + orange glow + a cross badge (orange is the try-again colour, never red); a wrong-number
+  popup uses popup(..., "popup hint"). Motion: UI comes in and goes out with MOTION (uiIn: rise 16 px + fade, 0.35 s,
+  power2.out; uiOut: fade + 10 px up, 0.3 s): card(), popup(), azTip, the question card, door tips.
+- Touch targets are 64 px or more: the "hear again" speaker (an SVG, SPEAKER in engine.js, not an emoji) and the plan tab.
+- Map (map.js): each room is a round lit window like the house's round window (.room.win), a gold SVG lock when locked;
+  the house's own windows light up as rooms are finished (an unlit one is a dim pane, never a black hole).
 - src/fx.js: painted-light effects, no pixel art: playFx(name, x, y, {palette, scale, parent, dur}) draws soft glows,
   sparks, twinkles and smoke/dust puffs (lumps lit top-left, shaded below) at full resolution on a small canvas, one rAF
   loop for all; turning pieces (sunburst rays, rune circle, portal swirl) are drawn once and moved with transforms.
@@ -72,13 +94,14 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
 ## Layout rules
 - Speaking character bottom-left, question card top-centre. When two characters talk to each other (story, bridges,
   Part 2 beat and m + d example, ending) both stay on screen: solo("duo") / solo("duoGame"); questions stay one speaker.
-  All tappable controls in the bottom-right action zone, ★ counter top-right.
+  All tappable controls in the bottom-right action zone. No HUD: no ★ counter, no question number, no ☰ menu
+  (stars are still counted in score for the map; award() lets them glitter where the answer was given).
   The three friends together (story, bridges, Part 2 dragon beat, Part 3 intro, party) use trio(): SPOTS.trio*.
-  Question progress ("Question x of N", no dots) inside the star pill, one line. Part 2: test results over the cauldron,
-  under the card and above the spell; nothing animates over the spell. Part 3: equation bar (item = plan) top-centre,
+  Part 2: the card keeps the whole word problem (q.sub) for the whole question; test results over the cauldron,
+  under the card (below its bottom edge) and above the spell; nothing animates over the spell. Part 3: equation bar (item = plan) top-centre,
   reply cards top-left (7 cards fit a row; numbered once counted; only the counts, .rsvp.mini, during a question that is
-  not about the replies: knocks and the "two said no" question show every card), the plan folds to a tab under the
-  stars (.scroll.tab, a tap opens it for 6 s), only the current question's count tag on the table (a tag shows again
+  not about the replies: knocks and the "two said no" question show every card), the plan folds to a tab in the
+  top-right corner (.scroll.tab, a tap opens it for 6 s), only the current question's count tag on the table (a tag shows again
   while its count changes), no "d = 4" chip during a knock (the replies count), answer gems on the board under the plan, smaller
   speaker bottom-left (SPOTS.table) whose side bubble grows upwards. Party: bubbles high (SPOTS.trioParty.ftop),
   monsters left and dragons right, one row each.
