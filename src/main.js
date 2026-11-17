@@ -1,6 +1,6 @@
 import "./style.css";
 import "./qa.js";
-import { confetti, groundShadow, camPt, camRest, camSet, ANIM_FILES, warmChars, setFore, score, showHud, music, curtainShut, curtainOpen, setTint, punch, shake, solo, trio, entrance, setFocus, setQuiet, gsap, $, el, img, ui, world, wait, sfx, say, setScene, placeChar, hideAllChars, pose, dance, partTitle, playFx, preload, hideChecklist, setDim, C, closeBubble, camTo, W } from "./engine.js";
+import { confetti, card, uiOut, groundShadow, camPt, camRest, camSet, ANIM_FILES, warmChars, setFore, score, showHud, music, curtainShut, curtainOpen, setTint, punch, shake, solo, trio, entrance, setFocus, setQuiet, gsap, $, el, img, ui, world, wait, sfx, say, setScene, placeChar, hideAllChars, pose, dance, partTitle, playFx, preload, hideChecklist, setDim, C, closeBubble, camTo, W } from "./engine.js";
 import { runPart1 } from "./part1.js";
 import { runPart2 } from "./part2.js";
 import { runPart3, partyTable, DOOR_XY } from "./part3.js";
@@ -11,15 +11,15 @@ import { planScroll, lightsUp, houseWindows, owlBlink, coin } from "./common.js"
 const ALL = ["bg_forest_far", "bg_forest_mid", "bg_forest_fore", "bg_hall_far", "bg_hall_mid", "bg_hall_fore", "bg_cauldron_far", "bg_cauldron_mid", "bg_cauldron_fore", "bg_doors_far", "bg_doors_mid", "bg_doors_fore",
   ...ANIM_FILES,
   "gu_monster_green", "gu_monster_pink", "gu_monster_blue", "gu_monster_sad", "gu_dragon_teal", "gu_dragon_red",
-  "p1_dial_base", "p1_dial_knob", "p1_variable_jar", "p1_constant_chest_closed", "p1_constant_chest_open", "p2_cauldron", "p2_orb_m", "p2_orb_d", "p2_orb_number", "p2_rune_stone",
-  "p3_door_closed", "p3_door_open", "fx_coin_spin", "pr_party_table_3d", "pr_bowl", "pr_cake", "pr_chair", "pr_sweet", "pr_balloon", "pr_plate", "pr_cushion", "pr_laddoo", "de_string_lights", "de_bunting", "cover_neel", "ui_panel_frame", "ui_button_pill", "ui_title_card", "ui_play_button", "ui_hint_hand"];
+  "p1_dial_base", "p1_dial_knob", "p2_orb_number", "p2_cauldron",
+  "p3_door_closed", "p3_door_open", "pr_party_table_3d", "pr_bowl", "pr_cake", "pr_chair", "pr_sweet", "pr_balloon", "pr_plate", "pr_cushion", "pr_laddoo", "de_string_lights", "de_bunting", "cover_neel", "ui_panel_frame", "ui_button_pill", "ui_title_card", "ui_play_button", "ui_hint_hand"];
 
 
 // what the title needs (the loader waits only for this), then what the story needs (it loads while the title is up),
 // then everything else, one file at a time while the story plays
 const TITLE = ["bg_forest", "ui_", "cover_neel"];
-const STORY_NOW = ["bg_hall", "fx_coin_spin", "gu_monster", "pr_party_table_3d", "pr_cake", "pr_plate", "pr_bowl", "pr_sweet", "pr_balloon", "anim_neel_idle", "anim_neel_talk", "anim_agni_idle", "anim_agni_talk", "anim_agni_crash_in", "anim_maya_idle", "anim_maya_talk"];
-const FIRST = ["bg_forest", "bg_hall", "ui_", "cover_neel", "fx_coin_spin", "gu_monster", "anim_neel_idle", "anim_neel_talk", "anim_neel_happy", "anim_agni_idle", "anim_agni_talk", "anim_agni_crash_in", "anim_agni_shocked", "anim_agni_cheer", "anim_maya_idle", "anim_maya_talk", "anim_maya_cast", "anim_maya_happy"];
+const STORY_NOW = ["bg_hall", "gu_monster", "pr_party_table_3d", "pr_cake", "pr_plate", "pr_bowl", "pr_sweet", "pr_balloon", "anim_neel_idle", "anim_neel_talk", "anim_agni_idle", "anim_agni_talk", "anim_agni_crash_in", "anim_maya_idle", "anim_maya_talk"];
+const FIRST = ["bg_forest", "bg_hall", "ui_", "cover_neel", "gu_monster", "anim_neel_idle", "anim_neel_talk", "anim_neel_happy", "anim_agni_idle", "anim_agni_talk", "anim_agni_crash_in", "anim_agni_shocked", "anim_agni_cheer", "anim_maya_idle", "anim_maya_talk", "anim_maya_cast", "anim_maya_happy"];
 function clearUI() { [...ui.children].forEach((c) => { if (c.id !== "bubble") c.remove(); }); world.innerHTML = ""; }
 
 // ---------- staging helpers ----------
@@ -54,27 +54,13 @@ function mysteryFriends(cx, cy) {
     },
   };
 }
-// the gold m seal stamps down: screen shake, a gold ring ripples out, a purple glow keeps pulsing (m is purple)
-function stampSeal(cx, cy) {
-  const glow = el("div", "sealGlow", ui, { left: cx - 170, top: cy - 170, width: 340, height: 340 });
-  const mc = coin(ui, { left: cx - 100, top: cy - 100, width: 200, height: 200 }, "m"), seal = mc.el;
-  mc.face.style.fontSize = "120px";
-  gsap.set(glow, { opacity: 0 });
-  let rays = null;
-  // the camera rushes in on the seal as it falls, then pulls back to show the room (the seal is UI, so it stays crisp)
-  camTo({ x: cx, y: cy, s: 1.16, dur: 0.38, ease: "power3.in" });
-  gsap.fromTo(seal, { scale: 2.4, opacity: 0, rotation: -18 }, { scale: 1, opacity: 1, rotation: 0, duration: 0.38, ease: "power4.in", onComplete: () => {
-    shake(12); sfx("knock"); sfx("magic");
-    const ring = el("div", "ring", ui, { left: cx - 100, top: cy - 100, width: 200, height: 200 });
-    gsap.fromTo(ring, { scale: 0.7, opacity: 1 }, { scale: 2.4, opacity: 0, duration: 0.7, ease: "power2.out", onComplete: () => ring.remove() });
-    // the light goes behind the seal so the letter m stays readable
-    const circle = playFx("cast", cx, cy + 20, { palette: "gold", scale: 3, parent: ui });
-    rays = playFx("sunburst", cx, cy, { palette: "gold", scale: 4.4, parent: ui }); // slow gold rays behind the seal
-    for (const fx of [circle, rays]) if (fx.el) ui.insertBefore(fx.el, seal);
-    camTo({ x: cx, y: cy, s: 1, dur: 1.6, ease: "power2.inOut" });
-    gsap.fromTo(glow, { opacity: 0.5, scale: 0.9 }, { opacity: 1, scale: 1.1, duration: 1.1, yoyo: true, repeat: -1, ease: "sine.inOut" });
-  } });
-  return { done: wait(1.3), coin: mc, remove() { rays && rays.stop(); gsap.to([seal, glow], { scale: 0, opacity: 0, duration: 0.4, onComplete: () => { seal.remove(); glow.remove(); } }); } };
+// the letter m is written in, plainly (review 2: a letter the child can write too, not a glowing coin)
+function writeM(cx, cy) {
+  const mc = coin(ui, { left: cx - 100, top: cy - 100, width: 200, height: 200 }, "m");
+  mc.face.style.fontSize = "150px";
+  sfx("chalk");
+  gsap.fromTo(mc.face, { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.7, ease: "power1.inOut" });
+  return { done: wait(0.8), coin: mc, remove() { gsap.to(mc.el, { opacity: 0, duration: 0.4, onComplete: () => mc.el.remove() }); } };
 }
 // scoreboard: m = ?, d = ? tiles. A new number pops in at once: a tile is never blank, not even for a moment
 function board() {
@@ -196,11 +182,11 @@ async function story() {
   await wait(0.8);
   const out = neelFromDoor(mid);
   camTo({ s: 1, dur: 3.6, ease: "power2.inOut" });
-  await say("nar", "Welcome to Neel's Night Party!");
+  await say("nar", "Welcome to Neel's Night Party!", { voiceOnly: true }); // the first screen is voice only (review 2): the picture tells it
   sfx("owl");
   await out;
   const friends = Promise.all([entrance("agni"), wait(0.6).then(() => entrance("maya"))]);
-  await say("nar", "Neel wants to have a party next week, but he has not decided how many friends to invite. Maya and Agni are helping him plan the party.");
+  await say("nar", "Neel wants to have a party next week. He has invited his friends, but their replies have not come yet. Maya and Agni are helping him plan the party.", { voiceOnly: true }); // the first screen is voice only (review 2): the picture tells it
   await friends;
   sfx("whoosh");
   let plan;
@@ -212,30 +198,41 @@ async function story() {
   // Agni's panic: a quick camera punch toward Agni with speed lines
   const hd = camPt(...headOf("agni"));
   punch(hd.x, hd.y); speedLines(hd.x, hd.y); sfx("boing");
-  await say("agni", "Neel, have you still not decided how many guests are coming? Then how will we plan? How many plates? How many sweets?", { p: "shocked", onStart: () => plan.ask() });
+  await say("agni", "Neel, have the replies still not come? Then how will we plan? How many plates? How many sweets?", { p: "shocked", onStart: () => plan.ask() });
   // the unknown number: friend silhouettes keep changing (top left), then become the letter m
   const SX = 350, SY = 250;
   plan.clear();
   const mystery = mysteryFriends(SX, SY);
   await say("maya", "Don't worry. When we don't know a number, we can write it as a letter.", { p: "explain" });
   await mystery.collapse();
-  const seal = stampSeal(SX, SY);
+  const seal = writeM(SX, SY);
   await seal.done;
   await say("maya", "Neel's friends are monsters. So let's use the letter <b>m</b> for the number of monster friends.", { p: "cast" });
   const cap = el("div", "mcap", ui, { left: SX, top: SY + 120 }, `<span class="mtxt">m</span> = number of Neel's monster friends`);
   gsap.from(cap, { y: 14, opacity: 0, duration: 0.4 });
   await say("maya", "Let's say <b>m</b> monster friends are coming.", { p: "explain" });
   await say("agni", "But Maya, m is not a number.", { p: "shocked" });
-  // the coin spins through numbers while Maya says it: m can be 3, 5, 8… and lands on m again
+  // m rolls through numbers while Maya says it: m can be 3, 5, 8… and comes back to m
   seal.coin.spin(4, ["3", "5", "8", "m"], 3.4);
   await say("maya", "<b>m</b> is a <span class=v>variable</span> that represents a number. A variable is a number that is not fixed yet. It can change.", { p: "explain" });
-  await say("maya", "When Neel decides who is coming, we can easily find the exact number of things we need.", { p: "happy" });
+  await say("maya", "When the replies come, we can easily find the exact number of things we need.", { p: "happy" });
   await say("agni", "Hmm! A variable! Let's plan!", { p: "cheer" });
   seal.remove(); gsap.to(cap, { opacity: 0, duration: 0.3, onComplete: () => cap.remove() });
 }
 
 // the bridges between parts: all three friends stay on stage while they talk
-async function bridge(lines, danceAll = true) {
+// the end of a level: one card with what was learned, in the words the friends use (on screen only, no new lines)
+const RECAP = {
+  p1: `<div class="tag">What we learned</div>
+    <div class="rrow"><span class="vcchip v">Variable</span><p>a number that can change<small>friends, plates, boxes of sweets</small></p></div>
+    <div class="rrow"><span class="vcchip c">Constant</span><p>a number that stays the same<small>1 big cake, 6 lamps, 10 sweets in a box</small></p></div>`,
+  p3: `<div class="tag">What we learned</div>
+    <p>Put the number in place of the letter.</p>
+    <p class="rx"><span class="mtxt">m</span> = 6: &nbsp;3<span class="mtxt">m</span> + 5 = 3 × 6 + 5 = <b>23</b></p>
+    <p>When <span class="mtxt">m</span> changed to 4, the same plan still worked:</p>
+    <p class="rx"><span class="mtxt">m</span> + 1 = 4 + 1 = <b>5</b> chairs</p>`,
+};
+async function bridge(lines, danceAll = true, recap) {
   sfx("win");
   closeBubble();
   hideChecklist();
@@ -243,8 +240,10 @@ async function bridge(lines, danceAll = true) {
   setFocus(false);
   setQuiet(false); // the level is done: the full painting comes back
   await trio("trio");
+  const rc = recap && card(recap, { left: 40, top: 120, width: recap.includes("rrow") ? 640 : 600 }, "card lesson recap"); // Part 3: clear of the plates
   if (danceAll) dance(lines[0][0]);
   for (const [w, t, p] of lines) await say(w, t, { p });
+  if (rc) uiOut(rc);
   ["neel", "agni", "maya"].forEach((k) => { if (C[k].loop) { C[k].loop = null; pose(k, "idle"); } });
   closeBubble();
 }
@@ -261,7 +260,7 @@ async function part1(start = 1) {
   const lights = img("de_string_lights", $("#Lmid"), { left: 500, top: 0, width: 1000 });
   gsap.from(lights, { y: -200, duration: 0.8, ease: "bounce.out", onComplete: () => lightsUp($("#Lmid"), 500, 0, 1000) });
   setDim(0, 1.2);
-  await bridge([["neel", "Thank you for helping me check my party list."], ["maya", "Great! Now you know that a number that can change is a <span class=v>variable</span>.", "happy"], ["maya", "And a number that stays the same is a <span class=c>constant</span>.", "explain"], ["agni", "Come on! Let's write the party plan!"]]);
+  await bridge([["neel", "Thank you for helping me check my party list."], ["maya", "Great! Now you know that a number that can change is a <span class=v>variable</span>.", "happy"], ["maya", "And a number that stays the same is a <span class=c>constant</span>.", "explain"], ["agni", "Come on! Let's write the party plan!"]], true, RECAP.p1);
   hideChecklist();
 }
 async function part2(start = 1) {
@@ -279,7 +278,7 @@ async function part2(start = 1) {
   // the plan the child wrote, on a scroll; Neel keeps it safe
   const sc = await planScroll();
   await say("nar", "Well done! Here is Neel's Party Plan.");
-  await say("neel", "This is our party plan. I will keep it safe until I decide who is coming!");
+  await say("neel", "This is our party plan. I will keep it safe until the replies come!");
   await sc.roll();
   closeBubble();
   hideChecklist();
@@ -294,7 +293,7 @@ async function part3(start = 1) {
   partTitle("PART 3 OF 3", "Neel Decides");
   await runPart3(start);
   setAnswer("");
-  await bridge([["neel", "Yay! Now I know exactly what we need!"], ["agni", "Even when the numbers changed, the plan still worked!"], ["maya", "That is the magic of variables. m and d can be any number.", "celebrate"]], false);
+  await bridge([["neel", "Yay! Now I know exactly what we need!"], ["agni", "Even when the numbers changed, the plan still worked!"], ["maya", "That is the magic of variables. m and d can be any number.", "celebrate"]], false, RECAP.p3);
   hideChecklist();
   await party();
 }

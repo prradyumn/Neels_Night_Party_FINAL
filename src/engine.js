@@ -673,17 +673,22 @@ stage.addEventListener("pointerdown", () => { if (mus.unlocked) return; mus.unlo
 const VOICE = { neel: { pitch: 0.75, rate: 1 }, agni: { pitch: 1.45, rate: 1.1 }, maya: { pitch: 1.2, rate: 1 }, nar: { pitch: 1, rate: 1 } };
 let voices = [];
 if ("speechSynthesis" in window) { const lv = () => (voices = speechSynthesis.getVoices()); lv(); speechSynthesis.onvoiceschanged = lv; }
-const VO = new Set(VO_IDS);
+// recorded lines: assets/vo/en/<id>.ogg (Ogg Opus, tools/make_voices_chatter.py); a browser that can't play Ogg Opus
+// uses its own voice instead
+const VO = new Set(new Audio().canPlayType('audio/ogg; codecs="opus"') ? VO_IDS : []);
 let voEl = null, voRun = 0;
-/** play a line's recorded segments one after another; resolves when done or interrupted */
+/** play a line's recorded segments one after another; resolves when done or interrupted: false if the browser
+ *  would not play the first one (no sound allowed yet, or the file is missing) */
 async function playVo(ids) {
   const run = ++voRun;
   for (const [i, id] of ids.entries()) {
-    if (run !== voRun) return;
+    if (run !== voRun) return true;
     if (i) await wait(0.12);
-    const a = (voEl = new Audio(`assets/vo/${id}.mp3`));
-    await new Promise((r) => { a.onended = a.onerror = r; a.play().catch(r); });
+    const a = (voEl = new Audio(`assets/vo/en/${id}.ogg`));
+    const ok = await new Promise((r) => { a.onended = () => r(true); a.onerror = () => r(false); a.play().catch(() => r(false)); });
+    if (!ok && !i) return false;
   }
+  return true;
 }
 const sayable = (w) => w.replace(/×/g, " times ").replace(/−/g, " minus ").replace(/=/g, " equals ");
 /** words: the line's words as shown (so word boundaries map to them); onWord(i): the voice has reached word i */
@@ -694,7 +699,7 @@ function speak(text, who, { words, onWord } = {}) {
     const ids = segments(text).map((s) => voId(who, s));
     if (ids.length && ids.every((id) => VO.has(id))) {
       hush(); duckMusic(true);
-      playVo(ids).then(() => { duckMusic(false); res(true); });
+      playVo(ids).then((ok) => { duckMusic(false); res(ok); });
       return;
     }
     if (!("speechSynthesis" in window)) return res(false);
@@ -809,8 +814,25 @@ export function say(who, text, opts = {}) {
   lineQ = new Promise((r) => (release = r));
   return prev.then(() => line(who, text, opts)).finally(() => { if (holds) lineBusy--; release(); });
 }
-async function line(who, text, { p, wait: needTap = true, auto = 0, voice: aloud = true, into = null, onStart } = {}) {
+async function line(who, text, { p, wait: needTap = true, auto = 0, voice: aloud = true, into = null, onStart, voiceOnly = false } = {}) {
   await titleP; // a part's title card is up: the first line waits for it, while the scene gets ready under it
+  // voice only (the opening narrator, review 2): no words on screen while its recording plays; a tap anywhere ends it.
+  // Without a recording (or if it fails to play) the line is shown as usual
+  if (voiceOnly && settings.voice && !window.__auto && segments(text).every((g) => VO.has(voId(who, g)))) {
+    closeBubble(true);
+    lastWho = who;
+    onStart && onStart();
+    let cut;
+    const cutP = new Promise((r) => (cut = r)), t0 = performance.now();
+    const tap = () => { if (performance.now() - t0 > 250) cut(); };
+    stage.addEventListener("pointerdown", tap);
+    skipNow = () => cut();
+    const how = await Promise.race([speak(text, who).then((ok) => (ok ? "done" : "fail")), cutP.then(() => "cut")]);
+    stage.removeEventListener("pointerdown", tap);
+    skipNow = null;
+    if (how === "cut") hush();
+    if (how !== "fail") { await wait(PACE.breath); return; }
+  }
   if (host.on && C[who] && host.cur !== who) await hostSwap(who);
   const c = C[who];
   // the speaker is lit, everyone else on stage steps back a little
@@ -827,7 +849,7 @@ async function line(who, text, { p, wait: needTap = true, auto = 0, voice: aloud
     gsap.killTweensOf(bubble);
     bubble.className = "";
     bubble.style.pointerEvents = "auto";
-    bubble.innerHTML = `<div class="txt">${html}</div>` /* no speaker name on the box (Draft 4): the tail shows who speaks */ + `<div class="tail"></div>` + (holds ? `<div class="nx">tap ▶</div>` : "") + (needTap && settings.autoplay ? `<div class="prog"><i></i></div>` : "") + `<div class="rp" title="Hear again">${SPEAKER}</div>`;
+    bubble.innerHTML = `<div class="txt">${html}</div>` /* no speaker name on the box (Draft 4): the tail shows who speaks */ + `<div class="tail"></div>` + (needTap && settings.autoplay ? `<div class="prog"><i></i></div>` : ""); // no speaker button, no "tap" label (review 2): a tap still moves on
     box = bubble.querySelector(".txt");
     placeBubble(c);
   }
@@ -845,7 +867,6 @@ async function line(who, text, { p, wait: needTap = true, auto = 0, voice: aloud
   }
   lastWho = who;
   if (!into) {
-    bubble.querySelector(".rp").onpointerdown = (e) => { e.stopPropagation(); sfx("tap"); speak(text, who); };
     gsap.fromTo(bubble, { opacity: 0, y: 14, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.22, ease: "back.out(2)" });
   }
   onStart && onStart();
@@ -1133,8 +1154,8 @@ export function qbox() {
 /** uses: the letters the current plan needs ("m", "d", "md"); a value the question does not use is left out */
 export function valPills(box, v, uses = "md") {
   box.innerHTML = "";
-  if (v.m && uses.includes("m")) el("span", "vpill m", box, {}, `m = <b>${v.m}</b>`);
-  if (v.d && uses.includes("d")) el("span", "vpill d", box, {}, `d = <b>${v.d}</b>`);
+  if (v.m && uses.includes("m")) el("span", "vpill m", box, {}, `<i>m</i> = <b>${v.m}</b>`);
+  if (v.d && uses.includes("d")) el("span", "vpill d", box, {}, `<i>d</i> = <b>${v.d}</b>`);
 }
 // paper confetti that tumbles in 3D as it falls (it catches the light as it turns); moved with transforms only
 export function confetti(n = 60) {

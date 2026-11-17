@@ -110,25 +110,22 @@ export function garland(parent, left, top, width) {
 
 /** the gold m coin (tools/blender/coin.py: 12 frames of half a turn). spin(turns, labels): the label changes each
  *  time the coin is edge-on, so a new letter or number is never seen appearing */
+/** a plain written letter or number (review 2: m is something you write, not a glowing coin). spin(turns, labels, dur)
+ *  rolls through the labels: each one slides up and the next comes in under it */
 export function coin(parent, style, label = "m") {
-  const c = el("div", "coin", parent, style), face = el("span", "cface", c, {}, label);
-  const draw = (a) => {
-    const fr = Math.floor(((((a % 0.5) + 0.5) % 0.5) / 0.5) * 12) % 12;
-    c.style.backgroundPosition = `${(fr / 11) * 100}% 0`;
-    face.style.transform = `scaleX(${Math.max(0.02, Math.abs(Math.cos(a * 2 * Math.PI)))})`;
-  };
-  draw(0);
+  const c = el("div", "mword", parent, style), face = el("span", "cface", c, {});
+  const put = (l) => { face.innerHTML = l; face.classList.toggle("letter", /^[a-z]$/i.test(String(l).trim())); };
+  put(label);
   return {
     el: c, face,
-    set(l) { face.innerHTML = l; },
+    set: put,
     spin(turns = 1, labels = [], dur = 0.7 * turns) {
-      const o = { a: 0 }; let half = 0;
-      sfx("whoosh");
-      return gsap.to(o, { a: turns, duration: dur, ease: "power2.inOut", onUpdate: () => {
-        const h = Math.floor(o.a * 2 + 0.5);
-        if (h !== half) { half = h; if (labels[h - 1] != null) face.innerHTML = labels[h - 1]; }
-        draw(o.a);
-      }, onComplete: () => draw(0) });
+      const step = dur / Math.max(1, labels.length), tl = gsap.timeline();
+      labels.forEach((l) => tl.to(face, { y: -24, opacity: 0, duration: step * 0.35, ease: "power1.in" })
+        .call(() => { put(l); sfx("pop"); })
+        .fromTo(face, { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: step * 0.45, ease: "back.out(2)" })
+        .to({}, { duration: step * 0.2 }));
+      return tl;
     },
   };
 }

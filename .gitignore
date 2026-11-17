@@ -3,3 +3,5 @@ node_modules/
 tools/vo_cache/
 tools/vo_audition/
 public/
+assets/vo/takes/
+tools/vo_refs/*_melo.wav

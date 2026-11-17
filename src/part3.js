@@ -17,7 +17,7 @@ export const DOOR_XY = DOORS.map(([x, y]) => ({ x: x - 200, y: y + 50 }));
 const tens = (a, b) => `${a - (a % 10)} + ${b - (b % 10)} is ${a - (a % 10) + b - (b % 10)}, and ${a % 10} + ${b % 10} is ${(a % 10) + (b % 10)}`;
 const Q = [
   { name: "Chairs", plan: ["m", "+", "1"], who: "maya", line: "Chairs = m + 1. m is 6. How many chairs?", means: "a chair for each friend, plus 1 extra", prep: "chairs", icon: "pr_chair", ask: "How many chairs?", opts: [7, 6, 16], ans: 7,
-    work: "6 + 1 = 7", h1: (v) => `"Extra" means add. The seal put ${v.m} in place of m, so add the 1 extra chair: ${v.m} + 1.`, h2: (v) => `Start at ${v.m} and count 1 more.`, inact: (v) => `Work out ${v.m} + 1.`, pop: "Neel needs 7 chairs.", exp: "Put 6 in place of m: 6 + 1 = 7. So Neel needs 7 chairs." },
+    work: "6 + 1 = 7", h1: (v) => `"Extra" means add. We put ${v.m} in place of m, so add the 1 extra chair: ${v.m} + 1.`, h2: (v) => `Start at ${v.m} and count 1 more.`, inact: (v) => `Work out ${v.m} + 1.`, pop: "Neel needs 7 chairs.", exp: "Put 6 in place of m: 6 + 1 = 7. So Neel needs 7 chairs." },
   { name: "Sweets", plan: ["3", "m", "+", "5"], who: "agni", line: "Sweets = 3m + 5. m is 6. How many sweets?", means: "3 sweets for each friend, plus 5 extra for Agni", prep: "sweets", icon: "pr_sweet", ask: "How many sweets?", opts: [18, 41, 23], ans: 23,
     work: "3 × 6 + 5 = 18 + 5 = 23", h1: (v) => `3 × ${v.m} is ${3 * v.m}. "Extra" means add, so add Agni's 5 sweets.`, h2: (v) => `${3 * v.m} + 5. Start at ${3 * v.m} and count on 5.`, inact: (v) => `3 × ${v.m} is ${3 * v.m}. Then add 5.`, pop: "Neel needs 23 sweets.", exp: "3m means 3 × m. Put 6 in place of m: 3 × 6 = 18. Then add Agni's 5 sweets: 18 + 5 = 23 sweets. 3m does not mean 36." },
   { name: "Balloons", plan: ["2", "m", "−", "3"], who: "neel", line: "Balloons = 2m − 3. m is 6. How many balloons are left?", means: "2 balloons for each friend, 3 burst", prep: "balloons", icon: "pr_balloon", ask: "How many balloons are left?", opts: [15, 9, 6], ans: 9,
@@ -313,7 +313,7 @@ const OPS = ["+", "−", "×"];
 const EQ_Q = `<span class="lo">&thinsp;=&thinsp;</span><span class="q">?</span>`;
 function renderPlan(q) {
   const head = q.change ? `<span class="lm">m</span>` : `<span class="item">${q.name}</span>`;
-  bar.innerHTML = head + `<span class="lo">&thinsp;=&thinsp;</span>` + q.plan.map((t) => OPS.includes(t) ? `&thinsp;${show([t])}&thinsp;` : (t === "m" || t === "d") ? `<span class="seal" data-k="${t}" style="color:${t === "m" ? "#5a1fa8" : "#c2410c"}"><i class="sl">${t}</i></span>` : show([t])).join("");
+  bar.innerHTML = head + `<span class="lo">&thinsp;=&thinsp;</span>` + q.plan.map((t) => OPS.includes(t) ? `&thinsp;${show([t])}&thinsp;` : (t === "m" || t === "d") ? `<span class="seal ${t}" data-k="${t}"><i class="sl">${t}</i></span>` : show([t])).join("");
   // the seals are asleep (grey) while the question is read: a tap on one ends the line, and they wake after it
   lock([...bar.querySelectorAll(".seal")]);
 }
@@ -341,24 +341,14 @@ async function openSeal(s) {
     await gsap.fromTo(fly, { scale: 0.6 }, { left: pp.x, top: pp.y, scale: 1.1, opacity: 0.2, duration: 0.3, ease: "power2.inOut" });
     fly.remove();
   }
-  // the m coin spins; when it is edge-on the letter becomes the number, so the swap is never seen
-  sfx("whoosh");
-  const o = { a: 0 };
-  let swapped = false;
-  await gsap.to(o, { a: 1, duration: 0.55, ease: "power2.inOut", onUpdate: () => {
-    const fr = Math.floor(((o.a % 0.5) / 0.5) * 12) % 12;
-    s.style.backgroundPosition = `${(fr / 11) * 100}% 0`;
-    sl.style.transform = `scaleX(${Math.max(0.02, Math.abs(Math.cos(o.a * 2 * Math.PI)))})`;
-    if (!swapped && o.a >= 0.25) { swapped = true; sl.textContent = v; }
-  } });
-  sfx("magic");
-  playFx("collect", pp.x, pp.y, { palette: "gold", scale: 2, parent: ui });
-  // then the coin steps aside for the plain number, shown whole: no half-drawn sums.
+  // the written letter slides up and away (review 2: no coin, no glow)
+  sfx("pop");
+  await gsap.to(sl, { y: -30, opacity: 0, duration: 0.25, ease: "power1.in" });
+  // then the plain number, shown whole: no half-drawn sums.
   // 2m with m = 6 reads 2 × 6, never "2 6" (which looks like twenty-six)
   gsap.set(s, { opacity: 0 });
   const afterNum = s.previousElementSibling && s.previousElementSibling.classList.contains("ln");
   s.classList.add("open");
-  s.style.backgroundImage = "none";
   s.innerHTML = (afterNum ? '<span class="lo">×</span>' : "") + v;
   await gsap.fromTo(s, { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.25, ease: "back.out(2)" });
 }
@@ -394,6 +384,7 @@ async function boardIn() {
   gsap.set(QB.box, { opacity: 0 });
   QB.box.classList.add("onboard");
   sfx("whoosh");
+  gsap.to(tg, { y: 120, autoAlpha: 0, duration: 0.45, ease: "power2.in" }); // the empty table steps out: the board would cut it in half
   await gsap.from(board, { y: -50, opacity: 0, duration: 0.45, ease: "power3.out" });
 }
 async function boardOut() {
@@ -405,6 +396,7 @@ async function boardOut() {
   b.remove();
   QB.box.classList.remove("onboard"); // the worked plan stays at the top of the hall
   gsap.to(QB.box, { opacity: 1, duration: 0.3 });
+  await gsap.to(tg, { y: 0, autoAlpha: 1, duration: 0.6, ease: "power3.out" }); // the table comes back for the answer to land on
 }
 
 function buildScene() {
@@ -444,10 +436,10 @@ export async function runPart3(start = 1) {
     trio("trioTable");
     await afterTitle();
     const ir = iconRow(Q);
-    await say("nar", "Neel has decided who is coming. Let's find the exact number of things we need.");
+    await say("nar", "The replies are coming in! Let's find the exact number of things we need.");
     ir.remove();
-    QB.show("Neel has decided!");
-    await say("neel", "I have decided! 6 monster friends are coming.", { p: "happy" });
+    QB.show("The replies are here!");
+    await say("neel", "The replies are here! 6 monster friends are coming.", { p: "happy" });
     await knockDoor(0, "m", 6);
     QB.show("6 monster friends said yes!");
     // the party plan from Part 2 comes out again, then stays open at the side
@@ -500,7 +492,7 @@ export async function runPart3(start = 1) {
     else await say(q.who, q.line);
     const iw = idleWatch(16, async () => { await maya("Take your time. " + q.inact(vals), "hint"); });
     if (!q.change) {
-      prompt(uses.length > 1 ? "Tap the gold seals to see the numbers!" : "Tap the gold seal to see the number!");
+      prompt(uses.length > 1 ? "Tap m and d to see the numbers!" : `Tap ${uses} to see the number!`);
       await crackSeals();
       closeBubble(); // the seal prompt is done: it does not stay in the bubble
       gsap.to(valBox, { autoAlpha: 0, duration: 0.3 }); // the numbers are in the bar now
@@ -552,14 +544,15 @@ export async function runPart3(start = 1) {
     if (!q.change) await deliver(q);
     if (q.change) {
       await twoSaidNo();
-      // "m can change": the m coin flips from 6 to 4, then drops into the m pill
-      const mc = coin(ui, { left: TX - 75, top: 250, width: 150, height: 150 }, "6");
+      // "m can change": m = 6 rolls to m = 4, written plainly, then drops into the m pill
+      const mc = coin(ui, { left: TX - 150, top: 250, width: 300, height: 150 }, `<i class="mi">m</i> = 6`);
       mc.face.style.fontSize = "76px";
-      await gsap.from(mc.el, { scale: 0, duration: 0.35, ease: "back.out(2)" });
-      await mc.spin(1.5, ["4", "4", "4"], 1.1);
+      await gsap.from(mc.el, { opacity: 0, y: 16, duration: 0.35, ease: "power2.out" });
+      await wait(0.4);
+      await mc.spin(1, [`<i class="mi">m</i> = 4`], 0.8);
       vals.m = 4; drawVals();
       const pr = valBox.querySelector(".vpill.m")?.getBoundingClientRect();
-      if (pr) { const a = toStage({ clientX: pr.left + pr.width / 2, clientY: pr.top + pr.height / 2 }); await gsap.to(mc.el, { left: a.x - 75, top: a.y - 75, scale: 0.25, opacity: 0, duration: 0.5, ease: "power2.in" }); }
+      if (pr) { const a = toStage({ clientX: pr.left + pr.width / 2, clientY: pr.top + pr.height / 2 }); await gsap.to(mc.el, { left: a.x - 150, top: a.y - 75, scale: 0.25, opacity: 0, duration: 0.5, ease: "power2.in" }); }
       mc.el.remove();
     }
     // when m or d has just changed, the table is worked out again while a line from the sheet talks about the plan:

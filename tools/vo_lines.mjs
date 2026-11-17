@@ -17,22 +17,37 @@ function table(file, name, scope = {}) {
   for (let k = j; k < s.length; k++) { if (s[k] === "[") depth++; else if (s[k] === "]" && --depth === 0) return Function("tbl", ...Object.keys(scope), `return ${s.slice(j, k + 1)}`)(() => "", ...Object.values(scope)); } // tbl: Part 2's card table, not spoken
 }
 // literal calls: say("who", "text" ...) and maya("text" ...)
+const lit = (s) => JSON.parse(`"${s}"`); // the string as JavaScript reads it (\" -> ")
 function calls(file) {
   const s = src(file);
-  for (const m of s.matchAll(/\bsay\("(\w+)",\s*"((?:[^"\\]|\\.)*)"/g)) add(m[1], m[2]);
-  for (const m of s.matchAll(/\bmaya\("((?:[^"\\]|\\.)*)"/g)) add("maya", m[1]);
-  for (const m of s.matchAll(/\["(neel|agni|maya)",\s*"((?:[^"\\]|\\.)*)"/g)) add(m[1], m[2]);   // bridge and praise lines
+  for (const m of s.matchAll(/\bsay\("(\w+)",\s*"((?:[^"\\]|\\.)*)"/g)) add(m[1], lit(m[2]));
+  for (const m of s.matchAll(/\bmaya\("((?:[^"\\]|\\.)*)"/g)) add("maya", lit(m[1]));
+  for (const m of s.matchAll(/\["(neel|agni|maya)",\s*"((?:[^"\\]|\\.)*)"/g)) add(m[1], lit(m[2]));   // bridge and praise lines
 }
 ["main.js", "part1.js", "part2.js", "part3.js", "common.js"].forEach(calls);
+// Part 2: Maya's m + d example (line("...")) and why an orb can't go there (rule())
+{
+  const s = src("part2.js"), r = s.slice(s.indexOf("function rule("), s.indexOf("export function show("));
+  for (const m of s.matchAll(/\bline\("((?:[^"\\]|\\.)*)"/g)) add("maya", lit(m[1]));
+  for (const m of r.matchAll(/"((?:[^"\\]|\\.)*\.)"/g)) add("maya", lit(m[1]));
+}
 
 // Part 1: the speaker's line, Maya's explanation, hints, the answer shown, nudges
 const ANS1 = { v: "Variable (it can change)", c: "Constant (it stays the same)" };
-for (const it of table("part1.js", "ITEMS")) {
+const ITEMS1 = table("part1.js", "ITEMS");
+for (const it of ITEMS1) {
   add(it.who, it.line);
   add("maya", "Correct! " + it.exp);
   add("maya", `Let's see the answer together. The answer is ${ANS1[it.ans]}. ` + it.exp);
   add("maya", "Not yet. Try again. " + it.h1);
-  // the second clue is built from the dial values on screen at the time (part1.js liveClue), so it is read by the browser voice
+  // the second clue reads the dial (2 to 8) and the value Maya turns it to: every one is recorded.
+  // Keep in step with part1.js liveClue.
+  for (let a = 2; a <= 8; a++) {
+    let b = a <= 5 ? a + 3 : a - 3;
+    if (it.ans === "v" && it.f(a) === it.f(b)) b = it.f(a) === it.f(2) ? 8 : 2;
+    add("maya", it === ITEMS1[0] ? `It was ${a} friends. Now it is ${b} friends. Did the number change?`
+      : `When ${a} friends come, ${it.there(it.f(a))}. When ${b} friends come, ${it.there(it.f(b), it.ans === "c")}. Did the number change?`);
+  }
   add("maya", it.inact + " Turn the dial.");
   add("maya", "Take your time. " + it.inact + " Tap Variable or Constant.");
 }

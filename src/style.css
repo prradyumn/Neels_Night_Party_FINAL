@@ -91,10 +91,6 @@ img{-webkit-user-drag:none;user-select:none}
 .orb{position:absolute;width:86px;height:86px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:800;color:#fff;
   text-shadow:0 3px 0 rgba(0,0,0,.45);background:center/contain no-repeat}
 .orb:active{scale:.88}
-.orb.m{background-image:url(assets/p2_orb_m.webp)}
-.orb.d{background-image:url(assets/p2_orb_d.webp)}
-.orb.n{background-image:url(assets/p2_orb_number.webp)}
-.orb.op{background-image:url(assets/p2_rune_stone.webp);color:#2c2448;text-shadow:none;font-size:48px}
 .orb.glow{filter:drop-shadow(0 0 16px #ffd76a) brightness(1.15)}
 
 .spellbar{position:absolute;height:92px;border-radius:46px;background:rgba(20,14,44,.85);border:4px solid var(--gold);display:flex;align-items:center;justify-content:center;gap:4px;font-size:54px;font-weight:800;color:#fff;padding:0 26px}
@@ -422,7 +418,7 @@ img{-webkit-user-drag:none;user-select:none}
 /* Part 1 bins: the jar or chest and its label are one tap target */
 .bin{border-radius:24px}
 .bin .binLbl{font-size:26px}
-.binLbl small{font-size:18px}
+.binLbl small{font-size:22px}
 .bin.wrong img{filter:drop-shadow(0 0 18px rgba(255,138,61,.95)) drop-shadow(0 0 6px rgba(255,138,61,.9))}
 .nope{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);font-size:84px;font-weight:900;color:#ff4d61;text-shadow:0 3px 0 #fff,0 0 14px rgba(0,0,0,.5);pointer-events:none;line-height:1}
 .answer{filter:drop-shadow(0 0 22px #7dffa8) drop-shadow(0 0 8px #7dffa8)!important}
@@ -454,7 +450,7 @@ img{-webkit-user-drag:none;user-select:none}
 /* reply cards: the friends' answers come through the doors */
 .rsvp{position:absolute;pointer-events:none!important;padding:10px 16px 14px;border-radius:14px;background:radial-gradient(circle at 30% 20%,#d6a66a,#b8834a 60%,#a5703a);border:10px solid #6b3f1d;box-shadow:inset 0 0 18px rgba(60,30,5,.5),0 10px 18px rgba(0,0,0,.45);z-index:45}
 .rsvp h3{display:inline-block;margin:0 0 4px;padding:0 12px;font-size:20px;letter-spacing:1px;text-transform:uppercase;color:#4a2a08;background:#fff3c4;border-radius:6px;transform:rotate(-2deg)}
-.rsvp .gl{font-size:24px;font-weight:800;margin:4px 0}
+.rsvp .gl{font-size:26px;font-weight:800;margin:4px 0}
 .rsvp .grp.m .gl{color:#3c1268}.rsvp .grp.d .gl{color:#6e2700}
 .rsvp .gl b{color:#1e0d00;font-size:28px}
 .rsvp .cards{display:flex;flex-wrap:wrap;gap:5px;padding-top:6px}
@@ -474,9 +470,11 @@ img{-webkit-user-drag:none;user-select:none}
 .qbox.eq .qplan .item{font-size:40px;color:var(--gold);margin-right:4px}
 .qbox.eq .qplan .work{font-size:44px;color:#fff}
 .qbox.eq .qs{font-size:30px}
-.seal{display:inline-flex;width:88px;height:88px;align-items:center;justify-content:center;background:url(assets/fx_coin_spin.webp) 0 0/1200% 100% no-repeat;filter:brightness(1.15) saturate(1.35);text-shadow:0 2px 0 #fff3c4;font-size:54px;font-weight:900;cursor:pointer;margin:0 4px}
-.seal .sl{font-style:normal;display:inline-block}
-.seal.open{background:none;filter:none;width:auto;color:#fff!important;text-shadow:none;cursor:default}
+/* a letter in the plan the child taps to see its number: written plainly (review 2), with a dashed box that says "tap me" */
+.seal{display:inline-flex;min-width:72px;height:88px;align-items:center;justify-content:center;padding:0 8px;border:3px dashed currentColor;border-radius:16px;background:rgba(255,255,255,.07);font-size:64px;cursor:pointer;margin:0 4px}
+.seal.m{color:#d6a8ff}.seal.d{color:#ffb070}
+.seal .sl{display:inline-block}
+.seal.open{background:none;border-color:transparent;min-width:0;padding:0;color:#fff!important;cursor:default}
 .seal.open .lo{margin:0 10px 0 4px}
 .lantern{position:absolute}
 .lantern.wrong{filter:drop-shadow(0 0 16px rgba(255,138,61,.95))}
@@ -501,8 +499,10 @@ img{-webkit-user-drag:none;user-select:none}
 .lantern.big.p3{width:112px;height:112px;font-size:52px}
 .doorTip{z-index:62}
 /* ---- wow round ---- */
-.coin{position:absolute;display:flex;align-items:center;justify-content:center;background:url(assets/fx_coin_spin.webp) 0 0/1200% 100% no-repeat;filter:brightness(1.15) saturate(1.35) drop-shadow(0 6px 10px rgba(0,0,0,.45))}
-.cface{display:inline-block;font-weight:900;color:#5a1fa8;text-shadow:0 2px 0 #fff3c4;line-height:1}
+/* m written plainly (review 2): no coin, no glow. A letter is the italic maths m; a number is the round font */
+.mword{position:absolute;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.cface{display:inline-block;font-weight:800;color:#fff;line-height:1;text-shadow:0 3px 0 rgba(0,0,0,.55),0 0 18px rgba(0,0,0,.5)}
+.cface.letter{font-family:"STIX Two Text","Cambria Math",Cambria,serif;font-style:italic;font-weight:700;color:#d6a8ff}
 .winOff{position:absolute;border-radius:45%;background:radial-gradient(ellipse,rgba(40,26,80,.72) 0%,rgba(40,26,80,.55) 55%,rgba(40,26,80,0) 74%);pointer-events:none} /* a dim pane, not a hole */
 .winGlow{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(255,230,160,.75) 0%,rgba(255,180,90,.32) 30%,rgba(255,150,60,0) 65%)} /* no blend mode: it stays on screen while the camera drifts */
 .lid{position:absolute;border-radius:50% 50% 45% 45%;background:linear-gradient(#7a5434,#5c3c22);pointer-events:none}
@@ -559,7 +559,7 @@ img{-webkit-user-drag:none;user-select:none}
 .rsvp h3{display:none}
 .rsvp.mini{width:auto!important;padding:6px 16px 8px;border-width:6px}
 .rsvp.mini .cards{display:none}
-.rsvp.mini .gl{font-size:22px;margin:2px 0}
+.rsvp.mini .gl{font-size:24px;margin:2px 0}
 .scroll.docked.tab{left:auto!important;right:18px;width:auto;padding:8px 22px 10px;cursor:pointer}
 .scroll.docked.tab h2{font-size:22px;margin:0}
 .scroll.docked.tab h2::before{content:"📜 "}
@@ -611,3 +611,61 @@ img{-webkit-user-drag:none;user-select:none}
 .room.win .num{left:6px;top:-4px}
 .room.win.done .th::after{right:18px;top:14px}
 .room.win .nm{margin-top:16px;font-size:32px}
+
+/* algebra letters as in a maths book (Grade 7): an italic serif m and d, still purple / orange, a little larger so they
+   match the rounded numbers beside them */
+.cm,.cd,.cmd b,.mtxt,.dtxt,.lm,.ld,.vpill i,.seal .sl,.orb.m,.orb.d,.mcap .mtxt{font-family:"STIX Two Text","Cambria Math",Cambria,"Times New Roman",serif;font-style:italic;font-weight:700}
+.cm,.cd,.cmd b,.mtxt,.dtxt,.lm,.ld,.vpill i,.seal .sl{font-size:1.12em;line-height:1}
+.orb.m,.orb.d{font-size:50px}
+/* the "What we learned" card at the end of a level (main.js RECAP): on the left, clear of the three friends */
+.card.recap{text-align:left;padding:4px 18px 10px}
+.card.recap .tag{margin:0 auto 6px;width:max-content}
+.card.recap p{font-size:26px;line-height:1.3;margin:6px 0 0;color:#F3EEFF}
+.card.recap .rx{font-size:30px;font-weight:800;color:#fff;padding-left:14px}
+.card.recap .rx b{color:#ffe066}
+.card.recap .rrow{display:flex;align-items:center;gap:14px;margin-top:10px}
+.card.recap .rrow img{width:76px;height:76px;object-fit:contain;flex:none}
+.card.recap .rrow p{margin:0}
+.card.recap small{display:block;font-size:22px;color:#cfc4ee;font-weight:600}
+.card.recap .v{color:#ffe066}.card.recap .c{color:#eef0f8}
+.mword .mi{font-family:"STIX Two Text","Cambria Math",Cambria,serif;font-style:italic;font-weight:700;color:#d6a8ff;font-size:1.12em}
+/* Part 2's pieces are plain tiles you write a plan with (review 2: no orbs, no brew): like keys, m purple, d orange,
+   numbers teal, signs gold. The art images are no longer used for them */
+.orb{border-radius:20px;border:4px solid;box-shadow:0 7px 0 rgba(0,0,0,.45),inset 0 2px 0 rgba(255,255,255,.18);text-shadow:none}
+.orb.m{background-color:#3b1d6e;border-color:#9b5cf0;color:#ead7ff}
+.orb.d{background-color:#5a2a0e;border-color:#ff8a3d;color:#ffd6b0}
+.orb.n{background-color:#0f3a40;border-color:#3fb8af;color:#fff}
+.orb.op{background-color:#2b2150;border-color:#ffc547;color:var(--gold);font-size:46px}
+/* ---- Part 1, review 2 ---- */
+/* Neel's party list: coloured pictures, a tick and the word for each checked thing (the level's progress) */
+.plist{position:absolute;width:380px;padding:10px 14px 12px;border-radius:20px;background:rgba(18,12,40,.88);border:3px solid rgba(255,197,71,.75);box-shadow:0 10px 24px rgba(0,0,0,.45);transform-origin:50% 50%;pointer-events:none}
+.plist h3{margin:0 0 6px;font-size:26px;font-weight:800;color:var(--gold);text-align:center}
+.plist .pl{display:flex;align-items:center;gap:10px;height:40px;padding:0 8px;border-radius:12px;font-size:22px;font-weight:700;color:#e9e2ff;border:2px solid transparent}
+.plist .pl img{width:34px;height:34px;object-fit:contain;flex:none}
+.plist .pl span{flex:1;white-space:nowrap}
+.plist .pl .st{font-size:20px;color:var(--good);white-space:nowrap}
+.plist .pl .st i{font-style:normal;font-size:17px;padding:1px 8px;border-radius:8px;margin-left:2px}
+.plist .pl .st i.v{color:#6b4500;background:#ffe28a}.plist .pl .st i.c{color:#3d4256;background:#e3e5ee}
+.plist .pl.cur{background:rgba(255,197,71,.16);border-color:var(--gold);color:#fff}
+.plist .pl.done{color:#b9b0d8}
+/* Variable / Constant: two plain buttons, the word and what it means */
+.vcbtn{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:28px;font-size:38px;font-weight:800;line-height:1.05;cursor:pointer;box-shadow:0 8px 0 rgba(0,0,0,.4),inset 0 3px 0 rgba(255,255,255,.45);border:4px solid}
+.vcbtn small{font-size:22px;font-weight:700;opacity:.85;margin-top:4px}
+.vcbtn.v{background:linear-gradient(#ffe28a,#ffc547);border-color:#fff1b8;color:#4a2c00}
+.vcbtn.c{background:linear-gradient(#f1f2f8,#c9cddc);border-color:#fff;color:#2c3044}
+.vcbtn:active{translate:0 4px;box-shadow:0 4px 0 rgba(0,0,0,.4)}
+.vcbtn.right{box-shadow:0 0 0 6px var(--good),0 0 26px rgba(76,211,138,.85)}
+.vcbtn.wrong{box-shadow:0 0 0 6px var(--ember),0 0 22px rgba(255,138,61,.8)}
+.vcbtn.answer{box-shadow:0 0 0 6px #7dffa8,0 0 26px #7dffa8}
+/* the chalkboard's example, acted out under its words */
+.chalk .said + .said{font-size:30px;margin-top:10px;color:#e8f2e4}
+.exstrip{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.exrow{display:flex;align-items:center;gap:14px;min-height:50px}
+.exl{width:140px;flex:none;font-size:24px;color:#ffe9a6}
+.exi{display:flex;gap:4px;flex-wrap:nowrap}
+.exk{display:inline-flex}
+.exk img{height:40px;width:40px;object-fit:contain}
+.exk .extab{width:110px;height:56px}
+.icard{display:inline-flex;align-items:center;justify-content:center;font-style:normal;width:30px;height:40px;border-radius:5px;background:linear-gradient(#fff8e6,#f3dfb0);border:2px solid #d9a440;box-shadow:inset 0 0 0 3px #fff8e6,inset 0 0 0 5px #e9b5ff}
+.card.recap .vcchip{flex:none;width:150px;text-align:center;font-size:26px;font-weight:800;border-radius:16px;padding:6px 0}.card.recap .vcchip.v{background:#ffe28a;color:#4a2c00}.card.recap .vcchip.c{background:#e3e5ee;color:#2c3044}
+.icard::after{content:"♥";font-size:16px;color:#c26bff}

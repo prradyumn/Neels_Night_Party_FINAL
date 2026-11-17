@@ -4,7 +4,7 @@ import { houseWindows, owlBlink } from "./common.js";
 
 // three rooms: the party is the end of room 3, not a room of its own
 export const ROOMS = [
-  { id: 1, name: "Neel's Party List", icon: "p1_variable_jar", bg: "bg_hall_far", x: 820, y: 620, max: 24 },
+  { id: 1, name: "Neel's Party List", icon: "p1_dial_base", bg: "bg_hall_far", x: 820, y: 620, max: 24 },
   { id: 2, name: "Write the Party Plan", icon: "p2_cauldron", bg: "bg_cauldron_far", x: 1090, y: 330, max: 27 },
   { id: 3, name: "Neel Decides", icon: "p3_door_closed", bg: "bg_doors_far", x: 1400, y: 640, max: 24 },
 ];

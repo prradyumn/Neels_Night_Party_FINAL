@@ -45,7 +45,7 @@ const Q = [
     exp: "Monsters get 3m laddoos. Dragons get 2d laddoos. \"Total\" means add. So the laddoos are <b>3m + 2d</b>.", pop: "The laddoos are 3m + 2d." },
   { duel: true, name: "Neel's shortcut", sub: "Neel thinks 3m + 2d is the same as 5md. Is he right?", who: "neel", line: "I think 3m + 2d is the same as 5md. Am I right?",
     icon: "pr_laddoo", f: (m, d) => 3 * m + 2 * d, pre: ["5", "m", "d"], tests: [[1, 1], [2, 1], [2, 3]], ans: "No, not the same",
-    h1: "m is the number of monsters. d is the number of dragons. Are they the same thing?", h2: "Look at the cauldron. With 2 monsters and 1 dragon, 3m + 2d gives 8, but 5md gives 10. Are they the same?", inact: "Are m and d the same number?",
+    h1: "m is the number of monsters. d is the number of dragons. Are they the same thing?", h2: "Look at the magic pot. With 2 monsters and 1 dragon, 3m + 2d gives 8, but 5md gives 10. Are they the same?", inact: "Are m and d the same number?",
     exp: "m and d are different numbers, so we cannot join 3m and 2d together. <b>3m + 2d</b> is already as short as it can be. So Neel is not right.", pop: "You caught Neel's mistake. 3m + 2d is not 5md." },
 ];
 // who praises each right answer (from the script)
@@ -100,7 +100,7 @@ const CX = 735;
 const flies = new Set();
 function render() {
   // empty: a dashed slot shows where the first orb will land
-  bar.innerHTML = tokens.length ? show(tokens) : `<span class="slot"></span><span class="ph">tap an orb</span>`;
+  bar.innerHTML = tokens.length ? show(tokens) : `<span class="slot"></span><span class="ph">tap a tile</span>`;
   // nothing to brew yet: Brew! stays dim and still, so the first tap goes to the orbs
   if (brewBtn) brewBtn.disabled = !tokens.length;
   if (undoBtn) undoBtn.classList.toggle("off", !tokens.length);
@@ -163,7 +163,7 @@ function buildScene() {
   bar = el("div", "spellbar", ui, { left: CX - 280, top: 396, width: 560 });
   tray = el("div", "abs tray", ui, { left: 0, top: 0, width: 1, height: 1 });
   QB = qbox();
-  brewBtn = button("Brew!", 1385, 842, tray);
+  brewBtn = button("Check", 1385, 842, tray); // plain words (review 2): not "Brew!"
   undoBtn = el("div", "undo", tray, { left: 1150, top: 804 }, "⌫");
   undoBtn.title = "Undo";
   onTap(undoBtn, () => addToken("⌫", undoBtn));
@@ -337,7 +337,7 @@ async function example() {
 async function tutorial() {
   await afterTitle();
   const ir = iconRow(Q.filter((q) => q.icon), 330); // under the narrator's bubble, never behind it
-  await say("nar", "Maya and Agni have made a list of things they need for the party, but Neel has still not decided how many friends are coming. Let's help Maya and Agni find the exact number of things they need.");
+  await say("nar", "Maya and Agni have made a list of things they need for the party, but the replies have still not come, so nobody knows how many friends are coming. Let's help Maya and Agni find the exact number of things they need.");
   ir.remove();
   const t = card(`<div class="tag">Maya explains</div><h2>Number of sweets</h2><table class="ttab"><tr><th>Number of friends</th><th>Sweets</th></tr><tr><td>1</td><td>1 × 2 = 2</td></tr><tr><td>2</td><td>2 × 2 = 4</td></tr><tr><td>3</td><td>3 × 2 = 6</td></tr></table>`, { left: 470, top: 14, width: 760 }, "card lesson");
   await maya("We have to write a plan for m monster friends. Let me show you how. For example, let's find the number of sweets. Each friend gets 2 sweets.", "explain");
@@ -357,8 +357,8 @@ async function tutorial() {
   actionZone(true);
   shelf(false);
   // the party plan, written as spells: the cauldron tries each one with different numbers of friends
-  await maya("Let's write each plan as a magic spell. The cauldron will test it with different numbers of friends.", "cast");
-  await maya("Tap the orbs to brew a spell. Then tap <b>Brew!</b> and the cauldron will test it.", "explain");
+  await maya("Let's write each plan with numbers and letters. The magic pot will test it with different numbers of friends.", "cast");
+  await maya("Tap the tiles to write the plan. Then tap <b>Check</b> and the magic pot will test it.", "explain");
 }
 
 export async function runPart2(start = 1) {
@@ -385,7 +385,7 @@ export async function runPart2(start = 1) {
     gsap.set(brewBtn, { autoAlpha: 1 });
     QB.show(q.name, q.sub);
     camFocus(CX, 640, 1.02);
-    tipNow = q.pre ? "Tap Brew! to test Neel's spell" : "Tap the orbs, then Brew!";
+    tipNow = q.pre ? "Tap Check to test Neel's plan" : "Tap the tiles, then Check";
     // the shelf sleeps while the question is read, and wakes when it is the child's turn
     shelf(false);
     await say(q.who, q.line, { p: q.who === "neel" && q.pre ? "happy" : undefined }); // Neel is sure of himself
@@ -441,11 +441,11 @@ export async function runPart2(start = 1) {
         iw.pause(); shelf(false); clearFlies();
         brewBtn.classList.remove("pulse");
         const fn = compile(tokens);
-        if (!fn) { sfx("bad"); await maya("That spell is not finished. Every + − or × needs something on both sides.", "hint"); shelf(true); iw.open(); continue; }
+        if (!fn) { sfx("bad"); await maya("That plan is not finished. Every + − or × needs something on both sides.", "hint"); shelf(true); iw.open(); continue; }
         const ok = (await testRun(fn, q)) && same(fn, q.f);
         if (ok) { markRight(bar, 2); solved = true; await wait(2); break; } // the green ticks stay up for a moment before the praise
         barMark = markWrong(bar, false); // the cauldron has already buzzed; goes as soon as the spell is changed (edited)
-        if (q.pre && !testedPre) { testedPre = true; await say("neel", "Oh no! My spell gives the wrong number of candles!", { p: "oops" }); tokens = []; render(); tipNow = "Tap the orbs, then Brew!"; shelf(true); iw.open(); continue; }
+        if (q.pre && !testedPre) { testedPre = true; await say("neel", "Oh no! My plan gives the wrong number of candles!", { p: "oops" }); tokens = []; render(); tipNow = "Tap the tiles, then Check"; shelf(true); iw.open(); continue; }
         tries++;
         if (tries === 1) await maya("Not yet. Try again. " + q.h1, "hint");
         else if (tries === 2) { await maya("Not yet. Try again. " + q.h2, "hint"); q.sol.forEach((t) => orbs[t]?.classList.add("glow")); }

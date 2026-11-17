@@ -11,7 +11,10 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
 ## Structure
 - src/main.js: flow (title → story at Neel's house → house map → rooms 1–3; room 3 ends with the party; no Play again button: the party stays the picture).
   Script source of truth: the Game sheet (Neel's Night Party - Game.csv) plus the review notes
-  (Neels_Night_Party_Review_Notes.pdf); the Story sheet is the older draft
+  (Neels_Night_Party_Review_Notes.pdf); the Story sheet is the older draft. Review 2 (Nov 2026) changed lines in the
+  code, ahead of the sheet: the premise is "Neel has invited his friends, but the replies have not come yet" (Part 3's
+  knocks bring the replies), Part 1's dial demo, Part 2's plain words (tiles, Check, magic pot, plan, never spell/orb/
+  brew/cauldron/seal). Any other new line needs the sheet.
 - src/engine.js: 1600×900 scaled stage, 3-layer parallax, sprite-sheet characters,
   speech bubbles, stars/HUD, synth SFX, browser TTS, curtain scene transition
   (src/curtain.svg, imported as text; left/right/valance groups moved as 3 layers)
@@ -20,14 +23,22 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
 - Camera (engine.js): #cam holds backgrounds, world, characters and effects; #ui, HUD and curtain stay fixed.
   camTo/camFocus/camRest/punch/shake move it; camPt(x, y, layer) converts a scene point to screen (use it to aim
   UI at scene objects). Put UI-anchored effects in ui (playFx parent: ui), scene effects in the default #fxl.
-- src/part1.js: Friend Dial (sort items into Variable jar / Constant chest). The things on display stand on a small table (TB, two staggered rows when there are more than 4). The jar and chest open with the question:
-  the dial is optional ("Turn the dial to check"), never a gate; hint 2 still turns it to show the numbers
-- src/part2.js: Spell Cauldron (build expressions from orbs; Brew! tests 3 values at once and the 3 result lines land
+- src/part1.js: Friend Dial: turn the dial, watch the table, tap the Variable or Constant button (review 2: plain
+  buttons, no jar or chest). Neel's party list (.plist) is introduced big in the middle, then stays top-right as the
+  level's progress (current item lit, a checked one ticked with its word). The chalkboard has one board per word
+  (heading VARIABLE / CONSTANT): the meaning, then an example acted out under the words (example(): friends and cards,
+  or friends and one table; each step starts when the board writes its number, atWord). Then Maya shows the dial with
+  chairs (dialDemo; chairs are not on the list). The things on display stand on a small table (TB, two staggered rows
+  when there are more than 4). The dial's badge says its value in words ("4 friends"). The buttons open with the
+  question: the dial is optional ("Turn the dial to check"), never a gate; hint 2 still turns it to show the numbers
+- src/part2.js: Write the Party Plan (build expressions from tiles: plain keys, m purple, d orange, numbers teal, signs
+  gold; Check tests 3 values at once in the magic pot (the cauldron art) and the 3 result lines land
   together; a right spell keeps its green ticks up 2 s before the praise; the 3rd wrong try puts the answer in the slot
   as Maya starts saying it). Controls Maya talks about are on screen (locked) while she says it, in every part
-- src/part3.js: Magic Doors. Replies arrive as cards through the doors (no guests until the party), gold seals open
-  independently. Each question is solved on a chalkboard over the hall (BOARD: seals, answer gems, "x is not enough"
-  for a wrong gem; the table never shows a wrong number); when solved the board lifts, the worked plan goes to the top
+- src/part3.js: Magic Doors. Replies arrive as cards through the doors (no guests until the party). The plan's letters
+  (.seal: a plain m or d in a dashed box, review 2) open one by one when tapped. Each question is solved on a chalkboard
+  over the hall (BOARD: the plan's letters, answer gems, "x is not enough"
+  for a wrong gem; the table never shows a wrong number). The empty table slides out while the board is up (it would cut it in half) and comes back as the board lifts (boardIn/boardOut); when solved the board lifts, the worked plan goes to the top
   and the things drop onto the table. They show only while they are talked about (hideGroups() at each question start):
   their own question, a recount (restock() brings a hidden kind back before it changes: chairs, sweets, balloons after
   Q6; plates, cushions after Q8) and the party. The string-light garland over the table is hung for the party only;
@@ -42,7 +53,7 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
   board and the worked plan show the numbers. During a knock,
   "Tap the door!" sits above the door. When m or d changes, FORM works every group out
   again and restock() moves/adds/removes things while a sheet line talks about the plan (after Q6: "Now m is 4…";
-  after Q8: Maya's "…The plan still works, even when the numbers change!"). No lines that are not in the sheet. Party: no tags,
+  after Q8: Maya's "…The plan still works, even when the numbers change!"). No new lines beyond review 2's. Party: no tags,
   m = 4 / d = 7 never change, guests stand in loose groups at different depths with shadows
 - src/finale.js: Party Day shopping. Not in the current script, so it is out of the flow (no room 4)
 - src/map.js: level select (3 rooms, title fixed on screen) · src/qa.js: QA mode (press Q, or a #qa-p2-7 link);
@@ -51,13 +62,15 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
   glow comes up (houseWindows(layer, false): no dark patches), Neel steps out of his lit doorway and walks down the path
   to his seat (main.js neelFromDoor), Agni and Maya arrive on theirs (trio({hold}) + entrance(k)); then the hall's
   "how many?" table (planTable: cake, plates, sweets, balloons, each with a ?, gone when Maya answers; the hall's fore
-  layer is hidden for it), the m coin that spins through
-  numbers (story, Part 3 seals, m 6 → 4), doors that swing open with light (part3 knockDoor), the cauldron test show and
-  gold-ink plan (part2 bubbleTest/spellWorks), the jar that fills and the chest that locks (part1), the living map, and
+  layer is hidden for it), the letter m written plainly (review 2: no coin, no glow; common.js coin() is a plain
+  letter that rolls through numbers: story, m 6 → 4), doors that swing open with light (part3 knockDoor), the magic pot
+  test show and gold-ink plan (part2 bubbleTest/spellWorks), the party list that ticks off (part1), the living map, and
   the arrival: friends walk up the path, the camera flies in through the round window to the party (main.js arrival()).
 - src/common.js: praise cues, idleWatch (open()/pause(): nudges only while answers are open and nobody speaks),
   Party Plan scroll (dock/glow). No word clues card or word box (Draft 4): Maya says the clue word in her hint.
-  No speaker names on the dialogue box (Draft 4): the bubble's tail shows who speaks
+  No speaker names on the dialogue box (Draft 4): the bubble's tail shows who speaks. No "hear again" speaker and no
+  "tap" label on any bubble or board (review 2): a tap still moves on. say(..., {voiceOnly: true}) plays a line with no
+  words on screen (the opening narrator); without a recording, or if it won't play, the line is shown as usual
 - Dialogue (engine.js say()): lines are queued, never overlap; busy()/skipLine(); a bubble tap shows the whole line, the
   next tap moves on; into: el writes the words on a board (Part 1 chalkboard); onStart shows a board row with the line
   that says it, never before. partTitle() is not awaited: the part sets up under the card and its first line waits
@@ -74,7 +87,7 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
   wrong = a gentle orange shake + orange glow + a cross badge (orange is the try-again colour, never red); a wrong-number
   popup uses popup(..., "popup hint"). Motion: UI comes in and goes out with MOTION (uiIn: rise 16 px + fade, 0.35 s,
   power2.out; uiOut: fade + 10 px up, 0.3 s): card(), popup(), azTip, the question card, door tips.
-- Touch targets are 64 px or more: the "hear again" speaker (an SVG, SPEAKER in engine.js, not an emoji) and the plan tab.
+- Touch targets are 64 px or more (the plan tab, the Variable / Constant buttons, the tiles).
 - Map (map.js): each room is a round lit window like the house's round window (.room.win), a gold SVG lock when locked;
   the house's own windows light up as rooms are finished (an unlit one is a dim pane, never a black hole).
 - src/fx.js: painted-light effects, no pixel art: playFx(name, x, y, {palette, scale, parent, dur}) draws soft glows,
@@ -85,8 +98,11 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
 - Audio: src/sfx/*.mp3 (bundled as data URLs via esbuild's mp3 loader) and assets/audio/*.mp3 music;
   all CC0, sources in assets/audio/CREDITS.txt. sfx(type) plays a recording when loaded, else the synth;
   music("calm"|"magic") crossfades and starts on the first tap; it ducks while TTS speaks
-- assets/: 70 WebP files (plus audio). fx_coin_spin (the gold m coin, 12 frames; common.js coin()) is a Blender render too
-  (tools/blender/coin.py). pr_party_table_3d (the Part 3 table) and pr_bowl are Blender renders made at the hall floor's
+- Voice-over: assets/vo/en/<id>.ogg (Chatterbox clones of synthetic MeloTTS reference clips, tools/vo_refs/), ids from
+  tools/vo_lines.mjs, listed in src/vo_manifest.json; README "Voices" has the commands and each speaker's settings
+  (tools/voice_cast.json). An edited line gets a new id: re-record it. assets/vo/takes/ is never deployed.
+- assets/: WebP files (plus audio). Art no longer used is kept in tools/unused_art/ (jar, chest, orbs, the m coin).
+  pr_sweet_box (an open mithai box of laddoos, review 2) is a Blender render: tools/blender/sweet_box.py. pr_party_table_3d (the Part 3 table) and pr_bowl are Blender renders made at the hall floor's
   angle (about 11 degrees), shadow baked in: tools/blender/table.py, bowl.py, finish.py
   (`blender -b --python tools/blender/table.py -- out.png 96 11`, then `python3 tools/blender/finish.py out.png assets/pr_party_table_3d.webp 1100`). anim_* = Ludo sprite sheets, 36 frames in a 6×6 grid,
   sizes in src/anim_meta.json; bg_<scene>_far/mid/fore = parallax layers
@@ -106,8 +122,12 @@ Deploy: Vercel runs `npm run dist` (vercel.json), which builds and copies index.
   speaker bottom-left (SPOTS.table) whose side bubble grows upwards. Party: bubbles high (SPOTS.trioParty.ftop),
   monsters left and dragons right, one row each.
 - No blue guest monster anywhere it could be read as a second Neel (gu_monster_blue).
+- Algebra letters look like a maths book: m and d in italic STIX Two Text (Google Fonts, with Baloo 2), 1.12em, everywhere
+  (bubble chips, cards, the plan bar, tiles, the plan's letters, value pills); numbers and words stay Baloo 2.
+- Level ends: bridge(lines, dance, recap) shows a "What we learned" card on the left (RECAP in main.js, Parts 1 and 3;
+  Part 2 ends with the Party Plan scroll). On-screen text only, in the words the friends say.
 - Keep the UI uncluttered and keep m purple / d orange everywhere. No panels behind controls (the action zone, the
-  answer gems and the test rows have no frame; tips and jar/chest labels are text with a shadow); the question card
+  answer gems and the test rows have no frame; tips are text with a shadow); the question card
   is a plain rounded glass card; a control with nothing to do is hidden (undo with an empty spell).
 - Keep assets WebP, total game under 20 MB. Re-encode from the lossless originals, never WebP from WebP:
   tools/optimize_images.py (sprite sheets q74, backgrounds at their drawn 2000 x 900).

@@ -1,0 +1,41 @@
+{
+ "_about": "Who each speaker sounds like. make_voice_refs.py (MeloTTS, ~/melo) speaks ref_text with melo/speed, then pitch-shifts it by pitch semitones (rubberband; formant: true keeps the vowel colour, so the voice sounds lower without sounding bigger) into tools/vo_refs/<who>.wav. make_voices_chatter.py (Chatterbox, ~/chatter) clones that clip for every line with exaggeration and cfg (lower cfg = slower, more deliberate); tempo (optional) time-stretches every take with rubberband, same pitch (0.9 = 10% slower). Grade 7 audience: friendly but not babyish, so pitch shifts stay mild and exaggeration a little under the cartoon end.",
+ "agni": {
+  "creature": "dragon (female): the warm, confident guide",
+  "melo": "EN_INDIA",
+  "speed": 0.7,
+  "pitch": -2,
+  "exaggeration": 0.55,
+  "cfg": 0.4,
+  "ref_text": "Good evening, everyone. I'm glad you're here. We have a big plan to make tonight, and we can do it together. Take your time, and trust yourself."
+ },
+ "maya": {
+  "creature": "witch: playful and a little mischievous, still kind",
+  "melo": "EN_INDIA",
+  "speed": 0.72,
+  "pitch": 1,
+  "exaggeration": 0.65,
+  "cfg": 0.4,
+  "ref_text": "Ooh, this is interesting. Every good spell needs the right ingredients. A pinch of numbers, a dash of letters, and a little mischief. Shall we see what happens?"
+ },
+ "neel": {
+  "creature": "yeti: big, gentle and slow, goofy rather than scary",
+  "melo": "EN_INDIA",
+  "speed": 0.66,
+  "pitch": -10,
+  "exaggeration": 0.4,
+  "cfg": 0.3,
+  "ref_text": "Hello there, friend. I'm big and furry, but I'm very gentle. I like quiet evenings and good company. Hmm, maybe a party is a good idea."
+ },
+ "nar": {
+  "creature": "narrator: calm storyteller",
+  "melo": "EN_INDIA",
+  "speed": 0.7,
+  "pitch": -4,
+  "exaggeration": 0.45,
+  "cfg": 0.3,
+  "ref_text": "Night falls softly over the forest. The lanterns glow, and the stars come out. In a little house on the hill, three friends are planning a special party.",
+  "formant": true,
+  "tempo": 0.9
+ }
+}

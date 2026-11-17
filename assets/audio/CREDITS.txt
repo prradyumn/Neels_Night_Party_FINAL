@@ -19,3 +19,9 @@ Sound effects (src/sfx/, bundled into game.js), Kenney (www.kenney.nl), CC0
   knock.mp3 Impact Sounds: impactWood_medium_000 + impactWood_medium_002
 
 All files were trimmed, loudness-matched and re-encoded as MP3 (64 kbps).
+
+Voices
+  Voices generated with AI. Every spoken line (assets/vo/en/*.ogg) was made on our own computer with Chatterbox
+  (Resemble AI, MIT license; it adds an inaudible Perth watermark to every recording), cloning short reference clips
+  that were themselves synthetic: MeloTTS (MyShell, MIT license), pitch-shifted with Rubber Band. No real person's voice
+  was used. How to remake a line: README.md, "Voices".

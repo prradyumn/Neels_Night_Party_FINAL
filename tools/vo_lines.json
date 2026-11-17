@@ -5,14 +5,14 @@
   "text": "Welcome to Neel's Night Party!"
  },
  {
-  "id": "nar_ffcc34d2",
+  "id": "nar_01f8bc88",
   "who": "nar",
-  "text": "Neel wants to have a party next week, but he has not decided how many friends to invite. Maya and Agni are helping him plan the party."
+  "text": "Neel wants to have a party next week. He has invited his friends, but their replies have not come yet. Maya and Agni are helping him plan the party."
  },
  {
-  "id": "agni_cbce6149",
+  "id": "agni_6ec8e4e2",
   "who": "agni",
-  "text": "Neel, have you still not decided how many guests are coming? Then how will we plan? How many plates? How many sweets?"
+  "text": "Neel, have the replies still not come? Then how will we plan? How many plates? How many sweets?"
  },
  {
   "id": "maya_b0905264",
@@ -40,9 +40,9 @@
   "text": "m is a variable that represents a number. A variable is a number that is not fixed yet. It can change."
  },
  {
-  "id": "maya_f1ee1442",
+  "id": "maya_329052c1",
   "who": "maya",
-  "text": "When Neel decides who is coming, we can easily find the exact number of things we need."
+  "text": "When the replies come, we can easily find the exact number of things we need."
  },
  {
   "id": "agni_262e9030",
@@ -55,9 +55,9 @@
   "text": "Well done! Here is Neel's Party Plan."
  },
  {
-  "id": "neel_e296e5c9",
+  "id": "neel_7ca85440",
   "who": "neel",
-  "text": "This is our party plan. I will keep it safe until I decide who is coming!"
+  "text": "This is our party plan. I will keep it safe until the replies come!"
  },
  {
   "id": "nar_2e4df218",
@@ -165,9 +165,24 @@
   "text": "Watch the dial."
  },
  {
-  "id": "maya_f2a4cbd9",
+  "id": "maya_74754ad6",
   "who": "maya",
-  "text": "Now help Neel check his party list. Turn the dial to change the number of friends. Did the number change? Put it in the jar for Variable or the chest for Constant."
+  "text": "This is the friend dial. It shows how many friends are coming."
+ },
+ {
+  "id": "maya_cb922523",
+  "who": "maya",
+  "text": "Watch the table: one chair for each friend. When the dial turns, the number of friends changes, and the number of chairs changes too."
+ },
+ {
+  "id": "maya_d15dbcb4",
+  "who": "maya",
+  "text": "So, if a number changes when the friends change, it is a variable. If it stays the same, it is a constant."
+ },
+ {
+  "id": "maya_7edb184e",
+  "who": "maya",
+  "text": "Now help Neel check his party list. Turn the dial and watch the table. Then tap Variable or Constant."
  },
  {
   "id": "maya_28e473fa",
@@ -200,9 +215,9 @@
   "text": "Oh! md gives 6, but only 5 friends came. So md is wrong here."
  },
  {
-  "id": "nar_35a3fb19",
+  "id": "nar_a8a5d42b",
   "who": "nar",
-  "text": "Maya and Agni have made a list of things they need for the party, but Neel has still not decided how many friends are coming. Let's help Maya and Agni find the exact number of things they need."
+  "text": "Maya and Agni have made a list of things they need for the party, but the replies have still not come, so nobody knows how many friends are coming. Let's help Maya and Agni find the exact number of things they need."
  },
  {
   "id": "maya_218d232a",
@@ -210,29 +225,14 @@
   "text": "For m friends, it is m × 2. We write it in short as 2m. A number next to a letter means multiply."
  },
  {
-  "id": "maya_3292cd33",
-  "who": "maya",
-  "text": "Some words tell us to add: and, more, extra, plus, total, in all."
- },
- {
-  "id": "maya_ef095041",
-  "who": "maya",
-  "text": "Some words tell us to multiply: each, every, per, times."
- },
- {
-  "id": "maya_c60c984a",
-  "who": "maya",
-  "text": "Some words tell us to take away: less, fewer, minus, left, broke, gone, said no."
- },
- {
   "id": "neel_1d2dfb94",
   "who": "neel",
   "text": "Hmm… it worked for 1 and 1. But not for the others!"
  },
  {
-  "id": "neel_772827dd",
+  "id": "neel_11c743ee",
   "who": "neel",
-  "text": "Oh no! My spell gives the wrong number of candles!"
+  "text": "Oh no! My plan gives the wrong number of candles!"
  },
  {
   "id": "maya_5d2db5c3",
@@ -255,29 +255,29 @@
   "text": "Let's write the plan!"
  },
  {
-  "id": "maya_cb28c0e6",
+  "id": "maya_eb7e5f04",
   "who": "maya",
-  "text": "Let's write each plan as a magic spell. The cauldron will test it with different numbers of friends."
+  "text": "Let's write each plan with numbers and letters. The magic pot will test it with different numbers of friends."
  },
  {
-  "id": "maya_e14e2283",
+  "id": "maya_c13e731d",
   "who": "maya",
-  "text": "Tap the orbs to brew a spell. Then tap Brew! and the cauldron will test it."
+  "text": "Tap the tiles to write the plan. Then tap Check and the magic pot will test it."
  },
  {
-  "id": "maya_9b6d9af4",
+  "id": "maya_eaa107f3",
   "who": "maya",
-  "text": "That spell is not finished. Every + − or × needs something on both sides."
+  "text": "That plan is not finished. Every + − or × needs something on both sides."
  },
  {
-  "id": "nar_5753e626",
+  "id": "nar_ce14c559",
   "who": "nar",
-  "text": "Neel has decided who is coming. Let's find the exact number of things we need."
+  "text": "The replies are coming in! Let's find the exact number of things we need."
  },
  {
-  "id": "neel_5d54b1e7",
+  "id": "neel_367341f1",
   "who": "neel",
-  "text": "I have decided! 6 monster friends are coming."
+  "text": "The replies are here! 6 monster friends are coming."
  },
  {
   "id": "maya_d93a0674",
@@ -305,14 +305,59 @@
   "text": "Now m is 4. Our plan still works: chairs = 4 + 1 = 5."
  },
  {
+  "id": "maya_88c3e04f",
+  "who": "maya",
+  "text": "Let's check with real numbers. Let's say 3 monsters and 2 dragons come."
+ },
+ {
+  "id": "maya_3a129d46",
+  "who": "maya",
+  "text": "\"In all\" means we put the two groups together, so we add. m monsters and d dragons make m + d friends."
+ },
+ {
+  "id": "maya_1a35be28",
+  "who": "maya",
+  "text": "Remember, when a letter sits right next to another letter or a number, it means multiply. So md means m × d."
+ },
+ {
+  "id": "maya_c8cda7d0",
+  "who": "maya",
+  "text": "Yes! When we put two groups together, we add, so we write m + d. We write md only when we multiply m by d."
+ },
+ {
+  "id": "maya_dda71ce7",
+  "who": "maya",
+  "text": "Start with a number or a letter."
+ },
+ {
+  "id": "maya_3c16d1f0",
+  "who": "maya",
+  "text": "Put a number or a letter after each sign."
+ },
+ {
+  "id": "maya_37f00737",
+  "who": "maya",
+  "text": "We write the number first, like 2m. Put a sign before the next number."
+ },
+ {
+  "id": "maya_b8ca780e",
+  "who": "maya",
+  "text": "One number at a time. Put a sign between two numbers."
+ },
+ {
+  "id": "maya_35e0bf14",
+  "who": "maya",
+  "text": "Put a sign between them."
+ },
+ {
   "id": "neel_e561c469",
   "who": "neel",
   "text": "Number of friends coming to the party."
  },
  {
-  "id": "maya_3408f604",
+  "id": "maya_b9b7387b",
   "who": "maya",
-  "text": "Correct! Neel has not decided yet, so the number of friends can change. So the number of friends is a variable."
+  "text": "Correct! The replies have not come yet, so the number of friends can change. So the number of friends is a variable."
  },
  {
   "id": "maya_a4e24e3c",
@@ -320,19 +365,54 @@
   "text": "Let's see the answer together."
  },
  {
-  "id": "maya_f7309d58",
+  "id": "maya_f85a8ddf",
   "who": "maya",
-  "text": "The answer is Variable (it can change). Neel has not decided yet, so the number of friends can change. So the number of friends is a variable."
+  "text": "The answer is Variable (it can change). The replies have not come yet, so the number of friends can change. So the number of friends is a variable."
  },
  {
-  "id": "maya_e9d624c2",
+  "id": "maya_41c6b2fe",
   "who": "maya",
-  "text": "Has Neel decided how many friends will come?"
+  "text": "Do we know yet how many friends will come?"
  },
  {
-  "id": "maya_0d9f551e",
+  "id": "maya_7f7b64e7",
   "who": "maya",
-  "text": "Has Neel decided yet?"
+  "text": "It was 2 friends. Now it is 5 friends. Did the number change?"
+ },
+ {
+  "id": "maya_dc146dfb",
+  "who": "maya",
+  "text": "It was 3 friends. Now it is 6 friends. Did the number change?"
+ },
+ {
+  "id": "maya_1fe348bb",
+  "who": "maya",
+  "text": "It was 4 friends. Now it is 7 friends. Did the number change?"
+ },
+ {
+  "id": "maya_4952f84f",
+  "who": "maya",
+  "text": "It was 5 friends. Now it is 8 friends. Did the number change?"
+ },
+ {
+  "id": "maya_13ec8751",
+  "who": "maya",
+  "text": "It was 6 friends. Now it is 3 friends. Did the number change?"
+ },
+ {
+  "id": "maya_e0fd39d1",
+  "who": "maya",
+  "text": "It was 7 friends. Now it is 4 friends. Did the number change?"
+ },
+ {
+  "id": "maya_f09551b1",
+  "who": "maya",
+  "text": "It was 8 friends. Now it is 5 friends. Did the number change?"
+ },
+ {
+  "id": "maya_f43c9fad",
+  "who": "maya",
+  "text": "Have the replies come yet?"
  },
  {
   "id": "maya_bcbe91a3",
@@ -365,6 +445,41 @@
   "text": "Listen again: one big cake, no matter how many friends come."
  },
  {
+  "id": "maya_0d8feb7a",
+  "who": "maya",
+  "text": "When 2 friends come, there is 1 big cake. When 5 friends come, there is still 1 big cake. Did the number change?"
+ },
+ {
+  "id": "maya_c05b98f4",
+  "who": "maya",
+  "text": "When 3 friends come, there is 1 big cake. When 6 friends come, there is still 1 big cake. Did the number change?"
+ },
+ {
+  "id": "maya_d3e25df6",
+  "who": "maya",
+  "text": "When 4 friends come, there is 1 big cake. When 7 friends come, there is still 1 big cake. Did the number change?"
+ },
+ {
+  "id": "maya_8ff9e834",
+  "who": "maya",
+  "text": "When 5 friends come, there is 1 big cake. When 8 friends come, there is still 1 big cake. Did the number change?"
+ },
+ {
+  "id": "maya_ba09c54c",
+  "who": "maya",
+  "text": "When 6 friends come, there is 1 big cake. When 3 friends come, there is still 1 big cake. Did the number change?"
+ },
+ {
+  "id": "maya_2bc3e456",
+  "who": "maya",
+  "text": "When 7 friends come, there is 1 big cake. When 4 friends come, there is still 1 big cake. Did the number change?"
+ },
+ {
+  "id": "maya_f0dc242c",
+  "who": "maya",
+  "text": "When 8 friends come, there is 1 big cake. When 5 friends come, there is still 1 big cake. Did the number change?"
+ },
+ {
   "id": "maya_5a9b0adb",
   "who": "maya",
   "text": "One big cake for everyone."
@@ -390,6 +505,41 @@
   "text": "If more friends come, do we need more plates?"
  },
  {
+  "id": "maya_cce9c897",
+  "who": "maya",
+  "text": "When 2 friends come, Neel needs 2 plates. When 5 friends come, Neel needs 5 plates. Did the number change?"
+ },
+ {
+  "id": "maya_ac96632f",
+  "who": "maya",
+  "text": "When 3 friends come, Neel needs 3 plates. When 6 friends come, Neel needs 6 plates. Did the number change?"
+ },
+ {
+  "id": "maya_3865c33f",
+  "who": "maya",
+  "text": "When 4 friends come, Neel needs 4 plates. When 7 friends come, Neel needs 7 plates. Did the number change?"
+ },
+ {
+  "id": "maya_8db5e5f7",
+  "who": "maya",
+  "text": "When 5 friends come, Neel needs 5 plates. When 8 friends come, Neel needs 8 plates. Did the number change?"
+ },
+ {
+  "id": "maya_6b05f727",
+  "who": "maya",
+  "text": "When 6 friends come, Neel needs 6 plates. When 3 friends come, Neel needs 3 plates. Did the number change?"
+ },
+ {
+  "id": "maya_07ec098b",
+  "who": "maya",
+  "text": "When 7 friends come, Neel needs 7 plates. When 4 friends come, Neel needs 4 plates. Did the number change?"
+ },
+ {
+  "id": "maya_19871c27",
+  "who": "maya",
+  "text": "When 8 friends come, Neel needs 8 plates. When 5 friends come, Neel needs 5 plates. Did the number change?"
+ },
+ {
   "id": "maya_831a361d",
   "who": "maya",
   "text": "One plate for each friend."
@@ -400,19 +550,54 @@
   "text": "Number of lamps in the hall. The hall has 6 lamps."
  },
  {
-  "id": "maya_3dbf2ec3",
+  "id": "maya_6842088d",
   "who": "maya",
-  "text": "Correct! The hall always has 6 lamps. It does not depend on the friends. So the number of lamps is a constant."
+  "text": "Correct! The hall always has 6 lamps. It does not depend on the number of friends. So the number of lamps is a constant."
  },
  {
-  "id": "maya_aa929178",
+  "id": "maya_84795f42",
   "who": "maya",
-  "text": "The answer is Constant (it stays the same). The hall always has 6 lamps. It does not depend on the friends. So the number of lamps is a constant."
+  "text": "The answer is Constant (it stays the same). The hall always has 6 lamps. It does not depend on the number of friends. So the number of lamps is a constant."
  },
  {
   "id": "maya_2c228457",
   "who": "maya",
   "text": "Does the hall get more lamps when more friends come?"
+ },
+ {
+  "id": "maya_537b0c06",
+  "who": "maya",
+  "text": "When 2 friends come, there are 6 lamps in the hall. When 5 friends come, there are still 6 lamps in the hall. Did the number change?"
+ },
+ {
+  "id": "maya_884275bc",
+  "who": "maya",
+  "text": "When 3 friends come, there are 6 lamps in the hall. When 6 friends come, there are still 6 lamps in the hall. Did the number change?"
+ },
+ {
+  "id": "maya_916002c6",
+  "who": "maya",
+  "text": "When 4 friends come, there are 6 lamps in the hall. When 7 friends come, there are still 6 lamps in the hall. Did the number change?"
+ },
+ {
+  "id": "maya_77aa7e30",
+  "who": "maya",
+  "text": "When 5 friends come, there are 6 lamps in the hall. When 8 friends come, there are still 6 lamps in the hall. Did the number change?"
+ },
+ {
+  "id": "maya_92dbb814",
+  "who": "maya",
+  "text": "When 6 friends come, there are 6 lamps in the hall. When 3 friends come, there are still 6 lamps in the hall. Did the number change?"
+ },
+ {
+  "id": "maya_d1b3e44a",
+  "who": "maya",
+  "text": "When 7 friends come, there are 6 lamps in the hall. When 4 friends come, there are still 6 lamps in the hall. Did the number change?"
+ },
+ {
+  "id": "maya_95723850",
+  "who": "maya",
+  "text": "When 8 friends come, there are 6 lamps in the hall. When 5 friends come, there are still 6 lamps in the hall. Did the number change?"
  },
  {
   "id": "maya_955d6b27",
@@ -440,6 +625,41 @@
   "text": "Listen again: every box has 10 sweets."
  },
  {
+  "id": "maya_1fc150ec",
+  "who": "maya",
+  "text": "When 2 friends come, there are 10 sweets in a box. When 5 friends come, there are still 10 sweets in a box. Did the number change?"
+ },
+ {
+  "id": "maya_cd6d101c",
+  "who": "maya",
+  "text": "When 3 friends come, there are 10 sweets in a box. When 6 friends come, there are still 10 sweets in a box. Did the number change?"
+ },
+ {
+  "id": "maya_1d268420",
+  "who": "maya",
+  "text": "When 4 friends come, there are 10 sweets in a box. When 7 friends come, there are still 10 sweets in a box. Did the number change?"
+ },
+ {
+  "id": "maya_21c44390",
+  "who": "maya",
+  "text": "When 5 friends come, there are 10 sweets in a box. When 8 friends come, there are still 10 sweets in a box. Did the number change?"
+ },
+ {
+  "id": "maya_9ffcad16",
+  "who": "maya",
+  "text": "When 6 friends come, there are 10 sweets in a box. When 3 friends come, there are still 10 sweets in a box. Did the number change?"
+ },
+ {
+  "id": "maya_5979830a",
+  "who": "maya",
+  "text": "When 7 friends come, there are 10 sweets in a box. When 4 friends come, there are still 10 sweets in a box. Did the number change?"
+ },
+ {
+  "id": "maya_4d30880e",
+  "who": "maya",
+  "text": "When 8 friends come, there are 10 sweets in a box. When 5 friends come, there are still 10 sweets in a box. Did the number change?"
+ },
+ {
   "id": "maya_1fb71489",
   "who": "maya",
   "text": "Every box has 10 sweets."
@@ -465,6 +685,41 @@
   "text": "More friends need more sweets. Do they need more boxes?"
  },
  {
+  "id": "maya_f7a45266",
+  "who": "maya",
+  "text": "When 2 friends come, Neel needs 1 box. When 8 friends come, Neel needs 2 boxes. Did the number change?"
+ },
+ {
+  "id": "maya_e0a04c2b",
+  "who": "maya",
+  "text": "When 3 friends come, Neel needs 1 box. When 6 friends come, Neel needs 2 boxes. Did the number change?"
+ },
+ {
+  "id": "maya_b63c970f",
+  "who": "maya",
+  "text": "When 4 friends come, Neel needs 1 box. When 7 friends come, Neel needs 2 boxes. Did the number change?"
+ },
+ {
+  "id": "maya_a843db33",
+  "who": "maya",
+  "text": "When 5 friends come, Neel needs 1 box. When 8 friends come, Neel needs 2 boxes. Did the number change?"
+ },
+ {
+  "id": "maya_5c99106b",
+  "who": "maya",
+  "text": "When 6 friends come, Neel needs 2 boxes. When 3 friends come, Neel needs 1 box. Did the number change?"
+ },
+ {
+  "id": "maya_58784a73",
+  "who": "maya",
+  "text": "When 7 friends come, Neel needs 2 boxes. When 4 friends come, Neel needs 1 box. Did the number change?"
+ },
+ {
+  "id": "maya_d5911373",
+  "who": "maya",
+  "text": "When 8 friends come, Neel needs 2 boxes. When 5 friends come, Neel needs 1 box. Did the number change?"
+ },
+ {
   "id": "maya_88cbf470",
   "who": "maya",
   "text": "More friends, more boxes?"
@@ -475,19 +730,54 @@
   "text": "Number of balloons on the door. Neel puts 10 balloons on the door to decorate it."
  },
  {
-  "id": "maya_dc0b10b3",
+  "id": "maya_e23674b9",
   "who": "maya",
-  "text": "Correct! The door always gets 10 balloons. They do not depend on the friends. So this number is a constant."
+  "text": "Correct! The door always gets 10 balloons. They do not depend on the number of friends. So this number is a constant."
  },
  {
-  "id": "maya_6bed9966",
+  "id": "maya_9511f4b8",
   "who": "maya",
-  "text": "The answer is Constant (it stays the same). The door always gets 10 balloons. They do not depend on the friends. So this number is a constant."
+  "text": "The answer is Constant (it stays the same). The door always gets 10 balloons. They do not depend on the number of friends. So this number is a constant."
  },
  {
-  "id": "maya_afa94555",
+  "id": "maya_c7b7fd1b",
   "who": "maya",
-  "text": "These balloons are only for the door. Do they depend on the friends?"
+  "text": "These balloons are only for the door. Do they depend on the number of friends?"
+ },
+ {
+  "id": "maya_30c7c85a",
+  "who": "maya",
+  "text": "When 2 friends come, there are 10 balloons on the door. When 5 friends come, there are still 10 balloons on the door. Did the number change?"
+ },
+ {
+  "id": "maya_1689a930",
+  "who": "maya",
+  "text": "When 3 friends come, there are 10 balloons on the door. When 6 friends come, there are still 10 balloons on the door. Did the number change?"
+ },
+ {
+  "id": "maya_10371f06",
+  "who": "maya",
+  "text": "When 4 friends come, there are 10 balloons on the door. When 7 friends come, there are still 10 balloons on the door. Did the number change?"
+ },
+ {
+  "id": "maya_bf26b128",
+  "who": "maya",
+  "text": "When 5 friends come, there are 10 balloons on the door. When 8 friends come, there are still 10 balloons on the door. Did the number change?"
+ },
+ {
+  "id": "maya_fe94a34c",
+  "who": "maya",
+  "text": "When 6 friends come, there are 10 balloons on the door. When 3 friends come, there are still 10 balloons on the door. Did the number change?"
+ },
+ {
+  "id": "maya_3b7b9f42",
+  "who": "maya",
+  "text": "When 7 friends come, there are 10 balloons on the door. When 4 friends come, there are still 10 balloons on the door. Did the number change?"
+ },
+ {
+  "id": "maya_0d27908c",
+  "who": "maya",
+  "text": "When 8 friends come, there are 10 balloons on the door. When 5 friends come, there are still 10 balloons on the door. Did the number change?"
  },
  {
   "id": "maya_034bf384",
@@ -513,6 +803,41 @@
   "id": "maya_9fb4def5",
   "who": "maya",
   "text": "Now the balloons are for the friends. One for each friend."
+ },
+ {
+  "id": "maya_61ee647b",
+  "who": "maya",
+  "text": "When 2 friends come, Neel gives away 2 balloons. When 5 friends come, Neel gives away 5 balloons. Did the number change?"
+ },
+ {
+  "id": "maya_7ee462cb",
+  "who": "maya",
+  "text": "When 3 friends come, Neel gives away 3 balloons. When 6 friends come, Neel gives away 6 balloons. Did the number change?"
+ },
+ {
+  "id": "maya_680de103",
+  "who": "maya",
+  "text": "When 4 friends come, Neel gives away 4 balloons. When 7 friends come, Neel gives away 7 balloons. Did the number change?"
+ },
+ {
+  "id": "maya_8804d37b",
+  "who": "maya",
+  "text": "When 5 friends come, Neel gives away 5 balloons. When 8 friends come, Neel gives away 8 balloons. Did the number change?"
+ },
+ {
+  "id": "maya_524fbabb",
+  "who": "maya",
+  "text": "When 6 friends come, Neel gives away 6 balloons. When 3 friends come, Neel gives away 3 balloons. Did the number change?"
+ },
+ {
+  "id": "maya_40184a83",
+  "who": "maya",
+  "text": "When 7 friends come, Neel gives away 7 balloons. When 4 friends come, Neel gives away 4 balloons. Did the number change?"
+ },
+ {
+  "id": "maya_5cd0506b",
+  "who": "maya",
+  "text": "When 8 friends come, Neel gives away 8 balloons. When 5 friends come, Neel gives away 5 balloons. Did the number change?"
  },
  {
   "id": "maya_627abf0c",
@@ -780,9 +1105,9 @@
   "text": "m is the number of monsters. d is the number of dragons. Are they the same thing?"
  },
  {
-  "id": "maya_88afa009",
+  "id": "maya_830ef5bf",
   "who": "maya",
-  "text": "Look at the cauldron. With 2 monsters and 1 dragon, 3m + 2d gives 8, but 5md gives 10. Are they the same?"
+  "text": "Look at the magic pot. With 2 monsters and 1 dragon, 3m + 2d gives 8, but 5md gives 10. Are they the same?"
  },
  {
   "id": "maya_2c420f1e",
@@ -805,9 +1130,9 @@
   "text": "Work out 6 + 1."
  },
  {
-  "id": "maya_4f3c5adf",
+  "id": "maya_1ae279bb",
   "who": "maya",
-  "text": "\"Extra\" means add. The seal put 6 in place of m, so add the 1 extra chair: 6 + 1."
+  "text": "\"Extra\" means add. We put 6 in place of m, so add the 1 extra chair: 6 + 1."
  },
  {
   "id": "maya_b0bd3f88",
